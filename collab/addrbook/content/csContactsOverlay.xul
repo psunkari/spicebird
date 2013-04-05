@@ -1,0 +1,673 @@
+<?xml version="1.0"?>
+
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla Communicator client code, released
+# March 31, 1998.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998-1999
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Seth Spitzer <sspitzer@netscape.com>
+#   Prasad Sunkari <prasad@synovel.com>
+#   Ashok Gudibandla <ashok@synovel.com>
+#   Sivakrishna Edpuganti <sivakrishna@synovel.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/addressbook.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/contacts.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/content/addressbook/csContactsOverlay.css" type="text/css"?>
+
+<!DOCTYPE overlay [
+<!ENTITY % abMainWindowDTD SYSTEM "chrome://messenger/locale/addressbook/abMainWindow.dtd" >
+%abMainWindowDTD;
+<!ENTITY % contactsDTD SYSTEM "chrome://messenger/locale/addressbook/contacts.dtd">
+%contactsDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+%globalDTD;
+]>
+
+<overlay id="contacts-overlay" 
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
+    <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+    <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
+  </stringbundleset>
+
+<script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/mailCore.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/addressbook/addressbook.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCommon.js"/>
+<script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
+<script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/msgPrintEngine.js"/>
+
+<!-- move needed functions into a single js file -->
+<script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/addressbook/abDragDrop.js"/>
+<script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/addressbook/abResultsPane.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCardViewOverlay.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/addressbook/csContactsOverlay.js"/>
+
+<keyset id="framework-keyset">
+   <key id="key_goContacts" key="&cmd.go.contacts.key;" modifiers="alt" command="switch-to-contacts"/>
+</keyset>
+
+<commandset id="framework-commands">
+    <commandset id="CommandUpdate_AddressBook"
+                commandupdater="true"
+                events="focus,addrbook-select"
+                oncommandupdate="CommandUpdate_AddressBook()"/>
+
+    <command id="cmd_newcontact" oncommand="AbNewCard();" />
+    <command id="cmd_newlist" oncommand="AbNewList();" />
+    <command id="cmd_newLdapDir" oncommand="AbNewLDAPDirectory()" />
+    <command id="cmd_newAddressBook" oncommand="AbNewAddressBook()" />
+    <command id="cmd_printSetup" oncommand="PrintUtils.showPageSetup()"/>
+    <command id="cmd_printcardpreview" oncommand="AbPrintPreviewCard();"/>
+    <command id="cmd_printcard" oncommand="AbPrintCard();"/>
+    <command id="button_edit" oncommand="goDoCommand('button_edit');"/>
+    <command id="cmd_printAddressBook" oncommand="AbPrintAddressBook()"/>
+    <command id="cmd_printPreviewAddressBook" oncommand="AbPrintPreviewAddressBook()"/>
+    <command id="cmd_delete" oncommand="goDoCommand('cmd_delete')"
+             valueAddressBook="&deleteAbCmd.label;"
+             valueCard="&deleteContactCmd.label;"
+             valueCards="&deleteContactsCmd.label;"
+             valueList="&deleteListCmd.label;"
+             valueLists="&deleteListsCmd.label;"
+             valueItems="&deleteItemsCmd.label;"
+             disabled="true"/>
+</commandset>
+
+  <commandset id="switch-commands">
+      <command id="switch-to-contacts" oncommand="setCurrentApp(gContactsAppName);" />
+  </commandset>
+
+<popupset id="framework-popupset">
+<popup id="dirTreeContext">
+  <menuitem id="dirTreeContext-properties"
+            label="&editButton2.label;"
+            accesskey="&editButton2.accesskey;"
+            oncommand="goDoCommand('button_edit');"/>
+  <menuseparator/>
+  <menuitem id="dirTreeContext-newcard" label="&newContactButton.label;"
+            accesskey="&newContactButton.accesskey;" oncommand="AbNewCard();"/>
+  <menuitem id="dirTreeContext-newlist"
+            label="&newlistButton.label;"
+            accesskey="&newlistButton.accesskey;"
+            command="cmd_newlist"/>
+  <menuseparator/>
+  <menuitem id="dirTreeContext-delete"
+            label="&deleteButton2.label;"
+            accesskey="&deleteButton2.accesskey;"
+            observes="button_delete"
+            oncommand="goDoCommand('button_delete');"/>
+</popup>
+
+<popup id="abResultsTreeContext">
+  <menuitem id="abResultsTreeContext-properties"
+            label="&editButton2.label;"
+            accesskey="&editButton2.accesskey;"
+            command="button_edit"/>
+  <menuseparator/>
+  <menuitem id="abResultsTreeContext-newmessage"
+            label="&newmsgButton.label;"
+            accesskey="&newmsgButton.accesskey;"
+            oncommand="AbNewMessage()"/>
+  <menuitem id="abResultsTreeContext-newim"
+            label="&newIM.label;"
+            accesskey="&newIM.accesskey;"
+            oncommand="AbIMSelected()"/>
+  <menuseparator/>
+  <menuitem id="abResultsTreeContext-delete"
+            label="&deleteButton2.label;"
+            accesskey="&deleteButton2.accesskey;"
+            observes="button_delete"
+            oncommand="goDoCommand('button_delete');"/>
+</popup>
+</popupset>
+
+                    <menupopup id="file-new-menupopup">
+                      <menuitem id="menu_newContact"
+                                label="&newContact.label;"
+                                accesskey="&newContact.accesskey;"
+                                app="contacts" showalways="true" weight="10"
+                                key="key_newCard" command="cmd_newcontact"/>
+                      <menuitem id="menu_newList"
+                                label="&newListCmd.label;"
+                                accesskey="&newListCmd.accesskey;"
+                                app="contacts" weight="11"
+                                command="cmd_newlist"/>
+                      <menuitem id="menu_newAddrbook"
+                                label="&newAddressBookCmd.label;"
+                                accesskey="&newAddressBookCmd.accesskey;"
+                                app="contacts" weight="12"
+                                oncommand="AbNewAddressBook()"/>
+                      <menuitem id="addLDAP" label="&newLDAPDirectoryCmd.label;"
+                                accesskey="&newLDAPDirectoryCmd.accesskey;"
+                                app="contacts" weight="13"
+                                oncommand="AbNewLDAPDirectory()"/>
+                    </menupopup>
+                    <menupopup id="new-toolbutton-popup">
+                      <menuitem id="menu_newContact2"
+                                label="&newContact.label;"
+                                accesskey="&newContact.accesskey;"
+                                app="contacts" showalways="true" weight="10"
+                                key="key_newCard" command="cmd_newcontact"/>
+                      <menuitem id="menu_newList2"
+                                label="&newListCmd.label;"
+                                accesskey="&newListCmd.accesskey;"
+                                app="contacts" weight="11"
+                                command="cmd_newlist"/>
+                      <menuitem id="menu_newAddrbook2"
+                                label="&newAddressBookCmd.label;"
+                                accesskey="&newAddressBookCmd.accesskey;"
+                                app="contacts" weight="12"
+                                oncommand="AbNewAddressBook()"/>
+                      <menuitem id="addLDAP2" label="&newLDAPDirectoryCmd.label;"
+                                accesskey="&newLDAPDirectoryCmd.accesskey;"
+                                app="contacts" weight="13"
+                                oncommand="AbNewLDAPDirectory()"/>
+                    </menupopup>
+
+  <menupopup id="file-menupopup">
+#ifdef XP_MACOSX
+                <menuitem id="menu_osxAddressBook" app="contacts"
+                          label="&osxAddressBook.label;"
+                          accesskey="&osxAddressBook.accesskey;"
+                          oncommand="AbShowHideOSXAddressBook();"
+                          checked="true" type="checkbox"/>
+                <menuseparator/>
+#endif
+                <!-- Print -->
+#ifndef XP_MACOSX
+                <menuitem id="printPreviewContactMenuItem"
+                          label="&printPreviewContactCmd.label;"
+                          accesskey="&printPreviewContactCmd.accesskey;"
+                          insertafter="file-print-separator" app="contacts"
+                          command="cmd_printcardpreview"/>
+#endif
+                <menuitem id="printContactMenuItem" label="&printContactCmd.label;"
+                          accesskey="&printContactCmd.accesskey;"
+                          insertafter="file-print-separator" app="contacts"
+                          key="key_printContact" command="cmd_printcard"/>
+#ifndef XP_MACOSX
+                <menuitem id="printPreviewAddressBook"
+                          label="&printPreviewAddressBook.label;"
+                          accesskey="&printPreviewAddressBook.accesskey;"
+                          insertafter="file-print-separator" app="contacts"
+                          oncommand="AbPrintPreviewAddressBook()"/>
+#endif
+                <menuitem id="printAddressBook" label="&printAddressBook.label;"
+                          accesskey="&printAddressBook.accesskey;"
+                          insertafter="file-print-separator" app="contacts"
+                          oncommand="AbPrintAddressBook()"/>
+                
+                <!-- Import/Export -->
+                <menuitem id="importAddressBook" label="&importCmd.label;"
+                          accesskey="&importCmd.accesskey;"
+                          insertbefore="file-exit-separator" app="contacts"
+                          oncommand="toImport()"/>
+
+                <menuitem id="exportAddressBook" label="&exportCmd.label;"
+                          accesskey="&exportCmd.accesskey;"
+                          insertbefore="file-exit-separator" app="contacts"
+                          oncommand="AbExport()"/>
+  </menupopup>
+
+  <menupopup id="edit-menupopup">
+      <menu id="edit-mail-find-menu">
+        <menupopup id="edit-mail-find-menupopup">
+          <menuitem id="menu_search_addresses2"
+                    label="&searchAddressesCmd.label;"
+                    accesskey="&searchAddressesCmd.accesskey;"
+                    key="key_searchAddresses"
+                    insertafter="searchMailCmd" app="contacts"
+                    oncommand="onAdvancedAbSearch();"/>
+        </menupopup>
+      </menu>
+            <menuitem id="menu_search_addresses"
+                      label="&searchAddressesCmd.label;"
+                      accesskey="&searchAddressesCmd.accesskey;"
+                      key="key_searchAddresses"
+                      insertbefore="edit-search-after-separator" app="contacts"
+                      oncommand="onAdvancedAbSearch();"/>
+      <menuitem label="&propertiesCmd.label;"
+                accesskey="&propertiesCmd.accesskey;"
+                key="key_properties"
+                command="button_edit"
+                insertbefore="edit-properties-after-separator" app="contacts"/>
+  </menupopup>
+
+  <menupopup id="view-menupopup">
+                <menuitem id="menu_showCardPane" app="contacts"
+                          label="&showContactPane.label;"
+                          accesskey="&showContactPane.accesskey;"
+                          oncommand="goToggleSplitter('results-splitter', 'menu_showCardPane')"
+                          checked="true" type="checkbox"/>
+                <menuseparator app="contacts"/>
+                <menu id="menu_ShowNameAs" label="&menu_ShowNameAs.label;" accesskey="&menu_ShowNameAs.accesskey;" app="contacts">
+                    <menupopup id="menu_ShowNameAsPopup">
+                        <menuitem type="radio" name="shownameas"
+                                  id="firstLastCmd"
+                                  label="&firstLastCmd.label;"
+                                  accesskey="&firstLastCmd.accesskey;"
+                                  oncommand="SetNameColumn('firstLastCmd')"/>
+                        <menuitem type="radio" name="shownameas"
+                                  id="lastFirstCmd"
+                                  label="&lastFirstCmd.label;"
+                                  accesskey="&lastFirstCmd.accesskey;"
+                                  oncommand="SetNameColumn('lastFirstCmd')"/>
+                        <menuitem type="radio" name="shownameas"
+                                  id="displayNameCmd"
+                                  label="&displayNameCmd.label;"
+                                  accesskey="&displayNameCmd.accesskey;"
+                                  oncommand="SetNameColumn('displayNameCmd')"/>
+                    </menupopup>
+                </menu>
+                <menu id="sortMenu" label="&sortMenu.label;" accesskey="&sortMenu.accesskey;" app="contacts">
+                    <menupopup id="sortMenuPopup" onpopupshowing="InitAbViewSortByMenu()">
+                        <menuitem label="&GeneratedName.label;" 
+                                  id="cmd_SortByGeneratedName"
+                                  accesskey="&GeneratedName.accesskey;"
+                                  oncommand="SortResultPane('GeneratedName');" name="sortas" type="radio" checked="true"/>
+                        <menuitem label="&PrimaryEmail.label;"
+                                  id="cmd_SortByPrimaryEmail"
+                                  accesskey="&PrimaryEmail.accesskey;"
+                                  oncommand="SortResultPane('PrimaryEmail');" name="sortas" type="radio" checked="true"/>
+                        <menuitem label="&ScreenName.label;"
+                                  id="cmd_SortBy_AimScreenName"
+                                  accesskey="&ScreenName.accesskey;"
+                                  oncommand="SortResultPane('_AimScreenName');" name="sortas" type="radio" checked="true"/>
+                        <menuitem label="&Company.label;"
+                                  id="cmd_SortByCompany"
+                                  accesskey="&Company.accesskey;"
+                                  oncommand="SortResultPane('Company');" name="sortas" type="radio" checked="true"/>
+                        <!-- LOCALIZATION NOTE:
+                        Fields for phonetic are disabled as default and can be enabled by 
+                        editing "mail.addr_book.show_phonetic_fields"    
+                        -->
+                        <menuitem label="&_PhoneticName.label;"
+                                  id="cmd_SortBy_PhoneticName"
+                                  hidden="true"
+                                  accesskey="&_PhoneticName.accesskey;"
+                                  oncommand="SortResultPane('_PhoneticName');" name="sortas" type="radio" checked="true"/>
+                        <menuitem label="&NickName.label;"
+                                  id="cmd_SortByNickName"
+                                  accesskey="&NickName.accesskey;"
+                                  oncommand="SortResultPane('NickName');" name="sortas" type="radio" checked="true"/>
+                        <menuitem label="&SecondEmail.label;"
+                                  id="cmd_SortBySecondEmail"
+                                  accesskey="&SecondEmail.accesskey;"
+                                  oncommand="SortResultPane('SecondEmail');" name="sortas" type="radio" checked="true"/>
+                        <menuitem label="&Department.label;"
+                                  id="cmd_SortByDepartment"
+                                  accesskey="&Department.accesskey;"
+                                  oncommand="SortResultPane('Department');" name="sortas" type="radio" checked="true"/>
+                        <menuitem label="&JobTitle.label;"
+                                  id="cmd_SortByJobTitle"
+                                  accesskey="&JobTitle.accesskey;"
+                                  oncommand="SortResultPane('JobTitle');" name="sortas" type="radio" checked="true"/>
+                        <menuitem label="&CellularNumber.label;"
+                                  id="cmd_SortByCellularNumber"
+                                  accesskey="&CellularNumber.accesskey;"
+                                  oncommand="SortResultPane('CellularNumber');" name="sortas" type="radio" checked="true"/>
+                        <menuitem label="&PagerNumber.label;"
+                                  id="cmd_SortByPagerNumber"
+                                  accesskey="&PagerNumber.accesskey;"
+                                  oncommand="SortResultPane('PagerNumber');" name="sortas" type="radio" checked="true"/>
+                        <menuitem label="&FaxNumber.label;"
+                                  id="cmd_SortByFaxNumber"
+                                  accesskey="&FaxNumber.accesskey;"
+                                  oncommand="SortResultPane('FaxNumber');" name="sortas" type="radio" checked="true"/>
+                        <menuitem label="&HomePhone.label;"
+                                  id="cmd_SortByHomePhone"
+                                  accesskey="&HomePhone.accesskey;"
+                                  oncommand="SortResultPane('HomePhone');" name="sortas" type="radio" checked="true"/>
+                        <menuitem label="&WorkPhone.label;"
+                                  id="cmd_SortByWorkPhone"
+                                  accesskey="&WorkPhone.accesskey;"
+                                  oncommand="SortResultPane('WorkPhone');" name="sortas" type="radio" checked="true"/>
+                        <menuseparator/>
+                        <menuitem id="sortAscending" type="radio" name="sortdirection" label="&sortAscending.label;" accesskey="&sortAscending.accesskey;" oncommand="AbSortAscending()"/>
+                        <menuitem id="sortDescending" type="radio" name="sortdirection" label="&sortDescending.label;" accesskey="&sortDescending.accesskey;" oncommand="AbSortDescending()"/>
+                    </menupopup>
+                </menu>
+            <menuseparator app="contacts"/>
+  </menupopup>
+
+  <menupopup id="go-menupopup">
+      <menuitem id="go-switch-to-contacts" label="&collab.contacts.title;" 
+                class="menuitem-iconic" key="key_goContacts"
+                observes="switch-to-contacts" insertbefore="go-separator"/>
+  </menupopup>
+
+  <toolbarpalette id="framework-toolpalette">
+      <toolbarbutton class="contacts-toolbarbutton padded-toolbarbutton" app="contacts" id="button-newcard"
+                     label="&newContactButton.label;" observes="cmd_newcontact"
+                     tooltiptext="&newContactButton.tooltip;"/>
+      <toolbarbutton class="contacts-toolbarbutton padded-toolbarbutton" app="contacts" id="button-newlist" label="&newlistButton.label;" tooltiptext="&newlistButton.tooltip;" command="cmd_newlist"/>
+      <toolbarbutton class="contacts-toolbarbutton padded-toolbarbutton" app="contacts" id="button-editcard"
+                     label="&editButton2.label;"
+                     tooltiptext="&editButton2.tooltip;"
+                     command="button_edit"/>
+      <toolbarbutton class="contacts-toolbarbutton padded-toolbarbutton" id="button-newmessage" app="contacts" 
+                     label="&newmsgButton.label;" tooltiptext="&newmsgButton.tooltip;" 
+                     oncommand="AbNewMessage();"/>
+      <toolbaritem id="ab-search-container" app="contacts" title="&searchItem.title;" align="center" class="chromeclass-toolbar-additional">
+        <textbox id="peopleSearchInput" flex="1" timeout="800"
+                 type="search"
+                 emptytext="&SearchNameOrEmail.label;"
+                 oncommand="onAbEnterInSearchBar();"
+                 chromedir="&locale.dir;"/>
+      </toolbaritem>     
+  </toolbarpalette>
+  <!-- toolbar -->
+  <toolbox id="framework-toolbox">
+  <!-- NOTE: When you change the id of this toolbar, don't forget to change
+             it in addressbook.css too -->
+  <toolbar id="contacts-primary-toolbar" flex="1" app="contacts"
+           toolbarname="Contacts Toolbar"
+           fullscreentoolbar="true" mode="full"
+           customizable="true"
+           context="framework-toolbar-context"
+           defaultset="new-toolbutton,button-newlist,separator,button-editcard,delete-toolbutton,separator,button-newmessage,im-toolbarbutton,spring,ab-search-container" />
+           <!-- 
+              XXX: im-toolbarbutton should not be present in defaultset here.
+                   Currently this seems to be only way to add that button into the toolbar by default.
+            -->
+  </toolbox>
+
+
+
+  <tabpanels id="tabpanelcontainer">
+  <!-- The main address book three pane -->
+  <hbox id="abContent" flex="1">
+    <vbox id="sidebar-contacts" minwidth="100" width="225" persist="width collapsed" class="main-sidebar-box">
+      <sidebarheader id="abDirTreeHeader" align="center">
+        <label id="abDirTreeHeader-title" value="&dirTreeHeader.label;" control="dirTree"/>
+      </sidebarheader>
+
+      <!-- FIX ME - remove document.commandDispatcher.updateCommands() when tree selection calls this automatically -->
+      <tree id="dirTree" class="abDirectory plain main-sidebar-tree" seltype="single" minwidth="150" flex="1" persist="width"
+            datasources="rdf:addressdirectory" ref="moz-abdirectory://"
+            flags="dont-build-content"
+            hidecolumnpicker="true"
+            context="dirTreeContext"
+            onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('addrbook-select');"
+            ondblclick="DirPaneDoubleClick(event);"
+            onblur="goOnEvent(this,'blur')">
+ 
+        <treecols>
+          <treecol id="DirCol" flex="1" primary="true" 
+                   crop="center" persist="width" ignoreincolumnpicker="true" hideheader="true"
+                   sort="?DirTreeNameSort" sortActive="true" sortDirection="ascending"/>
+        </treecols>
+     
+        <template>
+          <rule>
+            <conditions>
+              <content uri="?container"/> 
+              <member container="?container" child="?member"/>
+            </conditions>
+ 
+            <bindings>
+              <binding subject="?member"
+                       predicate="http://home.netscape.com/NC-rdf#DirName"
+                       object="?DirName"/>
+              <binding subject="?member"
+                       predicate="http://home.netscape.com/NC-rdf#DirTreeNameSort"
+                       object="?DirTreeNameSort"/>
+              <binding subject="?member"
+                       predicate="http://home.netscape.com/NC-rdf#IsMailList"
+                       object="?IsMailList"/>
+              <binding subject="?member"
+                       predicate="http://home.netscape.com/NC-rdf#IsRemote"
+                       object="?IsRemote"/>
+              <binding subject="?member"
+                       predicate="http://home.netscape.com/NC-rdf#IsSecure"
+                       object="?IsSecure"/>
+            </bindings>
+
+            <action>
+              <treechildren>
+                <treeitem uri="?member" persist="sortDirection sortColumn open">
+                  <treerow>
+                    <treecell label="?DirName" properties="IsMailList-?IsMailList IsRemote-?IsRemote IsSecure-?IsSecure"/>
+                  </treerow>
+                </treeitem>
+              </treechildren>
+            </action>
+          </rule>
+        </template>
+      </tree>
+    </vbox>
+
+    <splitter id="dirTree-splitter" collapse="before" persist="state" class="sidebar-splitter"/> 
+    
+    <vbox id="abResultsBox" flex="1" minwidth="100" class="main-content-box">
+
+      <!-- results pane -->
+      <tree id="abResultsTree" flex="1" enableColumnDrag="true" class="plain tree-striping main-content-tree"
+            context="abResultsTreeContext"
+            onclick="AbResultsPaneOnClick(event);"
+            onkeypress="AbResultsPaneKeyPress(event);"
+            onblur="goOnEvent(this, 'blur');"
+            onselect="this.view.selectionChanged(); document.commandDispatcher.updateCommands('addrbook-select');"
+            sortCol="GeneratedName"
+            minheight="100" height="100"
+            persist="height sortCol">
+
+        <treecols id="abResultsTreeCols">
+          <!-- these column ids must match up to the mork column names, except for GeneratedName, see nsIAddrDatabase.idl -->
+          <treecol id="GeneratedName" class="sortDirectionIndicator" 
+                   persist="hidden ordinal width sortDirection" flex="1" 
+                   label="&GeneratedName.label;" primary="true"/>
+          <splitter class="tree-splitter"/>
+          <treecol id="PrimaryEmail" class="sortDirectionIndicator" 
+                   persist="hidden ordinal width sortDirection"  flex="1"
+                   label="&PrimaryEmail.label;"/>
+          <splitter class="tree-splitter"/>
+          <treecol id="_AimScreenName" class="sortDirectionIndicator" 
+                   persist="hidden ordinal width sortDirection"  flex="1"
+                   label="&ScreenName.label;"/>
+          <splitter class="tree-splitter"/>
+          <treecol id="Company" class="sortDirectionIndicator" 
+                   persist="hidden ordinal width sortDirection" flex="1"
+                   label="&Company.label;"/>
+          <splitter class="tree-splitter"/>
+          <treecol id="NickName" class="sortDirectionIndicator" 
+                   persist="hidden ordinal width sortDirection" flex="1"
+                   label="&NickName.label;" hidden="true"/>
+          <splitter class="tree-splitter"/>
+          <treecol id="SecondEmail" class="sortDirectionIndicator" 
+                   persist="hidden ordinal width sortDirection" flex="1" 
+                   label="&SecondEmail.label;" hidden="true"/>
+          <splitter class="tree-splitter"/>
+          <treecol id="Department" class="sortDirectionIndicator" 
+                   persist="hidden ordinal width sortDirection" flex="1"  
+                   label="&Department.label;" hidden="true"/>
+          <splitter class="tree-splitter"/>
+          <treecol id="JobTitle" class="sortDirectionIndicator" 
+                   persist="hidden ordinal width sortDirection" flex="1" 
+                   label="&JobTitle.label;" hidden="true"/>
+          <splitter class="tree-splitter"/>
+          <treecol id="CellularNumber" class="sortDirectionIndicator" 
+                   persist="hidden ordinal width sortDirection" flex="1" 
+                   label="&CellularNumber.label;" hidden="true"/>
+          <splitter class="tree-splitter"/>
+          <treecol id="PagerNumber" class="sortDirectionIndicator" 
+                   persist="hidden ordinal width sortDirection" flex="1" 
+                   label="&PagerNumber.label;" hidden="true"/>
+          <splitter class="tree-splitter"/>
+          <treecol id="FaxNumber" class="sortDirectionIndicator" 
+                   persist="hidden ordinal width sortDirection" flex="1" 
+                   label="&FaxNumber.label;" hidden="true"/>
+          <splitter class="tree-splitter"/>
+          <treecol id="HomePhone" class="sortDirectionIndicator" 
+                   persist="hidden ordinal width sortDirection" flex="1" 
+                   label="&HomePhone.label;" hidden="true"/>
+          <splitter class="tree-splitter"/>
+          <treecol id="WorkPhone" class="sortDirectionIndicator" 
+                   persist="hidden ordinal width sortDirection" flex="1"
+                   label="&WorkPhone.label;"/>
+    
+          <!-- LOCALIZATION NOTE: _PhoneticName may be enabled for Japanese builds. -->
+          <!--
+          <treecol id="_PhoneticName" class="sortDirectionIndicator" 
+                   persist="hidden ordinal width sortDirection" flex="1" 
+                   label="&_PhoneticName.label;" hiddenbydefault="true"/>
+          <splitter class="tree-splitter"/>
+          -->
+        </treecols>
+
+        <treechildren ondraggesture="nsDragAndDrop.startDrag(event, abResultsPaneObserver);"/>
+      </tree>
+      
+      <splitter id="results-splitter" collapse="after" persist="state" class="main-content-splitter"/>
+      
+      <!-- card view -->
+      <hbox id="CardViewOuterBox" flex="1" minheight="100" height="200" persist="height" class="main-content-display"> 
+        <vbox id="CardViewBox" flex="1">
+          <vbox id="CardViewInnerBox" collapsed="true" flex="1">
+            <description id="CardTitle"/>
+            <hbox flex="1">
+              <vbox id="cvbPhoto" class="cardViewGroup">
+                <hbox style="min-width: 10ch; max-width: 10ch;">
+                  <spacer flex="1"/>
+                  <html:img align="center" src="" id="cvPhoto"
+                            style="max-width: 10ch; max-height: 10ch; min-width: 1ch;"/>
+                  <spacer flex="1"/>
+                </hbox>
+              </vbox>
+              <vbox flex="1">
+                <vbox id="cvbContact" class="cardViewGroup">
+                  <description class="CardViewHeading" id="cvhContact">&contact.heading;</description>          
+                  <description class="CardViewLink" id="cvListNameBox">
+                    <html:p><html:a href="" id="cvListName"/></html:p>
+                  </description>
+                  <description class="CardViewText" id="cvDisplayName"/>
+                  <description class="CardViewText" id="cvNickname"/>
+                  <description class="CardViewLink" id="cvEmail1Box">
+                    <html:a href="" id="cvEmail1"/>
+                  </description>
+                  <description class="CardViewLink" id="cvEmail2Box">
+                    <html:a href="" id="cvEmail2"/>
+                  </description>
+                  <description class="CardViewLink" id="cvScreennameBox">
+                    <html:a href="" id="cvScreenname"/>
+                    <html:img onclick="GoIM()" align="top" id="cvAimPresence"/>
+                  </description>
+                </vbox>
+                <vbox id="cvbHome" class="cardViewGroup">
+                  <description class="CardViewHeading" id="cvhHome">&home.heading;</description>          
+                  <hbox>
+                    <vbox flex="1">
+                      <description class="CardViewText" id="cvHomeAddress"/>
+                      <description class="CardViewText" id="cvHomeAddress2"/>
+                      <description class="CardViewText" id="cvHomeCityStZip"/>
+                      <description class="CardViewText" id="cvHomeCountry"/>
+                    </vbox>
+                    <vbox id="cvbHomeMapItBox" pack="end">
+                      <button id="cvHomeMapIt" url="" label="&mapItButton.label;" oncommand="MapIt('cvHomeMapIt');" tooltiptext="&mapIt.tooltip;"/>
+                    </vbox>
+                  </hbox>
+                  <description class="CardViewLink" id="cvHomeWebPageBox">
+                    <html:a onclick="return openLink('cvHomeWebPage');" href="" id="cvHomeWebPage"/>
+                  </description>
+                </vbox>
+                <vbox id="cvbOther" class="cardViewGroup">
+                  <description class="CardViewHeading" id="cvhOther">&other.heading;</description>
+                  <description class="CardViewText" id="cvBirthday"/>
+                  <description class="CardViewText" id="cvCustom1"/>
+                  <description class="CardViewText" id="cvCustom2"/>
+                  <description class="CardViewText" id="cvCustom3"/>
+                  <description class="CardViewText" id="cvCustom4"/>
+                  <description class="CardViewText" id="cvNotes" style="white-space: pre-wrap;"/>
+                  <hbox>
+                    <image id="cvBuddyIcon"/> 
+                  </hbox>
+                </vbox>
+                <vbox id="cvbDescription" class="cardViewGroup">
+                  <description class="CardViewHeading" id="cvhDescription">&description.heading;</description>
+                  <description class="CardViewText" id="cvDescription"/>
+                </vbox>
+                <vbox id="cvbAddresses" class="cardViewGroup">
+                  <description class="CardViewHeading" id="cvhAddresses">&addresses.heading;</description>
+                </vbox>
+              </vbox>
+      
+              <spacer width="20"/>
+
+              <vbox flex="1">
+                <vbox id="cvbPhone" class="cardViewGroup">
+                  <description class="CardViewHeading" id="cvhPhone">&phone.heading;</description>
+                  <description class="CardViewText" id="cvPhWork"/>
+                  <description class="CardViewText" id="cvPhHome"/>
+                  <description class="CardViewText" id="cvPhFax"/>
+                  <description class="CardViewText" id="cvPhCellular"/>
+                  <description class="CardViewText" id="cvPhPager"/>
+                </vbox>
+                <vbox id="cvbWork" class="cardViewGroup">
+                  <description class="CardViewHeading" id="cvhWork">&work.heading;</description>
+                  <description class="CardViewText" id="cvJobTitle"/>
+                  <description class="CardViewText" id="cvDepartment"/>
+                  <description class="CardViewText" id="cvCompany"/>
+                  <hbox>
+                    <vbox flex="1">
+                      <description class="CardViewText" id="cvWorkAddress"/>
+                      <description class="CardViewText" id="cvWorkAddress2"/>
+                      <description class="CardViewText" id="cvWorkCityStZip"/>
+                      <description class="CardViewText" id="cvWorkCountry"/>
+                    </vbox>
+                    <vbox id="cvbWorkMapItBox" pack="end">
+                      <button id="cvWorkMapIt" url="" label="&mapItButton.label;" oncommand="MapIt('cvWorkMapIt');" tooltiptext="&mapIt.tooltip;"/>
+                    </vbox>
+                  </hbox>
+                  <description class="CardViewLink" id="cvWorkWebPageBox">
+                    <html:a onclick="return openLink('cvWorkWebPage');" href="" id="cvWorkWebPage"/>
+                  </description>
+                </vbox>
+              </vbox>
+            </hbox>
+          </vbox>
+        </vbox>
+      </hbox>
+    </vbox>
+  </hbox>
+  </tabpanels>
+</overlay>

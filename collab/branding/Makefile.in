@@ -1,0 +1,59 @@
+DEPTH = ../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+DIRS = \
+	content \
+	locales \
+	$(NULL)
+
+PREF_JS_EXPORTS = $(srcdir)/spicebird-branding.js
+
+include $(topsrcdir)/config/rules.mk
+
+MAIL_APP_FILES = \
+	spicebird.ico \
+	default.xpm \
+	mozicon16.xpm \
+	mozicon50.xpm \
+	$(NULL)
+
+export::
+	$(NSINSTALL) -D $(DIST)/branding
+	cp $(addprefix $(srcdir)/, $(MAIL_APP_FILES)) $(DIST)/branding/
+	if [ ! -d $(DEPTH)/collab/app/icons ] ; then \
+		mkdir $(DEPTH)/collab/app/icons; \
+	fi
+	if [ ! -d $(DEPTH)/collab/app/icons/windows ] ; then \
+		mkdir $(DEPTH)/collab/app/icons/windows; \
+	fi
+	cp $(srcdir)/spicebird.ico  $(DEPTH)/collab/app/icons/windows/collab.ico
+	if [ ! -d $(DEPTH)/collab/app/icons/gtk ] ; then \
+		mkdir $(DEPTH)/collab/app/icons/gtk; \
+	fi
+	cp $(srcdir)/mozicon50.xpm  $(DEPTH)/collab/app/icons/gtk/collab.xpm
+	cp $(srcdir)/mozicon16.xpm  $(DEPTH)/collab/app/icons/gtk/collab16.xpm
+	# if [ ! -d $(DEPTH)/collab/app/icons/os2 ] ; then \
+	#	mkdir $(DEPTH)/collab/app/icons/os2; \
+	# fi
+	# cp $(srcdir)/spicebird-os2.ico  $(DEPTH)/collab/app/icons/os2/messengerWindow.ico
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))	# Not yet supported (Prasad)
+	cp $(srcdir)/spicebird.icns  $(DIST)/branding/spicebird.icns
+	cp $(srcdir)/dsstore $(DIST)/branding/dsstore
+	cp $(srcdir)/background.png $(DIST)/branding/background.png
+	cp $(srcdir)/disk.icns $(DIST)/branding/disk.icns
+	cp $(srcdir)/license.r $(DIST)/branding/license.r
+endif
+	cp $(srcdir)/spicebird.ico  $(DIST)/branding/app.ico
+	cp $(srcdir)/branding.nsi     $(DIST)/branding/branding.nsi
+	cp $(srcdir)/wizHeader.bmp    $(DIST)/branding/wizHeader.bmp
+	cp $(srcdir)/wizHeaderRTL.bmp $(DIST)/branding/wizHeaderRTL.bmp
+	cp $(srcdir)/wizWatermark.bmp $(DIST)/branding/wizWatermark.bmp
+ifeq ($(OS_ARCH),OS2)	# Not yet supported
+	cp $(srcdir)/spicebird-os2.ico  $(DIST)/branding/spicebird.ico
+	cp $(srcdir)/spicebird-os2.ico  $(DIST)/branding/app.ico
+endif
+

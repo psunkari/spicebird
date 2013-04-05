@@ -1,0 +1,6 @@
+#filter substitution
+google-account-@AB_CD@.jar:
+% locale google-account @AB_CD@ %locale/@AB_CD@/
+  locale/@AB_CD@/googleAccount.dtd               (%googleAccount.dtd)
+  locale/@AB_CD@/googleAccount.properties               (%googleAccount.properties)
+

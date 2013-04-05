@@ -1,0 +1,773 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+#   Ashok Gudibandla <ashok@synovel.com>
+# Portions created by the Initial Developer are Copyright (C) 2007-2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** 
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay [
+  <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/csCalendarApplets.dtd" > %dtd1;
+]>
+
+<bindings id="csCalendarAppletsBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="agenda">
+    <content> 
+      <xul:stringbundle anonid="agenda-stringbundle"
+                        src="chrome://calendar/locale/csCalendarApplets.properties" />
+      <xul:hbox flex="1">
+        <xul:vbox anonid="agenda-container" xbl:inherits="homekey" flex="1">
+          <xul:groupbox anonid="agenda-config-container" 
+                        class="applet-config-pane" collapsed="true" >
+            <xul:grid>
+              <xul:columns>
+                <xul:column flex="1" />
+                <xul:column flex="5" />
+              </xul:columns>
+              <xul:rows>
+                <xul:row align="center">
+                  <xul:label value="&applets.agenda.calendar.label;" crop="end" flex="1" />
+                  <xul:menulist oncommand="doPrefUpdate('calendar');" sizetopopup="none"
+                                anonid="agenda-config-calendar" flex="1">
+                    <xul:menupopup anonid="agenda-config-calpopup" />
+                  </xul:menulist>
+                </xul:row>
+                <xul:row align="center">
+                  <xul:label value="&applets.agenda.duration.label;" crop="end" flex="1" />
+                  <xul:menulist anonid="agenda-config-duration" sizetopopup="none"
+                                oncommand="doPrefUpdate('duration');" flex="1">
+                    <xul:menupopup>
+                      <xul:menuitem label="&applets.agenda.today;"  value="today"/>
+                      <xul:menuitem label="&applets.agenda.twodays;" value="twodays"/>
+                      <xul:menuitem label="&applets.agenda.week;" value="week"/>
+                      <xul:menuitem label="&applets.agenda.twoweeks;" value="twoweeks"/>
+                      <xul:menuitem label="&applets.agenda.month;" value="month"/>
+                    </xul:menupopup>
+                  </xul:menulist>
+                </xul:row>
+              </xul:rows>
+            </xul:grid>
+            <!-- xul:hbox align="center">
+              <xul:label value="&applets.agenda.numItems.label;"
+                         flex="1" crop="end"/>
+              <xul:textbox type="number"
+                           onchange="doPrefUpdate('numitems')"
+                           anonid="agenda-config-numitems"
+                           min="0" size="2"/>
+              <xul:spacer flex="10"/>
+            </xul:hbox -->
+            <xul:checkbox label="&applets.agenda.showEvents.label;" checked="false" 
+                          anonid="agenda-config-events"
+                          flex="1" crop="end"
+                          oncommand="doPrefUpdate('events')" />
+            <xul:checkbox label="&applets.agenda.showTasks.label;" checked="false" 
+                          anonid="agenda-config-tasks"
+                          flex="1" crop="end"
+                          oncommand="doPrefUpdate('tasks')" />
+            <xul:checkbox style="padding-left: 20px" 
+                          anonid="agenda-config-completed"
+                          flex="1" crop="end"
+                          label="&applets.agenda.showCompleted.label;" checked="false" disabled="true" 
+                          oncommand="doPrefUpdate('completed')" />
+          </xul:groupbox>
+          <xul:label anonid="agenda-status-label" class="applet-status-label"
+                     collapsed="true" crop="end" />
+          <xul:menupopup anonid="applet-menu">
+            <xul:menuitem label="&applets.agenda.newTask;" command="calendar_new_todo_command" 
+                          anonid="agenda-new-task" class="menuitem-iconic agenda-menu"/>
+            <xul:menuitem label="&applets.agenda.newEvent;" command="calendar_new_event_command"
+                          anonid="agenda-new-event" class="menuitem-iconic agenda-menu"/>
+          </xul:menupopup>
+          <xul:richlistbox anonid="agenda-list-box" flex="1" class="homebox-list" 
+                           onblur="event.originalTarget.clearSelection();" />
+        </xul:vbox>
+      </xul:hbox>
+    </content>
+    <implementation>
+      <field name="mPrefBranch">null</field>
+      <field name="mStatusLabel">null</field>
+      <field name="mStringBundle">null</field>
+      <field name="mParent">null</field>
+      <field name="mKey">null</field>
+      <field name="mListBox">null</field>
+      <field name="mStartDate">null</field>
+      <field name="mEndDate">null</field>
+      <field name="mCalendar">null</field>
+      <field name="mCalendarName">null</field>
+      <field name="mShowTasks">true</field>
+      <field name="mShowEvents">true</field>
+      <field name="mGetOperation">null</field>
+      <field name="mDays">null</field>
+      <constructor>
+        <![CDATA[
+          this.mParent = this.parentNode;
+          while (this.mParent && this.mParent.tagName != "homeapplet")
+            this.mParent = this.mParent.parentNode;
+          if (!this.mParent)
+            return;
+
+          this.mKey = this.mParent.getAttribute("homekey");
+          if (!this.mKey)
+            return;
+
+          this.mPrefBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                                       .getService(Components.interfaces.nsIPrefService)
+                                       .getBranch("collab.home.applets." + this.mKey + ".")
+          
+          this.mStringBundle = document.getAnonymousElementByAttribute(this, "anonid", "agenda-stringbundle");
+
+          this.mListBox = document.getAnonymousElementByAttribute(this, "anonid", "agenda-list-box");
+          this.mStatusLabel = document.getAnonymousElementByAttribute(this, "anonid", "agenda-status-label");
+
+          // If the calendar application is not loaded, show error
+          var appInfoClass = Components.classes["@synovel.com/collab/calendar-appinfo;1"];
+          if (appInfoClass) {
+            var calAppInfo =  appInfoClass.getService(Components.interfaces.csIAppInfo);
+            if (calAppInfo && !calAppInfo.enabled) {
+              this.showConfigPane = null; // Disable config button.
+              this.showMessage(this.mStringBundle.getString("collab.calendar.applets.calendar-not-loaded"));
+              return;
+            }
+          }
+
+          try {
+            this.calendarName = this.mPrefBranch.getCharPref("calendar");
+          } catch (ex) { 
+            this.calendarName = null;
+          }
+
+          try {
+            this.mShowTasks = this.mPrefBranch.getBoolPref("tasks");
+            this.mShowEvents = this.mPrefBranch.getBoolPref("events");
+            this.mShowCompleted = this.mPrefBranch.getBoolPref("completed");
+          } catch (ex) { }
+
+          try {
+            this.duration  = this.mPrefBranch.getCharPref("duration");
+          } catch (ex) { 
+            this.duration = null;
+          }
+
+          try {
+            this.mNumItems = this.mPrefBranch.getIntPref("numitems");
+          } catch (ex) {
+            this.mNumItems = 0;
+          }
+
+          this.createTitle();
+          this.refresh();
+        ]]>
+      </constructor>
+      <destructor>
+        <![CDATA[
+          if (this.mCalendar)
+            this.mCalendar.removeObserver(this.mCalObserver);
+        ]]>
+      </destructor>
+      <method name="getMenu">
+        <body>
+          <![CDATA[
+            return document.getAnonymousElementByAttribute(this, "anonid", "applet-menu");
+          ]]>
+        </body>
+      </method>
+      <method name="destroy">
+        <body>
+          <![CDATA[
+            if (this.mCalendar)
+              this.mCalendar.removeObserver(this.mCalObserver);
+          ]]>
+        </body>
+      </method>
+      <method name="showNoItemsMessage">
+        <body>
+          <![CDATA[
+            var calname = this.mCalendarName;
+            if (calname == "-all-calendars-") 
+              calname = this.mStringBundle.getString("collab.agenda.all-calendars")
+            
+            var duration = null;
+            if (this.mDays)
+              duration = document.getAnonymousElementByAttribute(this, "value", this.mDays).getAttribute("label");
+
+            if (calname && duration) 
+              this.showMessage(this.mStringBundle.getFormattedString("collab.agenda.empty", new Array(calname, duration)));
+            else
+              this.showMessage(this.mStringBundle.getString("collab.agenda.simple-empty"));
+          ]]>
+        </body>
+      </method>
+      <method name="refresh">
+        <body>
+          <![CDATA[
+            // If the previous request is pending. Cancel it.
+            if (this.mGetOperation && this.mGetOperation.isPending)
+              this.mGetOperation.cancel(Components.interfaces.calIErrors.OPERATION_CANCELLED);
+              
+            // Clear contents of the listbox
+            while (this.mListBox.getRowCount())
+              this.mListBox.removeItemAt(0);
+
+            // Show no items message, this will be 
+            // collapsed when an items are added
+            this.showNoItemsMessage();
+
+            // Populate the listbox
+            var filter = this.mCalendar.ITEM_FILTER_CLASS_OCCURRENCES;
+            if (this.mShowCompleted) 
+              filter |= this.mCalendar.ITEM_FILTER_COMPLETED_ALL;
+            else
+              filter |= this.mCalendar.ITEM_FILTER_COMPLETED_NO;
+         
+            if (this.mShowTasks)
+              filter |= this.mCalendar.ITEM_FILTER_TYPE_TODO;
+            if (this.mShowEvents)
+              filter |= this.mCalendar.ITEM_FILTER_TYPE_EVENT;
+         
+            this.mRefreshPending = true;
+            this.mGetOperation = this.mCalendar.getItems(filter, this.mNumItems, this.mStartDate, 
+                                    this.mEndDate, this.mGetListener);
+          ]]>
+        </body>
+      </method>
+      <method name="showMessage">
+        <parameter name="aErrorText"/>
+        <body>
+          <![CDATA[
+          if (aErrorText) {
+            this.mStatusLabel.collapsed = false;
+            this.mStatusLabel.value = aErrorText;
+          } else {
+            this.mStatusLabel.collapsed = true;
+            this.mStatusLabel.value = "";
+          }
+          ]]>
+        </body>
+      </method>
+      <property name="duration">
+        <setter>
+          <![CDATA[
+            this.mDays = val || 'today';
+            var dt = now();
+            this.mStartDate = dt.clone();
+           
+            dt.hour = dt.minute = dt.second = 0;
+            switch (this.mDays) {
+              case "twodays":
+                dt.day += 2;
+                break;
+              case "week":
+                dt.day += (7 - dt.weekday);
+                break;
+              case "twoweeks":
+                dt.day += (14 - dt.weekday);
+                break;
+              case "month":
+                dt.day = 1;
+                dt.month += 1;
+                break;
+              default:
+                this.mDays = "today";
+              case "today":
+                dt.day += 1;
+                break;
+            }
+            this.mEndDate = dt.clone();
+          ]]>
+        </setter>
+      </property>
+      <property name="calendarName">
+        <setter>
+          <![CDATA[
+            this.mCalendarName = val || '-all-calendars-';
+
+            if (this.mCalendar) {
+              this.mCalendar.removeObserver(this.mCalObserver);
+              this.mCalendar = null;
+            }
+
+            // Get the calendar if we have a name
+            if (this.mCalendarName) {
+              var cals = getCalendarManager().getCalendars({});
+              for each (var cal in cals) {
+                if (cal.name == this.mCalendarName) 
+                  this.mCalendar = cal;
+              }
+            }
+
+            // Calendar with that name does not exist
+            if (! this.mCalendar) {
+              this.mCalendarName = "-all-calendars-";
+              this.mCalendar = getAgendaCompositeCalendar();
+            }
+
+            this.mCalendar.addObserver(this.mCalObserver);
+          ]]>
+        </setter>
+      </property>
+      <method name="add">
+        <parameter name="aItem" />
+        <body>
+          <![CDATA[
+            var eod = now().clone();
+            eod.day++;
+            eod.hour = eod.minute = eod.second = 0;
+
+            var rawStart = aItem.startDate || aItem.dueDate || aItem.entryDate;
+            if (!rawStart)
+              return;
+
+            var item = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                "richlistitem");
+            item.setAttribute("class", "agenda-item homebox-listitem");
+
+            start = rawStart.getInTimezone(calendarDefaultTimezone());
+            if (eod.compare(start) > 0) {
+              eod.day--;
+              if (eod.compare(start) < 0) 
+                item.setAttribute("today", "true");
+            } else {
+              eod.day++;
+              if (eod.compare(start) > 0) 
+                item.setAttribute("tomorrow", "true");
+              else
+                item.setAttribute("later", "true");
+            }
+
+            var nodes = this.mListBox.children;
+            var added = false;
+            for each (var node in nodes) {
+              var ev = node.event;
+              var st = ev.startDate || ev.dueDate || ev.entryDate;
+              if (st.compare(rawStart) > 0) {
+                this.mListBox.insertBefore(item, node);
+                added = true;
+                break;
+              }
+            }
+            if (!added)
+              this.mListBox.appendChild(item);
+
+            item.event = aItem;
+            this.showMessage(null);
+          ]]>
+        </body>
+      </method>
+      <method name="delete">
+        <parameter name="aItem" />
+        <body>
+          <![CDATA[
+            var items = this.mListBox.children;
+
+            for each (var item in items) {
+              if (item.event.id == aItem.id) {
+                this.mListBox.removeChild(item);
+                break;
+              }
+            }
+
+            if(this.mListBox.getRowCount() == 0) 
+              this.showNoItemsMessage();
+          ]]>
+        </body>
+      </method>
+      <method name="initCalendarsPopup">
+        <body>
+          <![CDATA[
+              var menu  = document.getAnonymousElementByAttribute(this, "anonid", "agenda-config-calendar");
+              menu.removeAllItems();
+              menu.appendItem(this.mStringBundle.getString("collab.agenda.all-calendars"), "-all-calendars-");
+
+              var cals = getCalendarManager().getCalendars({});
+              for each (var cal in cals) 
+                menu.appendItem(cal.name, cal.name);
+          ]]>
+        </body>
+      </method>
+      <method name="doPrefUpdate">
+        <parameter name="aParam"/>
+        <body>
+          <![CDATA[
+            var value = null;
+
+            switch (aParam) {
+              case "calendar":
+                value = document.getAnonymousElementByAttribute(this, "anonid", "agenda-config-calendar").value;
+                this.calendarName = value;
+                if (value && value != "-all-calendars-")
+                  this.mPrefBranch.setCharPref ("calendar", value);
+                else
+                  try { 
+                    this.mPrefBranch.clearUserPref("calendar"); 
+                  } catch (ex) {}
+            
+                this.createTitle();
+                break;
+              case "tasks":
+                value = document.getAnonymousElementByAttribute(this, "anonid", "agenda-config-tasks").checked;
+                this.mShowTasks = value;
+                this.mPrefBranch.setBoolPref ("tasks", value);
+                if (value)
+                  document.getAnonymousElementByAttribute(this, "anonid", "agenda-config-completed")
+                          .removeAttribute("disabled");
+                else
+                  document.getAnonymousElementByAttribute(this, "anonid", "agenda-config-completed")
+                          .setAttribute("disabled", "true");
+                break;
+              case "events":
+                value = document.getAnonymousElementByAttribute(this, "anonid", "agenda-config-events").checked;
+                this.mShowEvents = value;
+                this.mPrefBranch.setBoolPref ("events", value);
+                break;
+              case "completed":
+                value = document.getAnonymousElementByAttribute(this, "anonid", "agenda-config-completed").checked;
+                this.mShowCompleted = value;
+                this.mPrefBranch.setBoolPref ("completed", value);
+                break;
+              case "duration":
+                value = document.getAnonymousElementByAttribute(this, "anonid", "agenda-config-duration").value;
+                this.duration = value;
+                this.mPrefBranch.setCharPref("duration", value);
+            
+                this.createTitle();
+                break;
+              case "numitems":
+                value = document.getAnonymousElementByAttribute(this, "anonid", "agenda-config-numitems").value;
+                this.mNumItems = value;
+                this.mPrefBranch.setIntPref("numitems", value);
+                break;
+            }
+
+            this.refresh();
+          ]]>
+        </body>
+      </method>
+      <method name="createTitle">
+        <body>
+          <![CDATA[
+            var calendar = this.mCalendarName;
+            if (this.mCalendarName == "-all-calendars-" )
+              calendar = this.mStringBundle.getString("collab.agenda.all-calendars");
+
+            var duration = null;
+            if (this.mDays)
+              duration = document.getAnonymousElementByAttribute(this, "value", this.mDays).getAttribute("label");
+
+            var title;
+            if (calendar && duration)
+              title = calendar + ", " + duration;
+            else
+              title = calendar + duration;
+
+            this.mParent.title = title;
+          ]]>
+        </body>
+      </method>
+      <method name="hideConfigPane">
+        <body>
+          <![CDATA[
+            document.getAnonymousElementByAttribute(this, "anonid", "agenda-config-container")
+                    .setAttribute("collapsed", true);
+          ]]>
+        </body>
+      </method>
+      <method name="showConfigPane">
+        <body>
+          <![CDATA[
+            this.initCalendarsPopup();
+
+            document.getAnonymousElementByAttribute(this, "anonid", "agenda-config-duration")
+                    .value = this.mDays;
+            document.getAnonymousElementByAttribute(this, "anonid", "agenda-config-events")
+                    .checked = this.mShowEvents;
+            document.getAnonymousElementByAttribute(this, "anonid", "agenda-config-tasks")
+                    .checked = this.mShowTasks;
+            document.getAnonymousElementByAttribute(this, "anonid", "agenda-config-completed")
+                    .checked = this.mShowCompleted;
+            document.getAnonymousElementByAttribute(this, "anonid", "agenda-config-calendar")
+                    .value = this.mCalendarName;
+
+            if (this.mShowTasks) {
+              document.getAnonymousElementByAttribute(this, "anonid", "agenda-config-completed")
+                      .removeAttribute("disabled");
+            } else {
+              document.getAnonymousElementByAttribute(this, "anonid", "agenda-config-completed")
+                      .setAttribute("disabled", "true");
+            }
+
+            document.getAnonymousElementByAttribute(this, "anonid", "agenda-config-container")
+                    .removeAttribute("collapsed");
+          ]]>
+        </body>
+      </method>
+      <field name="mGetListener">
+        <![CDATA[
+          ({
+            agenda: this,
+
+            QueryInterface: function (aIID) 
+            {
+              if (!aIID.equals(Components.interfaces.calIOperationListener) &&
+                  !aIID.equals(Components.interfaces.nsISupports)) {
+                throw Components.results.NS_ERROR_NO_INTERFACE;
+              }
+
+              return this;
+            },
+
+            onOperationComplete: function (aCalendar, aStatus, aOperationType, aId, aDetail) 
+            { },
+
+            onGetResult: function (aCalendar, aStatus, aItemType, aDetails, aCount, aItems) 
+            {
+              if (!Components.isSuccessCode(aStatus))
+                return;
+
+              for each (var item in aItems) 
+                this.agenda.add(item);
+
+              this.agenda.mListBox.selectedIndex = -1;
+            }
+          })
+        ]]>
+      </field>
+      <field name="mCalObserver">
+        <![CDATA[
+          ({
+            agenda: this,
+            mBatchCount: 0,
+         
+            QueryInterface: function (aIID) 
+            {
+              if (!aIID.equals(Components.interfaces.calIObserver) &&
+                  !aIID.equals(Components.interfaces.calICompositeObserver) &&
+                  !aIID.equals(Components.interfaces.nsISupports)) {
+                throw Components.results.NS_ERROR_NO_INTERFACE;
+              }
+         
+              return this;
+            },
+         
+            onStartBatch: function() 
+            {
+              this.mBatchCount++;
+            },
+
+            onEndBatch: function() 
+            {
+              this.mBatchCount--;
+              if (this.mBatchCount == 0) {
+                this.agenda.refresh();
+              }
+            },
+
+            onLoad: function() 
+            {
+              this.agenda.refresh();
+            },
+
+            onAddItem: function (aItem) {
+              if (this.mBatchCount) {
+                  return;
+              }
+         
+              if (isToDo(aItem)) {
+                if (!this.agenda.mShowTasks) {
+                  return;
+                }
+                if (aItem.isCompleted && !this.agenda.mShowCompleted) {
+                  return;
+                }
+              }
+         
+              var occs = aItem.getOccurrencesBetween(this.agenda.mStartDate,
+                                                     this.agenda.mEndDate,
+                                                     {});
+              for each (var occ in occs)
+                this.agenda.add(occ);
+            },
+
+            onModifyItem: function (aNewItem, aOldItem) 
+            {
+              if (this.mBatchCount) {
+                  return;
+              }
+         
+              if (isToDo(aNewItem) && 
+                  isToDo(aOldItem) && 
+                  !this.agenda.mShowTasks) {
+                return;
+              }
+         
+              var occs;
+              occs = aOldItem.getOccurrencesBetween(this.agenda.mStartDate,
+                                                    this.agenda.mEndDate,
+                                                    {});
+              for each (var occ in occs)
+                this.agenda.delete(occ);
+         
+              if (isToDo(aNewItem)) {
+                if (!this.agenda.mShowTasks) {
+                  return;
+                }
+                if (aNewItem.isCompleted && !this.agenda.mShowCompleted) {
+                  return;
+                }
+              }
+              occs = aNewItem.getOccurrencesBetween(this.agenda.mStartDate,
+                                                    this.agenda.mEndDate,
+                                                    {});
+              for each (var occ in occs)
+                this.agenda.add(occ);
+            },
+
+            onDeleteItem: function (aItem) 
+            {
+              if (this.mBatchCount) {
+                  return;
+              }
+         
+              if (isToDo(aItem)) {
+                if (!this.agenda.mShowTasks) {
+                  return;
+                }
+                if (aItem.isCompleted && !this.agenda.mShowCompleted) {
+                  return;
+                }
+              }
+         
+              var occs = aItem.getOccurrencesBetween(this.agenda.mStartDate,
+                                                     this.agenda.mEndDate,
+                                                     {});
+              for each (var occ in occs) {
+                this.agenda.delete(occ);
+              }
+            },
+         
+            onCalendarAdded: function (aCal) 
+            {
+              this.agenda.refresh();
+            },
+         
+            onCalendarRemoved: function (aCal) 
+            {
+              this.agenda.refresh();
+            },
+         
+            onError: function (aErrNo, aMessage) {},
+
+            onPropertyChanged: function(aCalendar, aName, aValue, aOldValue) {},
+      
+            onPropertyDeleting: function(aCalendar, aName) {},
+
+            onDefaultCalendarChanged: function (aNewDefaultCalendar) {}
+          })
+        ]]>
+      </field>
+    </implementation>
+  </binding>
+
+  <binding id="agenda-item" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+    <content>
+      <xul:hbox flex="1">
+         <xul:vbox>
+               <xul:image src="" width="16" height="16" anonid="agenda-listitem-image"/>
+               <xul:spacer flex="1"/>
+         </xul:vbox>
+         <xul:vbox flex="1">
+           <xul:hbox>
+             <xul:label anonid="agenda-item-times" flex="1" crop="end" />
+           </xul:hbox>
+           <xul:label anonid="agenda-item-title" flex="1" crop="end" />
+         </xul:vbox>
+       </xul:hbox>
+    </content>
+    <implementation>
+      <field name="mEventItem">null</field>
+      <property name="event">
+        <getter>
+          <![CDATA[
+            return this.mEventItem;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            this.mEventItem = val;
+
+            if (isToDo(val))
+               this.setAttribute("todo", "true");
+
+            var titleLabel = document.getAnonymousElementByAttribute(this, "anonid", "agenda-item-title");
+            var timesLabel = document.getAnonymousElementByAttribute(this, "anonid", "agenda-item-times");
+            var formatter = Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
+                                      .getService(Components.interfaces.calIDateTimeFormatter);
+
+            if (this.mEventItem.title)
+              titleLabel.setAttribute("value", this.mEventItem.title);
+
+            var startDate = this.mEventItem.startDate || this.mEventItem.dueDate || this.mEventItem.entryDate;
+            startDate = startDate.getInTimezone(calendarDefaultTimezone());
+
+            var timeString = null;
+            if (this.hasAttribute("today")) 
+              timeString = formatter.formatTime(startDate);
+            else
+              timeString = formatter.formatDateTime(startDate);
+
+            if (this.mEventItem.endDate) {
+              var endDate = this.mEventItem.endDate.getInTimezone(calendarDefaultTimezone());
+              if (endDate.isDate) {
+                var dt = endDate.clone();
+                dt.day --;
+
+                if (dt.day != startDate.day)
+                  timeString += " - " + formatter.formatDateTime(dt);
+              } else if (endDate.day != startDate.day)
+                timeString += " - " + formatter.formatDateTime(endDate);
+              else
+                timeString += " - " + formatter.formatTime(endDate);
+            }
+            timesLabel.setAttribute("value", timeString);
+          ]]>
+        </setter>
+      </property>
+    </implementation>
+  </binding>
+
+</bindings>
+

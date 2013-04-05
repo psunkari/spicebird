@@ -1,0 +1,5 @@
+#filter substitution
+
+collab.jar:
+*   content/collab/preferences/csGeneralPrefs.xul
+% overlay chrome://messenger/content/preferences/general.xul chrome://collab/content/preferences/csGeneralPrefs.xul

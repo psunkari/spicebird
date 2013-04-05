@@ -1,0 +1,5 @@
+#filter substitution
+google-applets-@AB_CD@.jar:
+% locale google-applets @AB_CD@ %locale/@AB_CD@/
+  locale/@AB_CD@/csGoogleApplet.dtd             (%csGoogleApplet.dtd)
+  locale/@AB_CD@/csGoogleApplet.properties      (%csGoogleApplet.properties)

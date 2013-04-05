@@ -1,0 +1,37 @@
+#filter substitution
+
+collab.jar:
+% content collab %content/collab/
+*   content/collab/about.css   
+*   content/collab/about.js    
+*   content/collab/about.xul   
+*   content/collab/collab.js   
+*   content/collab/collab.css
+*   content/collab/collab.xul
+*   content/collab/tabcollab.xml
+*   content/collab/splash.xul  
+*   content/collab/search.xml
+*   content/collab/homebox.css 
+*   content/collab/homebox.js  
+*   content/collab/homebox.xml 
+*   content/collab/applets.js
+*   content/collab/applets.xul  
+*   content/collab/applets.css
+*   content/collab/applets.xml
+*   content/collab/credits.xhtml
+*   content/collab/timezoneSelect.xul
+*   content/collab/timezoneSelect.js
+*   content/collab/statusbarpanel.xml
+*   content/collab/appchooser.xul
+*   content/collab/appchooser.js
+*   content/collab/specialTabs.js
+*   content/collab/specialTabs.xul
+% overlay chrome://collab/content/collab.xul chrome://collab/content/applets.xul
+% overlay chrome://messenger/content/preferences/preferences.xul chrome://collab/content/appchooser.xul
+
+toolkit.jar:
+*+  content/global/customizeToolbar.xul 
+*+  content/global/customizeToolbar.js
+*+  content/global/customizeToolbar.css
+*+  content/global/customizeToolbar.xml
+% style   chrome://global/content/customizeToolbar.xul chrome://collab/skin/collab.css

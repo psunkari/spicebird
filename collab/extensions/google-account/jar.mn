@@ -1,0 +1,6 @@
+google-account.jar:
+% content google-account %content/google-account/ xpcnativewrappers=yes
+% overlay chrome://messenger/content/AccountWizard.xul chrome://google-account/content/GoogleAccountWizard.xul
+*  content/google-account/GoogleAccountWizard.xul                  (content/GoogleAccountWizard.xul)
+*  content/google-account/GoogleAccountWizard.js                  (content/GoogleAccountWizard.js)
+

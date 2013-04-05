@@ -1,0 +1,193 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Code in this file is generated using a computer program.
+ * Please refer to the corresponding telepathy spec for any help in using the
+ * code here.  You may also feel free to contact the original developer for
+ * any related help.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+#include "nsIVariant.idl"
+
+
+%{C++
+#include "glib/gtypes.h"
+%}
+native gpointer(gpointer);
+
+
+
+/*
+ * A struct representing the presence of a contact.
+ */
+[scriptable, uuid(e1b2e533-d200-4c35-aeb5-1b18623963c5)]
+interface csITpSimplePresence : nsISupports
+{
+  /* The presence type, e.g. Connection_Presence_Type_Away. */
+  readonly attribute PRUint32 type;
+  /* The string identifier of the status, e.g. "brb", as defined in the */
+  readonly attribute AUTF8String status;
+  /*  */
+  readonly attribute AUTF8String statusMessage;
+
+  [noscript] gpointer toGLib();
+};
+
+/*
+ * Mapping returned by
+ */
+[scriptable, uuid(66b8308a-524c-4b4d-b0f3-39d1da7ca177)]
+interface csITpSimpleContactPresences : nsISupports
+{
+  /* A contact */
+  readonly attribute PRUint32 contact;
+  /* The contact's presence */
+  readonly attribute nsISupports presence;
+};
+
+/*
+ * A struct containing information about a status.
+ */
+[scriptable, uuid(60376cd0-b358-47ce-bf8f-12fb2fe880e0)]
+interface csITpSimpleStatusSpec : nsISupports
+{
+  /* The type of a presence. This SHOULD NOT be used as a way to set
+          statuses that the client does not recognise (as explained in */
+  readonly attribute PRUint32 type;
+  /* If true, the user can set this status on themselves using */
+  readonly attribute PRBool maySetOnSelf;
+  /* If true, a non-empty message can be set for this status. Otherwise,
+          the empty string is the only acceptable message. */
+  readonly attribute PRBool canHaveMessage;
+
+  [noscript] gpointer toGLib();
+};
+
+/*
+ * A mapping describing possible statuses.
+ */
+[scriptable, uuid(ddf2166e-2cef-46ee-84b4-394ba26c59b3)]
+interface csITpSimpleStatusSpecMap : nsISupports
+{
+  /* The string identifier of this status. */
+  readonly attribute AUTF8String identifier;
+  /* Details of this status. */
+  readonly attribute nsISupports spec;
+};
+
+[scriptable, uuid(efcb0931-6fa8-4b1f-8149-0dadee7b3040)]
+interface csITpConnectionInterfaceSimplePresenceSetPresenceCB : nsISupports
+{
+  void onSetPresenceError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onSetPresenceDone();
+};
+
+[scriptable, uuid(35a4ec1a-34a8-4fcd-9ea3-b293eeb9b8f2)]
+interface csITpConnectionInterfaceSimplePresenceGetPresencesCB : nsISupports
+{
+  void onGetPresencesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetPresencesDone(in nsIArray aPresence);
+};
+
+[scriptable, uuid(4aca76bb-bd07-4950-962b-87800a5126dd)]
+interface csITpConnectionInterfaceSimplePresenceStatusesCB : nsISupports
+{
+  void getPropertyStatusesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyStatusesDone(in nsIArray aStatuses);
+};
+
+[scriptable, uuid(80a5f34c-fe86-4586-a10a-6b36404c82ab)]
+interface csITpConnectionInterfaceSimplePresencePresencesChangedObserver : nsISupports
+{
+  void onPresencesChanged(in nsIArray aPresence);
+};
+
+/*
+ * An access control mode for extended presence items like geolocation.
+        This type isn't actually used by the SimplePresence interface, but
+        it's included here so it can be referenced by rich presence interfaces
+        such as
+ */
+[scriptable, uuid(489928ee-e350-4b4b-aa8a-3e58ec33ab32)]
+interface csITpRichPresenceAccessControl : nsISupports
+{
+  /* The type of access control to apply. */
+  readonly attribute PRUint32 type;
+  /* Any additional information required by the Type. The required
+          type and semantics are defined for each */
+  readonly attribute nsIVariant detail;
+
+  [noscript] gpointer toGLib();
+};
+
+
+
+[scriptable, uuid(a4154510-42c4-4502-b8de-36b4cee00e50)]
+interface csITpConnectionInterfaceSimplePresence : nsISupports
+{
+  void callSetPresence(in AUTF8String aStatus, in AUTF8String aStatusMessage, in csITpConnectionInterfaceSimplePresenceSetPresenceCB cb);
+
+  void callGetPresences(in PRUint32 aContactsCount, [array, size_is(aContactsCount)] in PRUint32 aContacts, in csITpConnectionInterfaceSimplePresenceGetPresencesCB cb);
+
+  void getPropertyStatuses(in csITpConnectionInterfaceSimplePresenceStatusesCB cb);
+
+  void connectToPresencesChanged(in csITpConnectionInterfaceSimplePresencePresencesChangedObserver observer);
+  void disconnectFromPresencesChanged(in csITpConnectionInterfaceSimplePresencePresencesChangedObserver observer);
+
+  const short Connection_Presence_Type_Unset = 0;
+  const short Connection_Presence_Type_Offline = 1;
+  const short Connection_Presence_Type_Available = 2;
+  const short Connection_Presence_Type_Away = 3;
+  const short Connection_Presence_Type_Extended_Away = 4;
+  const short Connection_Presence_Type_Hidden = 5;
+  const short Connection_Presence_Type_Busy = 6;
+  const short Connection_Presence_Type_Unknown = 7;
+  const short Connection_Presence_Type_Error = 8;
+
+  /* A type of access control for Rich_Presence_Access_Control.
+        For most types, the exact access control is given by an associated
+        variant. */
+  const short Rich_Presence_Access_Control_Type_Whitelist = 0;
+  const short Rich_Presence_Access_Control_Type_Publish_List = 1;
+  const short Rich_Presence_Access_Control_Type_Group = 2;
+  const short Rich_Presence_Access_Control_Type_Open = 3;
+
+};

@@ -1,0 +1,158 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "csITpConnection.idl"
+#include "nsIArray.idl"
+#include "nsISupports.idl"
+
+interface csITpContact;
+
+[scriptable, uuid(83e35e53-66be-4aed-b1e1-464dcb0172bb)]
+interface csITpConnectionReadyCB: nsISupports
+{
+  void onConnectionReady();
+  void onConnectionReadyError(in ACString aErrorDomain, in PRUint32 aErrorCode, in AUTF8String aErrorDesc);
+};
+
+[scriptable, uuid(7b8d62d0-ee26-4573-801b-c672a57ff290)]
+interface csITpConnectionInterfacesReadyCB: nsISupports
+{
+  void onConnectionInterfacesReady();
+  void onConnectionInterfacesReadyError(in ACString aErrorDomain, in PRUint32 aErrorCode, in AUTF8String aErrorDesc);
+};
+
+[scriptable, uuid(5509a11c-56ee-45d8-933b-c0e4b50eb2ba)]
+interface csITpContactUpdateObserver: nsISupports
+{
+  void onContactUpdate(in csITpContact aContact, in ACString aUpdateType);
+};
+
+[scriptable, uuid(18c8a0fc-c8d9-45f3-950e-549189030df1)]
+interface csITpContact: nsISupports
+{
+  readonly attribute AUTF8String alias;
+  readonly attribute AUTF8String avatarToken;
+  readonly attribute PRUint32 handle;
+  readonly attribute AUTF8String identifier;
+  readonly attribute AUTF8String presenceMessage;
+  readonly attribute AUTF8String presenceStatus;
+  readonly attribute PRUint32 presenceType;
+  readonly attribute AUTF8String connectionKey;
+
+  const short Contact_Feature_Alias = 0;
+  const short Contact_Feature_Avatar_Token = 1;
+  const short Contact_Feature_Presence = 2;
+  const short Contact_Feature_Count = 3;
+  boolean contactHasFeature(in PRUint32 feature);
+
+  const short Presence_Type_Unset = 0;
+  const short Presence_Type_Offline = 1;
+  const short Presence_Type_Available = 2;
+  const short Presence_Type_Away = 3;
+  const short Presence_Type_Extended_Away = 4;
+  const short Presence_Type_Hidden = 5;
+  const short Presence_Type_Busy = 6;
+  const short Presence_Type_Unknown = 7;
+  const short Presence_Type_Error = 8;
+
+  void addUpdateObserver(in csITpContactUpdateObserver observer);
+  void removeUpdateObserver(in csITpContactUpdateObserver observer);
+};
+
+[scriptable, uuid(d27f056e-454f-4c9b-856d-1af5b58aca26)]
+interface csITpGetContactsByHandleCB: nsISupports
+{
+  void onGetContactsByHandleDone(in nsIArray aContactsList, in PRUint32 aFailedCount,
+                                 [array, size_is(aFailedCount)] in PRUint32 aFailedHandles);
+  void onGetContactsByHandleError(in ACString aErrorDomain, in PRUint32 aErrorCode, in AUTF8String aErrorDesc);
+};
+
+[scriptable, uuid(8591c044-6b06-4b7b-b137-f4840c2d972a)]
+interface csITpUpgradeContactsCB: nsISupports
+{
+};
+
+[scriptable, uuid(1b8b8ce7-a268-450a-8303-eecc0b457a12)]
+interface csITpGetContactsByIdCB: nsISupports
+{
+};
+
+/*
+ * Extensions to the actual telepathy spec
+ * TpContact, GObject properties (after introspection)
+ */
+[scriptable, uuid(791288a7-b339-48b1-bebc-804637f5f78d)]
+interface csITpConnectionUtils: nsISupports
+{
+  void init(in AUTF8String aBusName, in ACString aObjectPath);
+  void callWhenReady(in csITpConnectionReadyCB cb);
+
+  /* 
+   * telepathy-glib does not init the interfaces till we actually get
+   * connected.  So, lets get the interfaces directly from TpConnection.
+   */
+  void callWhenInterfacesReady(in csITpConnectionInterfacesReadyCB cb);
+
+  /* Accessors for introspected values */
+  readonly attribute PRBool connectionReady;
+  readonly attribute PRUint32 selfHandle;
+  readonly attribute PRUint32 status;
+  readonly attribute PRUint32 statusReason;
+
+  /* Parsed from objectPath */
+  readonly attribute AUTF8String protocolName;
+  readonly attribute AUTF8String managerName;
+
+  /* Contacts API */
+  void getContactsByHandle(in PRUint32 aHandlesCount,
+                           [array, size_is(aHandlesCount)] in PRUint32 aHandles,
+                           in PRUint32 aFeaturesCount,
+                           [array, size_is(aFeaturesCount)] in PRUint32 aFeatures,
+                           in csITpGetContactsByHandleCB cb);
+
+  void getContactsById(in PRUint32 aIdsCount,
+                       [array, size_is(aIdsCount)] in string aIds,
+                       in PRUint32 aFeaturesCount,
+                       [array, size_is(aFeaturesCount)] in PRUint32 aFeatures,
+                       in csITpGetContactsByIdCB cb);
+
+  void upgradeContacts(in nsIArray aContacts, in PRUint32 aFeaturesCount,
+                       [array, size_is(aFeaturesCount)] in PRUint32 aFeatures,
+                       in csITpUpgradeContactsCB cb);
+
+};
+

@@ -1,0 +1,144 @@
+
+sidebarheader {
+%ifdef XP_UNIX
+  -moz-appearance: toolbar !important;
+%else
+  -moz-appearance: treeheadercell !important;
+  background: -moz-Dialog url(chrome://collab/skin/images/tab-bkgnd.png) repeat-x;
+  margin-bottom: 0.25em;
+  height: 22px !important;
+%endif
+}
+
+.main-sidebar-tree {
+%ifdef XP_UNIX
+  -moz-appearance: treeview;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+%else
+  -moz-appearance: none;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+%endif
+}
+
+.main-content-tree > treechildren::-moz-tree-row(selected),
+.main-sidebar-tree > treechildren::-moz-tree-row(selected) {
+%ifndef XP_UNIX
+  background: Highlight url(chrome://collab/skin/images/tab-active-bkgnd.png) repeat-x !important;
+  border-width: 1px;
+  border-color: Highlight;
+  border-style: solid !important;
+  -moz-border-radius: 3px;
+%endif
+}
+
+.main-content-tree > treechildren::-moz-tree-cell-text(selected),
+.main-sidebar-tree > treechildren::-moz-tree-cell-text(selected) {
+%ifndef XP_UNIX
+  color: HighlightText;
+%endif
+}
+
+.main-content-tree:not(:focus) > treechildren::-moz-tree-row(selected),
+.main-sidebar-tree:not(:focus) > treechildren::-moz-tree-row(selected) {
+%ifndef XP_UNIX
+  background: -moz-Dialog url(chrome://collab/skin/images/tab-active-bkgnd.png) repeat-x !important;
+  border-color: ThreeDShadow;
+%endif
+}
+
+.main-content-tree:not(:focus) > treechildren::-moz-tree-cell-text(selected),
+.main-sidebar-tree:not(:focus) > treechildren::-moz-tree-cell-text(selected) {
+%ifndef XP_UNIX
+  color: -moz-DialogText;
+%endif
+}
+
+.main-content-splitter {
+%ifdef XP_UNIX
+  border: none;
+  min-height: 5px;
+%else
+  border-width: 1px 0px;
+  border-style: solid;
+  -moz-border-top-colors: -moz-Field;
+  -moz-border-right-colors: -moz-Dialog;
+  -moz-border-bottom-colors: -moz-Dialog;
+  -moz-border-left-colors: -moz-Field;
+  background-color: ThreeDLightShadow !important;
+  min-height: 3px;
+  height: 3px;
+%endif
+}
+
+.main-content-splitter[orient="horizontal"]
+{
+%ifndef XP_UNIX
+  border-width: 0px 1px;
+%endif
+  min-width: 5px;
+}
+
+.main-content-display {
+%ifdef XP_UNIX
+  border: 1px solid ThreeDShadow;
+%endif
+}
+
+.main-content-tree {
+%ifdef XP_UNIX
+  -moz-appearance: treeview;
+%else
+  -moz-appearance: none;
+%endif
+  background: -moz-Field;
+}
+
+.main-content-tree treecol:not([hideheader]) {
+%ifdef XP_UNIX
+  min-height: 24px;
+%else
+  min-height: 22px;
+%endif
+}
+
+.sidebar-splitter {
+%ifndef XP_UNIX
+  min-width: 3px;
+  border-width: 0px 1px !important;
+  -moz-border-top-colors: none;
+  -moz-border-right-colors: none;
+  -moz-border-bottom-colors: none;
+  -moz-border-left-colors: none;
+  border-color: -moz-Field !important;
+  background-color: ThreeDLightShadow;
+  width: 3px;
+%endif
+}
+
+.sidebar-splitter[orient="vertical"] {
+%ifndef XP_UNIX
+  min-height: 3px;
+  border-width: 1px 0px !important;
+  height: 3px;
+%endif
+}
+
+.tree-striping > treechildren::-moz-tree-row(odd) {
+%ifdef XP_UNIX
+  background-color: -moz-oddtreerow;
+%else
+  background-image: url("chrome://collab/skin/images/row.png");
+  background-position: bottom;
+  background-repeat: repeat-x;
+%endif
+}
+
+.tree-striping > treechildren::-moz-tree-row(selected),
+.tree-striping > treechildren::-moz-tree-row(selected, focus) {
+%ifdef XP_UNIX
+  background-color: -moz-cellhighlight;
+%endif
+}
+

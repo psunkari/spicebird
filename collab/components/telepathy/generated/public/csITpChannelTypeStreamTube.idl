@@ -1,0 +1,126 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Code in this file is generated using a computer program.
+ * Please refer to the corresponding telepathy spec for any help in using the
+ * code here.  You may also feel free to contact the original developer for
+ * any related help.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIVariant.idl"
+#include "nsIArray.idl"
+
+
+%{C++
+#include "glib/gtypes.h"
+%}
+native gpointer(gpointer);
+
+
+
+[scriptable, uuid(6c12aa10-032e-48c7-8bb9-aee3e8f6b10b)]
+interface csITpChannelTypeStreamTubeOfferCB : nsISupports
+{
+  void onOfferError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onOfferDone();
+};
+
+[scriptable, uuid(a2ab3298-7bb8-4f8e-95c4-3a92ed862092)]
+interface csITpChannelTypeStreamTubeAcceptCB : nsISupports
+{
+  void onAcceptError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onAcceptDone(in nsIVariant aaddress);
+};
+
+[scriptable, uuid(d62dfd09-a9e1-44cf-bd74-ba7d25fba853)]
+interface csITpChannelTypeStreamTubeNewRemoteConnectionObserver : nsISupports
+{
+  void onNewRemoteConnection(in PRUint32 aHandle, in nsIVariant aConnectionParam, in PRUint32 aConnectionID);
+};
+
+[scriptable, uuid(f3d23e60-bfb4-424a-be34-0ffca54a7ebd)]
+interface csITpChannelTypeStreamTubeNewLocalConnectionObserver : nsISupports
+{
+  void onNewLocalConnection(in PRUint32 aConnectionID);
+};
+
+[scriptable, uuid(b94702ef-515a-4ac3-8fc6-0160a3f9af8c)]
+interface csITpChannelTypeStreamTubeConnectionClosedObserver : nsISupports
+{
+  void onConnectionClosed(in PRUint32 aConnectionID, in AUTF8String aError, in AUTF8String aMessage);
+};
+
+[scriptable, uuid(17735a82-4f14-4d0a-83a4-b941db2f21d7)]
+interface csITpChannelTypeStreamTubeServiceCB : nsISupports
+{
+  void getPropertyServiceError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyServiceDone(in AUTF8String aService);
+};
+
+[scriptable, uuid(1bb1e48b-5f2e-4a22-9341-ce324e935e8a)]
+interface csITpChannelTypeStreamTubeSupportedSocketTypesCB : nsISupports
+{
+  void getPropertySupportedSocketTypesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertySupportedSocketTypesDone(in nsIArray aSupportedSocketTypes);
+};
+
+
+
+[scriptable, uuid(409fa642-3970-4249-881e-ded5db0453cf)]
+interface csITpChannelTypeStreamTube : nsISupports
+{
+  void callOffer(in PRUint32 aaddresstype, in nsIVariant aaddress, in PRUint32 aaccesscontrol, in nsIArray aparameters, in csITpChannelTypeStreamTubeOfferCB cb);
+
+  void callAccept(in PRUint32 aaddresstype, in PRUint32 aaccesscontrol, in nsIVariant aaccesscontrolparam, in csITpChannelTypeStreamTubeAcceptCB cb);
+
+  void connectToNewRemoteConnection(in csITpChannelTypeStreamTubeNewRemoteConnectionObserver observer);
+  void disconnectFromNewRemoteConnection(in csITpChannelTypeStreamTubeNewRemoteConnectionObserver observer);
+
+  void connectToNewLocalConnection(in csITpChannelTypeStreamTubeNewLocalConnectionObserver observer);
+  void disconnectFromNewLocalConnection(in csITpChannelTypeStreamTubeNewLocalConnectionObserver observer);
+
+  void connectToConnectionClosed(in csITpChannelTypeStreamTubeConnectionClosedObserver observer);
+  void disconnectFromConnectionClosed(in csITpChannelTypeStreamTubeConnectionClosedObserver observer);
+
+  void getPropertyService(in csITpChannelTypeStreamTubeServiceCB cb);
+
+  void getPropertySupportedSocketTypes(in csITpChannelTypeStreamTubeSupportedSocketTypesCB cb);
+
+};

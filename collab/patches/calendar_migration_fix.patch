@@ -1,0 +1,22 @@
+diff --git a/calendar/providers/storage/calStorageCalendar.js b/calendar/providers/storage/calStorageCalendar.js
+--- a/calendar/providers/storage/calStorageCalendar.js
++++ b/calendar/providers/storage/calStorageCalendar.js
+@@ -1448,17 +1448,17 @@ calStorageCalendar.prototype = {
+             // A timezones downgrade has happened!
+             throw Components.interfaces.calIErrors.STORAGE_UNKNOWN_TIMEZONES_ERROR;
+         } else if (versionComp > 0) {
+             LOG("timezones have been updated, updating calendar data.");
+ 
+             var zonesToUpdate = [];
+             var getZones = createStatement(
+                 this.mDB,
+-                "SELECT DISTINCT(zone) FROM ("+
++                "SELECT DISTINCT(zone) AS zone FROM ("+
+                 "SELECT recurrence_id_tz AS zone FROM cal_attendees  WHERE recurrence_id_tz IS NOT NULL UNION " +
+                 "SELECT recurrence_id_tz AS zone FROM cal_events     WHERE recurrence_id_tz IS NOT NULL UNION " +
+                 "SELECT event_start_tz   AS zone FROM cal_events     WHERE event_start_tz   IS NOT NULL UNION " +
+                 "SELECT event_end_tz     AS zone FROM cal_events     WHERE event_end_tz     IS NOT NULL UNION " +
+                 "SELECT recurrence_id_tz AS zone FROM cal_properties WHERE recurrence_id_tz IS NOT NULL UNION " +
+                 "SELECT recurrence_id_tz AS zone FROM cal_todos      WHERE recurrence_id_tz IS NOT NULL UNION " +
+                 "SELECT todo_entry_tz    AS zone FROM cal_todos      WHERE todo_entry_tz    IS NOT NULL UNION " +
+                 "SELECT todo_due_tz      AS zone FROM cal_todos      WHERE todo_due_tz      IS NOT NULL" +

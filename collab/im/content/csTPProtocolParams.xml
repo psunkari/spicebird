@@ -1,0 +1,643 @@
+<?xml version="1.0"?>
+<!--
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+# Synovel Software Technologies
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Siva Edpuganti <sivakrishna@synovel.com> (Original Author)
+#   Prasad Sunkari <prasad@synovel.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+-->
+
+<!DOCTYPE tp-bindings [
+  <!ENTITY % csTPProtocolParamsDTD SYSTEM "chrome://im/locale/csTPProtocolParams.dtd"> %csTPProtocolParamsDTD;
+]>
+
+<bindings id="telepathy-protocol-params-bindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="ParamsPanel">
+    <resources>
+      <stylesheet src="chrome://im/skin/csTPProtocolParams.css"/>
+    </resources>
+
+    <content> 
+      <xul:stringbundleset>
+         <xul:stringbundle anonid="bundle_im" src="chrome://im/locale/im.properties"/>
+      </xul:stringbundleset>
+      <xul:vbox flex="1">
+        <xul:tabbox flex="1">
+          <xul:tabs>
+            <xul:tab label="&collab.im.protocolparams.basic;"/>
+            <xul:tab label="&collab.im.protocolparams.advanced;"/>
+          </xul:tabs>
+          <xul:tabpanels flex="1">
+            <xul:tabpanel>
+              <xul:vbox anonid="basic-params-box" flex="1">
+                <xul:grid anonid="basic-params-grid">
+                  <xul:columns>
+                    <xul:column flex="1" />
+                    <xul:column flex="2" />
+                  </xul:columns>
+                  <xul:rows anonid="basic-param-rows">
+                    <xul:row align="center">
+                      <xul:hbox>
+                        <xul:spacer flex="1"/>
+                        <xul:label value="&collab.im.protocolparams.protocol;"/>
+                      </xul:hbox>
+                      <xul:menulist anonid="protocol-list" oncommand="ProtocolSelected()">
+                        <xul:menupopup/>
+                      </xul:menulist>
+                    </xul:row>
+                  </xul:rows>
+                </xul:grid>
+              </xul:vbox>
+            </xul:tabpanel>
+
+            <xul:tabpanel>
+              <xul:vbox anonid="advanced-params-box" flex="1">
+                <xul:grid anonid="advanced-params-grid">
+                  <xul:columns>
+                    <xul:column flex="1" />
+                    <xul:column flex="2" />
+                  </xul:columns>
+                  <xul:rows anonid="advanced-param-rows"/>
+                </xul:grid>
+              </xul:vbox>
+            </xul:tabpanel>
+
+          </xul:tabpanels>
+        </xul:tabbox>
+      </xul:vbox>
+    </content>
+    <implementation>
+      <!--
+        TODO:
+        - When loading from preferences, ('getParamsList' called without calling 'getProtocolList')
+          -> 'password' parameter does not have 'required' flag set.
+          -> new parameter 'auth_gssapi' is listed for 'jabber' protocol'
+
+        - Add functionality to register new accounts
+      -->
+
+      <field name="mBasicParamRows">null</field>
+      <field name="mAdvancedParamRows">null</field>
+      <field name="mProtocolName">null</field>
+      <field name="mManagerName">null</field>
+      <field name="mConnectionManagers">null</field>
+      <field name="mProtocolList">[]</field>
+      <field name="mProtocolMenuList">null</field>
+      <field name="mPrefKey">-1</field>
+      <field name="mLoadFromPrefs">false</field>
+      <field name="mPrefBranch">null</field>
+      <field name="mPrompts">null</field>
+      <field name="mStringBundle">null</field>
+      <field name="mPendingList"/>
+
+      <constructor>
+        <![CDATA[
+          this.mBasicParamRows = document.getAnonymousElementByAttribute(this, "anonid", "basic-param-rows");
+          this.mAdvancedParamRows = document.getAnonymousElementByAttribute(this, "anonid", "advanced-param-rows");
+
+          this.mProtocolMenuList = document.getAnonymousElementByAttribute(this, "anonid", "protocol-list");
+          this.mPrefBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                                       .getService(Components.interfaces.nsIPrefService)
+                                       .getBranch("collab.im.accounts.");
+
+          this.mPrompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                    .getService(Components.interfaces.nsIPromptService);
+
+          this.mStringBundle = document.getAnonymousElementByAttribute(this, "anonid", "bundle_im");
+        ]]>
+      </constructor>
+
+      <method name="GotProtocolList">
+        <parameter name="aManager"/>
+        <body>
+          <![CDATA[
+            var index = this.mPendingList.indexOf(aManager);
+            if (index == -1)
+              return;
+
+            this.mPendingList.splice(index, 1);
+
+            // Check if protocol list is got from all managers
+            if (this.mPendingList.length == 0)
+              this.RefreshProtocolList();
+          ]]>
+        </body>
+      </method>
+
+      <method name="RefreshProtocolList">
+        <body>
+          <![CDATA[
+            var popup = this.mProtocolMenuList.firstChild;
+            while (popup.lastChild)
+              popup.removeChild(popup.lastChild);
+
+            if (this.mProtocolList.length == 0) {
+              this.mPrompts.alert(null, this.getLocaleString('InvalidAccountConfigTitle'),
+                                  this.getLocaleString('ProtocolListEmptyError'));
+              window.close();
+              return;
+            }
+
+            for each (var item in this.mProtocolList) {
+              var menuitem = document.createElementNS(popup.namespaceURI, "menuitem");
+              menuitem.setAttribute("label", item.protocol);
+              menuitem.setAttribute("value", item.protocol);
+              menuitem.setAttribute("manager", item.manager);
+              popup.appendChild(menuitem);
+            }
+
+            this.mProtocolMenuList.selectedIndex = 0;
+            // setting selectedIndex does not trigger 'oncommand'
+            this.ProtocolSelected();
+          ]]>
+        </body>
+      </method>
+
+      <method name="ProtocolSelected">
+        <body>
+          <![CDATA[
+            this.mProtocolName = this.mProtocolMenuList.selectedItem.value;
+            this.mManagerName = this.mProtocolMenuList.selectedItem.getAttribute("manager");
+            this.LoadParameters();
+          ]]>
+        </body>
+      </method>
+
+      <method name="Init">
+        <parameter name="aConnectionManagers" />
+        <parameter name="aPrefKey" />
+        <body>
+          <![CDATA[
+            this.mConnectionManagers = aConnectionManagers;
+
+            if (aPrefKey) {
+              this.mPrefKey = aPrefKey;
+              this.mLoadFromPrefs = true;
+
+              var popup = this.mProtocolMenuList.firstChild;
+
+              // Clear protocol list
+              while (popup.lastChild)
+                popup.removeChild(popup.lastChild);
+
+              // Get manager & protocol from pref and disable popup
+              try {
+                var manager  = this.mPrefBranch.getCharPref(this.mPrefKey + '.manager');
+                var protocol = this.mPrefBranch.getCharPref(this.mPrefKey + '.protocol');
+              } catch(ex) {
+                this.mPrompts.alert(null, this.getLocaleString('InvalidAccountConfigTitle'),
+                                    this.getLocaleString([ 'InvalidAccountConfigMessage', this.mPrefKey ]));
+                window.close();
+                return;
+              }
+
+              var menuitem = document.createElementNS(popup.namespaceURI, "menuitem");
+              menuitem.setAttribute("label", protocol);
+              menuitem.setAttribute("value", protocol);
+              menuitem.setAttribute("manager", manager);
+              popup.appendChild(menuitem);
+
+              this.mProtocolMenuList.disabled = true;
+
+              this.mProtocolMenuList.selectedIndex = 0;
+              // setting selectedIndex does not trigger 'oncommand'
+              this.ProtocolSelected();
+            }
+            else {
+              // Reset protocol list
+              this.mProtocolList = [];
+
+              function GetProtocolListCB(aThisObject, aManager) {
+                this._self = aThisObject;
+                this.manager = aManager;
+              }
+
+              GetProtocolListCB.prototype = {
+                onAddItem: function(aStringItem) {
+                  // Skip the protocol if already listed with another manager
+                  var existingItem = this._self.mProtocolList.filter( function(item) {
+                                                                        return item.protocol == aStringItem;
+                                                                      } )[0];
+                  if (existingItem)
+                    return;
+
+                  this._self.mProtocolList.push({protocol: aStringItem, manager: this.manager});
+                },
+  
+                onError: function(aErrorCode) {
+                  this._self.showError(this._self.getLocaleString('telepathy.error.' + aErrorCode) + '\n\n'
+                                       + this._self.getLocaleString('ProtocolListError', [this.manager]));
+                },
+  
+                onItemsComplete: function() {
+                  this._self.GotProtocolList(this.manager);
+                }
+              }
+
+              this.mPendingList = [];
+              for each (var connectionManager in this.mConnectionManagers) {
+                try {
+                  connectionManager = connectionManager.QueryInterface(Components.interfaces.csITPConnectionManager);
+                  var protocolListCB = new GetProtocolListCB(this, connectionManager.name);
+                  this.mPendingList.push(connectionManager.name);
+                  connectionManager.getProtocolList(protocolListCB);
+                } catch(ex) {
+                  dump('ERROR: Got a non-connection-manager object\n');
+                }
+              }
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="LoadParameters">
+        <body>
+          <![CDATA[
+            this.clear();
+
+            var paramListCB = {
+              dialog: this,
+
+              QueryInterface: function(aIID) {
+                if (!aIID.equals(Components.interfaces.csITPInterfaceListCB) &&
+                    !aIID.equals(Components.interfaces.nsISupports)) {
+                  throw Components.results.NS_ERROR_NO_INTERFACE;
+                }
+
+                return this;
+              },
+
+              onAddItem: function(aSupportsItem) {
+                var csITPConnectionManagerParam = Components.interfaces.csITPConnectionManagerParam;
+                var param = aSupportsItem.QueryInterface(csITPConnectionManagerParam);
+
+                // Skip adding password parameter
+                var paramFlags = param.flags;
+                var isPassword = paramFlags & csITPConnectionManagerParam.PARAM_FLAG_SECRET;
+                if ( (param.flags & csITPConnectionManagerParam.PARAM_FLAG_SECRET) 
+                     || /^password$/i.test(param.name) )
+                  return;
+
+                this.dialog.addParameter(param);
+              },
+
+              onError: function(aErrorCode) {
+                this.dialog.showError(this.dialog.getLocaleString('telepathy.error.' + aErrorCode) + '\n\n'
+                                      + this.dialog.getLocaleString(['ParametersListError',
+                                                                    this.dialog.mProtocolName]));
+              },
+
+              onItemsComplete: function() {
+                // Resize the window.
+                window.sizeToContent();
+                return;
+              }
+            }
+
+            this.mConnectionManagers[this.mManagerName].getParamsList(paramListCB, this.mProtocolName);
+          ]]>
+        </body>
+      </method>
+
+      <method name="SaveParameters">
+        <body>
+          <![CDATA[
+            if (!this.checkForBasicParams()) {
+              this.mPrompts.alert(null, this.getLocaleString('InvalidAccountConfigTitle'),
+                                  this.getLocaleString('BasicParametersMandatoryError'));
+              return false;
+            }
+
+            var key;
+
+            if (!this.mLoadFromPrefs) {
+              // Get the next available key
+              try {
+                for (key=0; key<10000; key++) {
+                  this.mPrefBranch.getCharPref(key.toString() + ".account");
+                }
+              } catch (ex) { };
+
+              this.mPrefKey = key;
+            }
+
+            // Cleanup existing preferences, if any
+            try {
+              this.mPrefBranch.deleteBranch(this.mPrefKey.toString());
+            } catch(ex) { };
+ 
+            this.mPrefBranch.setCharPref(this.mPrefKey + ".manager", this.mManagerName);
+            this.mPrefBranch.setCharPref(this.mPrefKey + ".protocol", this.mProtocolName);
+
+            var paramRows = new Array();
+            // Ignore first(header) row of mBasicParamRows 
+            for (var i = 1; i < this.mBasicParamRows.childNodes.length; i++)
+              paramRows.push(this.mBasicParamRows.childNodes[i]);
+
+            for (var i = 0; i < this.mAdvancedParamRows.childNodes.length; i++)
+              paramRows.push(this.mAdvancedParamRows.childNodes[i]);
+
+            for (var i = 0; i < paramRows.length; i++) {
+
+              var valueCell = paramRows[i].lastChild;
+
+              var signature = valueCell.getAttribute("signature");
+              var param = valueCell.getAttribute("param");
+
+              switch (signature) {
+                case "q":
+                case "n":
+                case "i":
+                  if (valueCell.value)
+                    this.mPrefBranch.setIntPref(this.mPrefKey + "." + param, valueCell.value);
+                  break;
+                case "b":
+                  this.mPrefBranch.setBoolPref(this.mPrefKey + "." + param, valueCell.checked);
+                  break;
+                case "s":
+                  if (valueCell.value)
+                    this.mPrefBranch.setCharPref(this.mPrefKey + "." + param, valueCell.value);
+                  break;
+                default:
+                  if (valueCell.value)
+                    this.mPrefBranch.setCharPref(this.mPrefKey + "." + param, valueCell.value.toString);
+              }
+            }
+
+            // Update observer service when creating a new account
+            if (!this.mLoadFromPrefs) {
+              var observerService = Components.classes["@mozilla.org/observer-service;1"]
+                                              .getService(Components.interfaces.nsIObserverService);
+              observerService.notifyObservers(null, "csIMAccountCreated", this.mPrefKey);
+            }
+
+            return true;
+          ]]>
+        </body>
+      </method>
+
+      <method name="showError">
+        <parameter name="aMessage" />
+        <body>
+          <![CDATA[
+            // TODO: Handle Reporting of Errors
+            Components.utils.reportError(aMessage);
+          ]]>
+        </body>
+      </method>
+
+      <method name="clear">
+        <body>
+          <![CDATA[
+            while(this.mBasicParamRows.lastChild 
+                  // Do not delete the header row
+                  && this.mBasicParamRows.firstChild != this.mBasicParamRows.lastChild)
+              this.mBasicParamRows.removeChild(this.mBasicParamRows.lastChild);
+
+            while(this.mAdvancedParamRows.lastChild)
+              this.mAdvancedParamRows.removeChild(this.mAdvancedParamRows.lastChild);
+
+            // Ensures that window resizes when protocol is changed the first time
+            window.sizeToContent();
+          ]]>
+        </body>
+      </method>
+
+      <method name="getParamName">
+        <parameter name="aParameter" />
+        <body>
+          <![CDATA[
+            var paramName = aParameter.name;
+            var localizedName = this.getLocaleString('im.' + this.mManagerName + '.protocol.params.' + paramName);
+            
+            // If localized string does not exist, make minimal changes
+            if (!localizedName) {
+              // Capitalize first letter
+              localizedName = paramName.charAt(0).toUpperCase() + paramName.substring(1);
+              
+              // Replace '-' with space
+              localizedName = localizedName.replace(/-/g, ' ');
+
+              // Append ':' if the parameter type is not boolean
+              if (aParameter.signature != 'b')
+                localizedName += ':';
+            }
+
+            return localizedName;
+          ]]>
+        </body>
+      </method>
+
+      <method name="getLocaleString">
+        <parameter name="aLocaleCode" />
+        <body>
+          <![CDATA[
+            var localeString = '';
+            try {
+              if (typeof(aLocaleCode) == 'object')
+                localeString = this.mStringBundle.getFormattedString(aLocaleCode[0], aLocaleCode.slice(1));
+              else
+                localeString = this.mStringBundle.getString(aLocaleCode);
+            } catch(ex) {
+              // Ignore if not present
+            }
+
+            return localeString;
+          ]]>
+        </body>
+      </method>
+
+      <method name="addParameter">
+        <parameter name="aParam" />
+        <body>
+          <![CDATA[
+            var paramRow = document.createElementNS(this.namespaceURI, "row");
+            paramRow.setAttribute("align", "center");
+
+            // Create titleCell => hbox > spacer, label
+            var titleCell = document.createElementNS(this.namespaceURI, "hbox");
+
+            var titleCellSpacer = document.createElementNS(this.namespaceURI, "spacer");
+            titleCell.appendChild(titleCellSpacer);
+            titleCellSpacer.setAttribute("flex", "1");
+
+            var titleCellLabel = document.createElementNS(this.namespaceURI, "label");
+            titleCell.appendChild(titleCellLabel);
+
+            titleCellLabel.setAttribute("value", this.getParamName(aParam));
+
+            // Parse the flags
+            var paramFlags = aParam.flags;
+            var csITPConnectionManagerParam = Components.interfaces.csITPConnectionManagerParam;
+            var hasDefault = paramFlags & csITPConnectionManagerParam.PARAM_FLAG_HAS_DEFAULT;
+            var isRequired = paramFlags & csITPConnectionManagerParam.PARAM_FLAG_REQUIRED;
+
+            var defaultValue = null;
+            if (this.mLoadFromPrefs) {
+              var signature = aParam.signature;
+              var param = aParam.name;
+
+              try {
+                switch (signature) {
+                  case "q":
+                  case "n":
+                  case "i":
+                    defaultValue = this.mPrefBranch.getIntPref(this.mPrefKey + "." + param);
+                    break;
+                  case "b":
+                    defaultValue = this.mPrefBranch.getBoolPref(this.mPrefKey + "." + param);
+                    break;
+                  case "s":
+                    defaultValue = this.mPrefBranch.getCharPref(this.mPrefKey + "." + param);
+                    break;
+                  default:
+                    defaultValue = this.mPrefBranch.getCharPref(this.mPrefKey + "." + param);
+                }
+
+                hasDefault = true;
+                
+              } catch(ex) {
+                dump('WARN: Unable to get pref: ' + param + ' for key: ' + this.mPrefKey + '\n');
+
+                defaultValue = '';
+              }
+            }
+            else if (hasDefault) {
+              defaultValue = aParam.defaultValue;
+            }
+
+            // Create valueCell => textbox/checkbox/label
+            var valueCell;
+            switch(aParam.signature) {
+
+              case 's':
+                valueCell = document.createElementNS(this.namespaceURI, "textbox");
+
+                if (hasDefault)
+                  valueCell.setAttribute("value", defaultValue);
+
+                break;
+
+              case 'q':
+              case 'n':
+              case 'i':
+                valueCell = document.createElementNS(this.namespaceURI, "textbox");
+
+                valueCell.setAttribute("type", "number");
+
+                if (hasDefault)
+                  valueCell.setAttribute("value", defaultValue);
+
+                break;
+
+              case 'b':
+                valueCell = document.createElementNS(this.namespaceURI, "checkbox");
+
+                // TODO: Default values set by telepathy-haze for checkbox parameters are NOT correct
+                function isValid(aParam, loadFromPrefs) {
+                  // Default value is valid if loading from preferences
+                  if (loadFromPrefs)
+                    return true;
+
+                  // Default values provided by conn. manager, for all checkboxes, are invalid
+                  if (aParam.signature == 'b')
+                    return false;
+                }
+
+                valueCell.setAttribute("checked", hasDefault && (defaultValue == true)
+                                                  && isValid(aParam, this.mLoadFromPrefs));
+
+                valueCell.setAttribute("label", this.getParamName(aParam));
+                titleCell.setAttribute("collapsed", "true");
+                break;
+
+              default:
+                valueCell = document.createElementNS(this.namespaceURI, "label");
+                valueCell.setAttribute("value", this.getParamName(aParam));
+                if (hasDefault)
+                  valueCell.value = valueCell.value + "(default)";
+            }
+
+            // Store param name & signature to use when saving parameters.
+            valueCell.setAttribute("param", aParam.name);
+            valueCell.setAttribute("signature", aParam.signature);
+
+            paramRow.appendChild(titleCell);
+            paramRow.appendChild(valueCell);
+
+            // Disable account parameter if loading from preferences
+            if ( this.mLoadFromPrefs && /^account$/i.test(aParam.name) ) {
+              valueCell.setAttribute("disabled", true);
+            }
+
+            // Add to corresponding tab based on 'required' param flag
+            if (isRequired)
+              this.mBasicParamRows.appendChild(paramRow);
+            else
+              this.mAdvancedParamRows.appendChild(paramRow);
+          ]]>
+        </body>
+      </method>
+
+      <method name="checkForBasicParams">
+        <body>
+          <![CDATA[
+            var completed = true;
+
+            for (var i = 1; i < this.mBasicParamRows.childNodes.length && completed; i++) {
+              var valueCell = this.mBasicParamRows.childNodes[i].lastChild;
+
+              var signature = valueCell.getAttribute("signature");
+              var param = valueCell.getAttribute("param");
+
+              if (!valueCell.value && (valueCell.checked == undefined 
+                                       || valueCell.checked.toString() == '')) {
+                completed = false;
+                break;
+              }
+            }
+
+            return completed;
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+</bindings>
+

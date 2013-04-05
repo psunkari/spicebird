@@ -1,0 +1,57 @@
+diff --git a/mailnews/local/src/nsLocalMailFolder.cpp b/mailnews/local/src/nsLocalMailFolder.cpp
+--- a/mailnews/local/src/nsLocalMailFolder.cpp
++++ b/mailnews/local/src/nsLocalMailFolder.cpp
+@@ -3251,17 +3251,25 @@ nsMsgLocalMailFolder::GetIncomingServerT
+         else
+         {
+ #ifdef HAVE_MOVEMAIL
+           // next try "movemail"
+           url->SetScheme(NS_LITERAL_CSTRING("movemail"));
+           rv = accountManager->FindServerByURI(url, PR_FALSE, getter_AddRefs(server));
+           if (NS_SUCCEEDED(rv) && server)
+             mType.AssignLiteral("movemail");
++          else
+ #endif /* HAVE_MOVEMAIL */
++          {
++            // next try "blog"
++            url->SetScheme(NS_LITERAL_CSTRING("blog"));
++            rv = accountManager->FindServerByURI(url, PR_FALSE, getter_AddRefs(server));
++            if (NS_SUCCEEDED(rv) && server)
++              mType.AssignLiteral("blog");
++          }
+         }
+       }
+     }
+   }
+   aServerType = mType;
+ }
+ 
+ nsresult nsMsgLocalMailFolder::CreateBaseMessageURI(const nsACString& aURI)
+diff --git a/mailnews/local/src/nsLocalUtils.cpp b/mailnews/local/src/nsLocalUtils.cpp
+--- a/mailnews/local/src/nsLocalUtils.cpp
++++ b/mailnews/local/src/nsLocalUtils.cpp
+@@ -118,16 +118,24 @@ nsGetMailboxServer(const char *uriStr, n
+     // if we can't find a pop server, maybe it's a local message 
+     // in an imap hierarchy. look for an imap server.
+     if (NS_FAILED(rv)) 
+     {
+       aUrl->SetScheme(NS_LITERAL_CSTRING("imap"));
+       rv = accountManager->FindServerByURI(aUrl, PR_FALSE,
+                                     getter_AddRefs(server));
+     }
++
++    // it could even be a blog server
++    if (NS_FAILED(rv))
++    {
++      aUrl->SetScheme(NS_LITERAL_CSTRING("blog"));
++      rv = accountManager->FindServerByURI(aUrl, PR_FALSE,
++                                    getter_AddRefs(server));
++    }
+   }
+   if (NS_SUCCEEDED(rv)) 
+   {
+     NS_ADDREF(*aResult = server);
+     return rv;
+   }
+ 
+ // if you fail after looking at all "pop3", "movemail" and "none" servers, you fail.

@@ -1,0 +1,171 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Code in this file is generated using a computer program.
+ * Please refer to the corresponding telepathy spec for any help in using the
+ * code here.  You may also feel free to contact the original developer for
+ * any related help.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+
+
+%{C++
+#include "glib/gtypes.h"
+%}
+native gpointer(gpointer);
+
+
+
+/*
+ * A struct (message ID, timestamp in seconds since
+        1970-01-01 00:00 UTC, sender's handle, message type, flags, text)
+        representing a pending text message, as returned by
+ */
+[scriptable, uuid(87842e58-6e57-4057-99d3-244dc17bc4ae)]
+interface csITpPendingTextMessage : nsISupports
+{
+  readonly attribute PRUint32 identifier;
+  readonly attribute PRUint32 unixTimestamp;
+  readonly attribute PRUint32 sender;
+  readonly attribute PRUint32 messageType;
+  readonly attribute PRUint32 flags;
+  readonly attribute AUTF8String text;
+
+  [noscript] gpointer toGLib();
+};
+
+[scriptable, uuid(1a2328fb-ff4b-4b5a-9dbb-f38bb4db6710)]
+interface csITpChannelTypeTextAcknowledgePendingMessagesCB : nsISupports
+{
+  void onAcknowledgePendingMessagesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onAcknowledgePendingMessagesDone();
+};
+
+[scriptable, uuid(f1f12989-1a14-41b7-8b79-816e1dd97b5b)]
+interface csITpChannelTypeTextGetMessageTypesCB : nsISupports
+{
+  void onGetMessageTypesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetMessageTypesDone(in PRUint32 aAvailableTypesCount, [array, size_is(aAvailableTypesCount)] in PRUint32 aAvailableTypes);
+};
+
+[scriptable, uuid(50051a43-1a6f-4cc0-9ac6-150589b3b626)]
+interface csITpChannelTypeTextListPendingMessagesCB : nsISupports
+{
+  void onListPendingMessagesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onListPendingMessagesDone(in nsIArray aPendingMessages);
+};
+
+[scriptable, uuid(94f9f2ee-f329-4132-ae45-1526293ad90e)]
+interface csITpChannelTypeTextLostMessageObserver : nsISupports
+{
+  void onLostMessage();
+};
+
+[scriptable, uuid(2118d560-fe64-46ae-9ecf-5a0e1f2d4035)]
+interface csITpChannelTypeTextReceivedObserver : nsISupports
+{
+  void onReceived(in PRUint32 aID, in PRUint32 aTimestamp, in PRUint32 aSender, in PRUint32 aType, in PRUint32 aFlags, in AUTF8String aText);
+};
+
+[scriptable, uuid(ad28c66c-0d38-466a-bd95-395f5d90b14e)]
+interface csITpChannelTypeTextSendCB : nsISupports
+{
+  void onSendError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onSendDone();
+};
+
+[scriptable, uuid(30e924db-70d6-49fa-87a2-3537cfb7eb46)]
+interface csITpChannelTypeTextSendErrorObserver : nsISupports
+{
+  void onSendError(in PRUint32 aError, in PRUint32 aTimestamp, in PRUint32 aType, in AUTF8String aText);
+};
+
+[scriptable, uuid(710d7ee1-3fe4-47f9-8de4-c9a0fd58158d)]
+interface csITpChannelTypeTextSentObserver : nsISupports
+{
+  void onSent(in PRUint32 aTimestamp, in PRUint32 aType, in AUTF8String aText);
+};
+
+
+
+[scriptable, uuid(495e071a-432a-49bd-84f6-fa8df73b6723)]
+interface csITpChannelTypeText : nsISupports
+{
+  void callAcknowledgePendingMessages(in PRUint32 aIDsCount, [array, size_is(aIDsCount)] in PRUint32 aIDs, in csITpChannelTypeTextAcknowledgePendingMessagesCB cb);
+
+  void callGetMessageTypes(in csITpChannelTypeTextGetMessageTypesCB cb);
+
+  void callListPendingMessages(in PRBool aClear, in csITpChannelTypeTextListPendingMessagesCB cb);
+
+  void connectToLostMessage(in csITpChannelTypeTextLostMessageObserver observer);
+  void disconnectFromLostMessage(in csITpChannelTypeTextLostMessageObserver observer);
+
+  void connectToReceived(in csITpChannelTypeTextReceivedObserver observer);
+  void disconnectFromReceived(in csITpChannelTypeTextReceivedObserver observer);
+
+  void callSend(in PRUint32 aType, in AUTF8String aText, in csITpChannelTypeTextSendCB cb);
+
+  const short Channel_Text_Send_Error_Unknown = 0;
+  const short Channel_Text_Send_Error_Offline = 1;
+  const short Channel_Text_Send_Error_Invalid_Contact = 2;
+  const short Channel_Text_Send_Error_Permission_Denied = 3;
+  const short Channel_Text_Send_Error_Too_Long = 4;
+  const short Channel_Text_Send_Error_Not_Implemented = 5;
+
+  void connectToSendError(in csITpChannelTypeTextSendErrorObserver observer);
+  void disconnectFromSendError(in csITpChannelTypeTextSendErrorObserver observer);
+
+  void connectToSent(in csITpChannelTypeTextSentObserver observer);
+  void disconnectFromSent(in csITpChannelTypeTextSentObserver observer);
+
+  /* The type of message. */
+  const short Channel_Text_Message_Type_Normal = 0;
+  const short Channel_Text_Message_Type_Action = 1;
+  const short Channel_Text_Message_Type_Notice = 2;
+  const short Channel_Text_Message_Type_Auto_Reply = 3;
+  const short Channel_Text_Message_Type_Delivery_Report = 4;
+
+  const short Channel_Text_Message_Flags_Truncated = 1;
+  const short Channel_Text_Message_Flags_Non_Text_Content = 2;
+  const short Channel_Text_Message_Flags_Scrollback = 4;
+  const short Channel_Text_Message_Flags_Rescued = 8;
+
+};

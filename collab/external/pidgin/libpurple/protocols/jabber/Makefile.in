@@ -1,0 +1,149 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+#   Sunil Mohan Adapa <sunil@synovel.com>
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** 
+
+DEPTH		= ../../../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+LIBRARY_NAME	= jabber
+FORCE_SHARED_LIB = 1
+VISIBILITY_FLAGS =
+NO_DIST_INSTALL = 1
+NO_INSTALL	= 1
+
+ifeq ($(OS_ARCH),WINNT)
+OS_LIBS		+=				\
+		$(call EXPAND_LIBNAME,ws2_32)	\
+		$(NULL)
+
+SHARED_LIBRARY_LIBS =                                                   \
+                win32/$(LIB_PREFIX)jabberwin32_s.$(LIB_SUFFIX)          \
+                $(NULL)
+endif
+
+EXTRA_DSO_LIBS	= purple
+EXTRA_DSO_LDOPTS +=			\
+		$(CS_GLIB_LIBS)		\
+		$(CS_LIBXML_LIBS)	\
+		$(CS_SASL_LIBS)		\
+		$(LIBS_DIR)		\
+		$(EXTRA_DSO_LIBS)	\
+		$(NULL)
+
+CSRCS		=			\
+		$(JABBERSOURCES)	\
+		libxmpp.c		\
+		$(NULL)
+
+JABBERSOURCES	= 			\
+		adhoccommands.c		\
+		auth.c			\
+		buddy.c			\
+		bosh.c			\
+		caps.c			\
+		chat.c			\
+		data.c			\
+		disco.c			\
+		google.c		\
+		ibb.c			\
+		iq.c			\
+		jabber.c		\
+		jingle/jingle.c 	\
+		jingle/content.c 	\
+		jingle/iceudp.c 	\
+		jingle/rawudp.c 	\
+		jingle/rtp.c 		\
+		jingle/session.c 	\
+		jingle/transport.c 	\
+		jutil.c			\
+		message.c		\
+		oob.c			\
+		parser.c		\
+		ping.c			\
+		presence.c		\
+		roster.c		\
+		si.c			\
+		xdata.c			\
+		pep.c			\
+		useravatar.c		\
+		usermood.c		\
+		usernick.c		\
+		usertune.c		\
+		$(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+CFLAGS		+=			\
+		-DHAVE_CONFIG_H		\
+		-DHAVE_CYRUS_SASL	\
+		-I$(srcdir)/../..	\
+		-I$(srcdir)/../../..	\
+		$(CS_GLIB_CFLAGS)	\
+		$(CS_LIBXML_CFLAGS)	\
+		$(CS_SASL_CFLAGS)	\
+		$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+CFLAGS		+=			\
+		-I$(srcdir)/win32	\
+		-I$(srcdir)/../../win32	\
+		$(NULL)
+endif
+
+MKDIR := mkdir
+export::
+	@if test ! -d jingle; then $(MKDIR) jingle; fi;
+
+libs:: $(SHARED_LIBRARY)
+	$(INSTALL) $^ $(DIST)/bin/purple/plugins
+
+install:: $(SHARED_LIBRARY)
+	$(SYSINSTALL) $(IFLAGS2) $^ $(DESTDIR)$(mozappdir)/purple/plugins
+
+ifeq ($(OS_ARCH), WINNT)
+libs:: $(CS_SASL_DLLS) $(CS_SASL_MODULE_DIR)
+	$(INSTALL) $(CS_SASL_DLLS) $(DIST)/bin
+	$(INSTALL) -D $(DIST)/bin/sasl2
+	$(INSTALL) $(CS_SASL_MODULE_DIR)/* $(DIST)/bin/sasl2
+
+install:: $(CS_SASL_DLLS) $(CS_SASL_MODULE_DIR)
+	$(SYSINSTALL) $(IFLAGS) $(CS_SASL_DLLS) $(DESTDIR)$(mozappdir)
+	$(SYSINSTALL) $(IFLAGS) $(CS_SASL_MODULE_DIR)/* $(DESTDIR)$(mozappdir)/bin/sasl2
+endif

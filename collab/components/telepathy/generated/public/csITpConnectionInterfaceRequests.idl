@@ -1,0 +1,160 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Code in this file is generated using a computer program.
+ * Please refer to the corresponding telepathy spec for any help in using the
+ * code here.  You may also feel free to contact the original developer for
+ * any related help.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+#include "nsIVariant.idl"
+
+
+%{C++
+#include "glib/gtypes.h"
+%}
+native gpointer(gpointer);
+
+
+
+/*
+ * Enough details of a channel that clients can work out how to dispatch
+        or handle it.
+ */
+[scriptable, uuid(c2a7dfef-23cd-4e93-ab3a-c7b534f5edfc)]
+interface csITpChannelDetails : nsISupports
+{
+  /* The object path of the channel. */
+  readonly attribute ACString channel;
+  /*  */
+  readonly attribute nsIArray properties;
+
+  [noscript] gpointer toGLib();
+};
+
+[scriptable, uuid(4d7979f7-3cca-4c42-b8cd-275939f1dd79)]
+interface csITpConnectionInterfaceRequestsCreateChannelCB : nsISupports
+{
+  void onCreateChannelError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onCreateChannelDone(in ACString aChannel, in nsIArray aProperties);
+};
+
+[scriptable, uuid(cb9c518d-9f04-4804-bf4f-eacb74903b70)]
+interface csITpConnectionInterfaceRequestsEnsureChannelCB : nsISupports
+{
+  void onEnsureChannelError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onEnsureChannelDone(in PRBool aYours, in ACString aChannel, in nsIArray aProperties);
+};
+
+[scriptable, uuid(2062f993-3a8b-4b54-9547-a6dd5000ffe0)]
+interface csITpConnectionInterfaceRequestsNewChannelsObserver : nsISupports
+{
+  void onNewChannels(in nsIArray aChannels);
+};
+
+[scriptable, uuid(2ae9792f-64e5-4417-a1d7-29257276bdc5)]
+interface csITpConnectionInterfaceRequestsChannelsCB : nsISupports
+{
+  void getPropertyChannelsError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyChannelsDone(in nsIArray aChannels);
+};
+
+[scriptable, uuid(84850b14-3724-4d9a-9026-0530aeb92f29)]
+interface csITpConnectionInterfaceRequestsChannelClosedObserver : nsISupports
+{
+  void onChannelClosed(in ACString aRemoved);
+};
+
+/*
+ * 
+ */
+[scriptable, uuid(94abaffa-a1f6-404e-ac27-2ebfa0a2d353)]
+interface csITpChannelClass : nsISupports
+{
+  /* A D-Bus interface name, followed by a dot and a D-Bus property name. */
+  readonly attribute AUTF8String key;
+  /* The value of the property. */
+  readonly attribute nsIVariant value;
+};
+
+/*
+ * 
+ */
+[scriptable, uuid(f644b57d-e4db-4572-9260-db35ed4b6b0b)]
+interface csITpRequestableChannelClass : nsISupports
+{
+  /*  */
+  readonly attribute nsIArray fixedProperties;
+  /*  */
+  void getAllowedProperties(out PRUint32 aAllowedPropertiesCount, [array, size_is(aAllowedPropertiesCount)] out string aAllowedProperties);
+
+  [noscript] gpointer toGLib();
+};
+
+[scriptable, uuid(8c8e741e-6158-49d4-904e-4b2b87f42b1f)]
+interface csITpConnectionInterfaceRequestsRequestableChannelClassesCB : nsISupports
+{
+  void getPropertyRequestableChannelClassesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyRequestableChannelClassesDone(in nsIArray aRequestableChannelClasses);
+};
+
+
+
+[scriptable, uuid(c4ce4601-ccd6-47aa-975e-0bfa72fd835f)]
+interface csITpConnectionInterfaceRequests : nsISupports
+{
+  void callCreateChannel(in nsIArray aRequest, in csITpConnectionInterfaceRequestsCreateChannelCB cb);
+
+  void callEnsureChannel(in nsIArray aRequest, in csITpConnectionInterfaceRequestsEnsureChannelCB cb);
+
+  void connectToNewChannels(in csITpConnectionInterfaceRequestsNewChannelsObserver observer);
+  void disconnectFromNewChannels(in csITpConnectionInterfaceRequestsNewChannelsObserver observer);
+
+  /* A list of all the channels which currently exist on this connection.
+        Change notification is via the */
+  void getPropertyChannels(in csITpConnectionInterfaceRequestsChannelsCB cb);
+
+  void connectToChannelClosed(in csITpConnectionInterfaceRequestsChannelClosedObserver observer);
+  void disconnectFromChannelClosed(in csITpConnectionInterfaceRequestsChannelClosedObserver observer);
+
+  void getPropertyRequestableChannelClasses(in csITpConnectionInterfaceRequestsRequestableChannelClassesCB cb);
+
+};

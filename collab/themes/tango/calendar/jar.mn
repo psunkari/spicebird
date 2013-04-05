@@ -1,0 +1,28 @@
+#filter substition
+lightning.jar:
+% skin lightning classic/1.0 %skin/lightning/
+    skin/lightning/lightning-widgets.css
+
+calendar.jar:
+% skin calendar classic/1.0 %skin/calendar/
+*+  skin/calendar/calendar-views.css 
+*+  skin/calendar/calendar-task-view.css 
+*+  skin/calendar/calendar-unifinder.css 
+*   skin/calendar/calendar-toolbar.css 
+*   skin/calendar/csCalendarOverlay.css   
+*   skin/calendar/event-filter.css
+*+  skin/calendar/calendar-management.css
+*   skin/calendar/csCalendarApplets.css
+    skin/calendar/22x22/office-calendar.png     (22x22/office-calendar.png)
+    skin/calendar/22x22/x-appointment.png       (22x22/x-appointment.png)
+    skin/calendar/22x22/calendar-toolbar.png    (22x22/calendar-toolbar.png)
+    skin/calendar/22x22/calendar-navigation.png (22x22/calendar-navigation.png)
+    skin/calendar/16x16/appointment-new.png     (16x16/appointment-new.png)
+    skin/calendar/16x16/task.png	        (16x16/task.png)
+    skin/calendar/16x16/office-calendar.png     (16x16/office-calendar.png)
+    skin/calendar/16x16/office-calendar-new.png	(16x16/office-calendar-new.png)
+    skin/calendar/16x16/previous-day.png        (16x16/previous-day.png)
+    skin/calendar/16x16/next-day.png            (16x16/next-day.png)
+    skin/calendar/16x16/task-new.png            (16x16/task-new.png)
+    skin/calendar/event-title-background.png    (images/event-title-background.png)
+*+  skin/calendar/widgets/minimonth.css

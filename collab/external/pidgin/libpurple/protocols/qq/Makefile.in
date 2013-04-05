@@ -1,0 +1,115 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+#   Sunil Mohan Adapa <sunil@synovel.com>
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** 
+
+DEPTH		= ../../../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+LIBRARY_NAME	= qq
+FORCE_SHARED_LIB = 1
+VISIBILITY_FLAGS =
+NO_DIST_INSTALL = 1
+NO_INSTALL	= 1
+
+ifeq ($(OS_ARCH),WINNT)
+OS_LIBS		+=				\
+		$(call EXPAND_LIBNAME,ws2_32)	\
+		$(NULL)
+endif
+
+EXTRA_DSO_LIBS	= purple
+EXTRA_DSO_LDOPTS +=			\
+		$(CS_GLIB_LIBS)		\
+		$(LIBS_DIR)		\
+		$(EXTRA_DSO_LIBS)	\
+		$(NULL)
+
+CSRCS		=			\
+		$(QQSOURCES)		\
+		$(NULL)
+
+QQSOURCES	=			\
+		buddy_info.c		\
+		buddy_memo.c		\
+		buddy_list.c		\
+		buddy_opt.c		\
+		char_conv.c		\
+		qq_crypt.c		\
+		file_trans.c		\
+		group.c			\
+		group_internal.c	\
+		group_im.c		\
+		group_info.c		\
+		group_join.c		\
+		group_opt.c		\
+		qq_define.c		\
+		im.c			\
+		qq_process.c		\
+		qq_base.c		\
+		packet_parse.c		\
+		qq.c			\
+		qq_network.c		\
+		send_file.c		\
+		qq_trans.c		\
+		utils.c			\
+		$(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+CFLAGS		+=			\
+		-DHAVE_CONFIG_H		\
+		-I$(srcdir)/../..	\
+		-I$(srcdir)/../../..	\
+		$(CS_GLIB_CFLAGS)	\
+		$(NULL)
+
+#		-DQQ_BUDDY_ICON_DIR=\"$(datadir)/pixmaps/purple/buddy_icons/qq\" \
+
+ifeq ($(OS_ARCH),WINNT)
+CFLAGS		+=			\
+		-I$(srcdir)/../../win32	\
+		$(NULL)
+endif
+
+libs:: $(SHARED_LIBRARY)
+	$(INSTALL) $^ $(DIST)/bin/purple/plugins
+
+install:: $(SHARED_LIBRARY)
+	$(SYSINSTALL) $(IFLAGS2) $^ $(DESTDIR)$(mozappdir)/purple/plugins

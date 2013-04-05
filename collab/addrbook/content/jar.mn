@@ -1,0 +1,7 @@
+#filter substition
+
+messenger.jar:
+*  content/messenger/addressbook/csContactsOverlay.xul 
+*  content/messenger/addressbook/csContactsOverlay.js 
+% style   chrome://global/content/customizeToolbar.xul chrome://messenger/skin/addressbook/contacts.css
+% style   chrome://global/content/customizeToolbar.xul chrome://messenger/skin/addressbook/addressbook.css

@@ -1,0 +1,4 @@
+collab.jar:
+* content/collab/migration/csMigrationOverlay.xul
+% overlay chrome://messenger/content/migration/migration.xul  chrome://collab/content/migration/csMigrationOverlay.xul
+* content/collab/migration/csMigration.js

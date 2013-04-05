@@ -1,0 +1,56 @@
+#filter substition
+
+classic.jar:
+% skin messenger classic/1.0 %skin/classic/messenger/
+*+   skin/classic/messenger/primaryToolbar.css
+*+   skin/classic/messenger/subscribe.css
+*+   skin/classic/messenger/messenger.css
+*+   skin/classic/messenger/msgSelectOffline.css
+*+   skin/classic/messenger/editContactOverlay.css
+*+   skin/classic/messenger/folderPane.css
+*+   skin/classic/messenger/folderMenus.css
+*+   skin/classic/messenger/messageHeader.css
+*+   skin/classic/messenger/messengercompose/messengercompose.css
+*+   skin/classic/messenger/smime/msgCompSMIMEOverlay.css
+*    skin/classic/messenger/csMailnewsOverlay.css
+*    skin/classic/messenger/mailnews-applets.css
+*    skin/classic/messenger/csRSSApplet.css
+*    skin/classic/messenger/start.css
+*+   skin/classic/messenger/searchBox.css
+*+   skin/classic/messenger/accountCentral.css
+*+   skin/classic/messenger/mailWindow1.css
+     skin/classic/messenger/images/msg-headers.png                     (images/msg-headers.png)
++    skin/classic/messenger/images/starredContact48.png                (images/starredContact48.png)
+     skin/classic/messenger/22x22/mailnews-toolbar.png                 (22x22/mailnews-toolbar.png)
+     skin/classic/messenger/22x22/mail-mark-junk.png                   (22x22/mail-mark-junk.png)
+     skin/classic/messenger/22x22/internet-mail.png                    (22x22/internet-mail.png)
+     skin/classic/messenger/22x22/manage-filters.png                   (22x22/manage-filters.png)
+     skin/classic/messenger/22x22/account-new.png                      (22x22/account-new.png)
+     skin/classic/messenger/22x22/folder-subscriptions.png             (22x22/folder-subscriptions.png)
+     skin/classic/messenger/22x22/mail-message-search.png              (22x22/mail-message-search.png)
+     skin/classic/messenger/22x22/network-offline.png                  (22x22/network-offline.png)
+     skin/classic/messenger/22x22/mail-message-new.png                 (22x22/mail-message-new.png)
+     skin/classic/messenger/22x22/preferences-system.png               (22x22/preferences-system.png)
+     skin/classic/messenger/22x22/internet-news-reader.png             (22x22/internet-news-reader.png)
+     skin/classic/messenger/16x16/go-down.png                          (16x16/go-down.png)
+     skin/classic/messenger/16x16/go-next.png                          (16x16/go-next.png)
+     skin/classic/messenger/16x16/go-previous.png                      (16x16/go-previous.png)
+     skin/classic/messenger/16x16/go-up.png                            (16x16/go-up.png)
+     skin/classic/messenger/16x16/mail-forward.png                     (16x16/mail-forward.png)
+     skin/classic/messenger/16x16/mail-message-new.png                 (16x16/mail-message-new.png)
+     skin/classic/messenger/16x16/mail-reply-all.png                   (16x16/mail-reply-all.png)
+     skin/classic/messenger/16x16/mail-reply-sender.png                (16x16/mail-reply-sender.png)
+     skin/classic/messenger/16x16/mail-mark-junk.png                   (16x16/mail-mark-junk.png)
+     skin/classic/messenger/16x16/network-error.png                    (16x16/network-error.png)
+     skin/classic/messenger/16x16/face-devilish.png                    (16x16/face-devilish.png)
+     skin/classic/messenger/16x16/x-mail-unread.png                    (16x16/x-mail-unread.png)
+     skin/classic/messenger/16x16/internet-mail.png                    (16x16/internet-mail.png)
+     skin/classic/messenger/16x16/folder.png                           (16x16/folder.png)
+     skin/classic/messenger/16x16/x-rss-feeds.png                      (16x16/x-rss-feeds.png)
+     skin/classic/messenger/16x16/view-refresh.png                     (16x16/view-refresh.png)
++    skin/classic/messenger/starContact.png                            (16x16/starContact.png)
++    skin/classic/messenger/contactStarred.png                         (16x16/contactStarred.png)
++    skin/classic/messenger/16x16/folder-pane.png                      (16x16/folder-pane.png)
++    skin/classic/messenger/icons/server.png                           (16x16/server-icons.png)
++    skin/classic/messenger/messengercompose/format-buttons.png        (16x16/format-buttons.png)
++    skin/classic/messenger/messengercompose/compose-toolbar.png       (22x22/compose-toolbar.png)

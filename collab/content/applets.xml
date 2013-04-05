@@ -1,0 +1,774 @@
+<?xml version="1.0"?>
+<!--
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+# Synovel Software Technologies
+# Portions created by the Initial Developer are Copyright (C) 2007-2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Prasad Sunkari <prasad@synovel.com> (Original Author)
+#   Ashok Gudibandla <ashok@synovel.com> 
+#   Sivakrishna Edpuganti <sivakrishna@synovel.com> 
+#   Fred Jendrzejewski <fred.jen@web.de>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# Code for the clock applet is taken from
+# http://developer.mozilla.org/en/docs/Canvas_tutorial:Basic_animations
+# under the following license.
+# 
+# Copyright (c) 2005, Kamiel Martinet
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+# 
+# ***** END LICENSE BLOCK ***** 
+-->
+
+<!DOCTYPE dateTimeApplet SYSTEM "chrome://collab/locale/applets.dtd">
+
+<bindings id="CollabAppletsBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="datetime">
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox anonid="aclocks-container" 
+                  class="overflow-hidden"
+                  xbl:inherits="homekey" flex="1">
+          <xul:groupbox anonid="aclock-config-container" 
+                        class="applet-config-pane" collapsed="true">
+            <xul:grid flex="1">
+              <xul:columns>
+                <xul:column flex="1"/>
+              </xul:columns>
+              <xul:rows>
+                <xul:row align="center">
+                <xul:hbox>
+                  <xul:spacer flex="10"/>
+                  <xul:button label="&collab.dateTimeApplet.add.label;"
+                              accesskey="&collab.dateTimeApplet.add.accesskey;"
+                              oncommand="addNewClock()" 
+                              flex="1" crop="end"/>
+                  <xul:button anonid="aclock-del-button"
+                              label="&collab.dateTimeApplet.delete.label;"
+                              accesskey="&collab.dateTimeApplet.delete.accesskey;"
+                              oncommand="deleteSelectedClock()" 
+                              flex="1" crop="end"/>
+                  <xul:spacer flex="10"/>
+                </xul:hbox>
+                </xul:row>
+                <xul:row>
+                  <xul:checkbox anonid="config-show-seconds"
+                                label="&collab.dateTimeApplet.showSeconds.label;"
+                                accesskey="&collab.dateTimeApplet.showSeconds.accesskey;"
+                                checked="false" flex="1" crop="end"
+                                oncommand="doPrefUpdate('seconds')" />
+                </xul:row>
+                <xul:row>
+                  <xul:checkbox anonid="config-show-date"
+                                label="&collab.dateTimeApplet.showDate.label;"
+                                accesskey="&collab.dateTimeApplet.showDate.accesskey;"
+                                flex="1" crop="end" checked="true" 
+                                oncommand="doPrefUpdate('date')" />
+                </xul:row>
+              </xul:rows>
+            </xul:grid>
+          </xul:groupbox>
+        </xul:vbox>
+      </xul:hbox>
+    </content>
+    <implementation>
+      <field name="mTimeoutHandler">null</field>
+      <field name="mShowSeconds">false</field>
+      <field name="mShowDate">true</field>
+      <field name="mShowLocale">true</field>
+      <field name="mPrefBranch">null</field>
+      <field name="mClocksContainer">null</field>
+      <field name="mParent">null</field>
+      <field name="mKey">null</field>
+      <field name="mConfigContainer">null</field>
+      <field name="mNumClocks">null</field>
+      <field name="mTimezones">null</field>
+      <field name="mBackgrounds">null</field>
+      <field name="mCurrentHBox">null</field>
+      <field name="mSelectedClock">null</field>
+      <constructor>
+        <![CDATA[  
+          this.mParent = this.parentNode;
+          while (this.mParent && this.mParent.tagName != "homeapplet")
+            this.mParent = this.mParent.parentNode;
+          if (!this.mParent)
+            return;
+
+          this.mKey = this.mParent.getAttribute("homekey");
+          if (!this.mKey)
+            return;
+
+          this.mPrefBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                                       .getService(Components.interfaces.nsIPrefService)
+                                       .getBranch("collab.home.applets." + this.mKey + ".");
+          
+          this.mClocks = new Array;
+          this.mTimezones = new Array;
+          this.mClocksContainer = document.getAnonymousElementByAttribute(this, "anonid", "aclocks-container");
+          this.mConfigContainer = document.getAnonymousElementByAttribute(this, "anonid", "aclock-config-container")
+
+          this.mBackgrounds = {};
+          var img;
+          var self = this;
+          img = new Image();
+          img.src = "chrome://collab/skin/images/morning.png";
+          img.onload = function() { self.updateClocks(); };
+          this.mBackgrounds[0] = img;
+
+          img = new Image();
+          img.src = "chrome://collab/skin/images/noon.png";
+          img.onload = function() { self.updateClocks(); };
+          this.mBackgrounds[1] = img;
+
+          img = new Image();
+          img.src = "chrome://collab/skin/images/evening.png";
+          img.onload = function() { self.updateClocks(); };
+          this.mBackgrounds[2] = img;
+
+          img = new Image();
+          img.src = "chrome://collab/skin/images/night.png";
+          img.onload = function() { self.updateClocks(); };
+          this.mBackgrounds[3] = img;
+
+          try {
+            this.mShowSeconds = this.mPrefBranch.getBoolPref("seconds");
+          } catch (ex) {};
+
+          try {
+            this.mShowDate = this.mPrefBranch.getBoolPref("date");
+          } catch (ex) {};
+
+          try {
+            var timezones = this.mPrefBranch.getCharPref("timezones");
+
+            this.mTimezones = timezones.split(",");
+            this.mNumClocks = this.mTimezones.length;
+          } catch(ex) {
+            // Initialize preference values for 1 clock with default timezone.
+            this.mTimezones.push("--default--");
+            this.mNumClocks = 1;
+            this.doPrefUpdate("timezones");
+          }
+
+          this.createClocks(true);
+
+          var self = this;
+          this.mTimeoutHandler = function timeoutHandler() { self.updateClocks() };
+          this.updateClocks();
+        ]]>
+      </constructor>
+      <method name="createClocks">
+        <parameter name="aInit" />
+        <body>
+          <![CDATA[
+            for (var i=0; i<this.mNumClocks; i++)
+              this.addClock(this.mTimezones[i], i, aInit);
+          ]]>
+        </body>
+      </method>
+      <method name="addClock">
+        <parameter name="aTzId" />
+        <parameter name="aKey" />
+        <parameter name="aInit" />
+        <body>
+          <![CDATA[
+            var spacer = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul","spacer");
+            spacer.setAttribute("flex", "1");
+
+            var clock = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul","aclock");
+            clock.setAttribute("style", "-moz-binding: url('chrome://collab/content/applets.xml#analog-clock')");
+
+            this.mClocks.push(clock);
+
+            // Two column layout.  TODO: Configurable multicolumn layout
+            if (this.mCurrentHBox) {
+              this.mCurrentHBox.appendChild(clock);
+              this.mCurrentHBox.appendChild(spacer);
+              this.mCurrentHBox = null;
+            } else {
+              var hbox = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                  "hbox");
+              var spacer2 = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                     "spacer");
+              spacer2.setAttribute("flex", "1");
+              hbox.appendChild(spacer);
+              hbox.appendChild(clock);
+              hbox.appendChild(spacer2);
+              this.mClocksContainer.appendChild(hbox);
+              this.mCurrentHBox = hbox;
+            }
+
+            clock.init(this, aTzId, aKey);
+            if (!aInit)
+              clock.update();
+          ]]>
+        </body>
+      </method>
+      <method name="updateClocks">
+        <body>
+          <![CDATA[
+            // Return if timeout handler not set - update in progress
+            if (!this.mTimeoutHandler)
+              return;
+
+            var now = new Date();
+            if (this.mShowSeconds) {
+              setTimeout(this.mTimeoutHandler, 1000 - now.getMilliseconds());
+            } else {
+              setTimeout(this.mTimeoutHandler, (60 - now.getSeconds()) * 1000);
+            }
+
+            var nodes = this.mClocks;
+            for each (var node in nodes)
+              if (node)
+                node.update();
+          ]]>
+        </body>
+      </method>
+      <method name="hideConfigPane">
+        <body>
+          <![CDATA[
+            this.mConfigContainer.setAttribute("collapsed", "true");
+
+            var nodes = this.mClocks;
+            for each (var node in nodes)
+              if (node)
+                node.hidePopup();
+
+            if (this.mSelectedClock) {
+               this.mSelectedClock.selected = false;
+               this.mSelectedClock = null;
+            }
+          ]]>
+        </body>
+      </method>
+      <method name="showConfigPane">
+        <body>
+          <![CDATA[
+            document.getAnonymousElementByAttribute(this, "anonid", "config-show-seconds")
+                    .checked = this.mShowSeconds;
+            document.getAnonymousElementByAttribute(this, "anonid", "config-show-date")
+                    .checked = this.mShowDate;
+            this.mConfigContainer.removeAttribute("collapsed");
+
+            var nodes = this.mClocks;
+            for each (var node in nodes)
+              if (node)
+                node.showPopup();
+
+            this.updateDeleteButton();
+          ]]>
+        </body>
+      </method>
+      <method name="addNewClock">
+        <body>
+          <![CDATA[
+            // Set default timezone for new clock.
+            this.mTimezones.push("--default--");
+            this.doPrefUpdate("timezones");
+            this.mNumClocks++;
+
+            // Add clock to applet
+            this.addClock(this.mTimezones[this.mNumClocks-1], this.mNumClocks-1, false);
+
+            // In configuration view now.
+            this.mClocks[this.mNumClocks-1].showPopup();
+
+            this.updateDeleteButton();
+          ]]>
+        </body>
+      </method>
+      <method name="deleteSelectedClock">
+        <body>
+          <![CDATA[
+            this.deleteClock(this.mSelectedClock.mKey);
+            this.mSelectedClock = null;
+            this.updateDeleteButton();
+          ]]>
+        </body>
+      </method>
+      <method name="doPrefUpdate">
+        <parameter name="aParam" />
+        <body>
+          <![CDATA[
+            var value = null;
+
+            switch (aParam) {
+              case "timezones":
+                var timezones;
+
+                if (this.mTimezones.length) {
+                  timezones = this.mTimezones[0];
+
+                  for (var i=1; i<this.mTimezones.length; i++)
+                    timezones = timezones + "," + this.mTimezones[i];
+                }
+                else
+                  break;
+
+                try {
+                  this.mPrefBranch.setCharPref('timezones', timezones);
+                } catch(ex) {
+                  dump('error updating preference: timezones\n');
+                }
+
+                break;
+
+              case "seconds":
+                value = document.getAnonymousElementByAttribute(this, "anonid", "config-show-seconds").checked;
+                this.mShowSeconds = value;
+                this.mPrefBranch.setBoolPref ("seconds", value);
+                this.updateClocks();
+                break;
+
+              case "date":
+                value = document.getAnonymousElementByAttribute(this, "anonid", "config-show-date").checked;
+                this.mShowDate = value;
+                this.mPrefBranch.setBoolPref ("date", value);
+                this.updateClocks();
+                break;
+            }
+          ]]>
+        </body>
+      </method>
+      <method name="deleteClock">
+        <parameter name="aKey" />
+        <body>
+          <![CDATA[
+            var clockTz = this.mTimezones.splice(aKey, 1);
+            this.mNumClocks--;
+            this.doPrefUpdate("timezones");
+
+            // Stop clocks update
+            this.mTimeoutHandler = null;
+
+            var child;
+            var container = this.mClocksContainer;
+            while ((child = container.lastChild) && (child.getAttribute("anonid") != "aclock-config-container"))
+              container.removeChild(child);
+            // initialize currentHBox to null
+            this.mCurrentHBox = null;
+
+            // Re-initialize clocks array
+            this.mClocks.length = 0;
+
+            this.createClocks();
+            var self = this;
+            this.mTimeoutHandler = function timeoutHandler() { self.updateClocks() };
+            this.updateClocks();
+
+            this.showConfigPane();
+          ]]>
+        </body>
+      </method>
+      <method name="updatedTimezone">
+        <parameter name="aKey" />
+        <parameter name="aTzId" />
+        <body>
+          <![CDATA[
+            this.mTimezones[aKey] = aTzId;
+            this.doPrefUpdate("timezones");
+          ]]>
+        </body>
+      </method>
+      <method name="updateDeleteButton">
+        <body>
+          <![CDATA[
+            var button = document.getAnonymousElementByAttribute(this,
+                                    "anonid", "aclock-del-button");
+            if (this.mSelectedClock && this.mNumClocks > 1)
+              button.removeAttribute("disabled");
+            else
+              button.setAttribute("disabled", "true");
+          ]]>
+        </body>
+      </method>
+    </implementation>
+      
+   <handlers>
+      <handler event="click">
+        <![CDATA[
+          var inConfigMode = this.mConfigContainer.getAttribute("collapsed");
+          if ( inConfigMode && inConfigMode == "true" )
+            return;
+          if (event.originalTarget.tagName.indexOf("canvas") == -1)
+            return;
+
+          var canvas = event.originalTarget;
+
+          if (this.mSelectedClock)
+            this.mSelectedClock.selected = false;
+
+          this.mSelectedClock = canvas.parentNode.parentNode.parentNode;
+          this.mSelectedClock.selected = true;
+
+          this.updateDeleteButton();
+        ]]>
+      </handler>
+   </handlers>
+  </binding>
+
+  <binding id="analog-clock">
+    <content> 
+      <xul:hbox anonid="aclock-outerbox" flex="1" style="min-height: 150px !important;">
+        <xul:box orient="vertical" align="center">
+          <xul:hbox anonid="aclock-text-buttons">
+          </xul:hbox>
+          <html:canvas anonid="aclock-canvas" width="150" min-width="150" max-width="150"
+                       style="height: 150px !important; width: 150px !important;"/>
+          <xul:hbox anonid="aclock-text-labels">
+            <xul:spacer flex="1" />
+            <xul:vbox>
+              <xul:spacer flex="1" />
+              <xul:label class="aclock-day" anonid="aclock-day" value="Sunday" />
+              <xul:label class="aclock-month" anonid="aclock-month" value="August" />
+              <xul:spacer flex="1" />
+            </xul:vbox>
+            <xul:label class="aclock-date" anonid="aclock-date" value="20" />
+            <xul:spacer flex="1" />
+          </xul:hbox>
+          <xul:label anonid="aclock-timezone-label"
+                     class="aclock-timezone-label"
+                     value="&collab.dateTimeApplet.localtime.label;"
+                     flex="1" collapsed="false"/>  
+          <xul:menulist anonid="aclock-timezone-menulist"
+                        class="aclock-timezone-menu"
+                        value="&collab.dateTimeApplet.localtime.label;" 
+                        style="width: 120px !important;"
+                        flex="1" collapsed="true" oncommand="doChangeTimezone(event)">
+            <xul:menupopup anonid="aclock-timezone-popup" onpopupshowing="addTimezones(this)">
+              <xul:menuitem anonid="aclock-timezone-default"
+                            value="--default--"
+                            label="&collab.dateTimeApplet.localtime.label;"/>
+              <xul:menuseparator anonid="aclock-timezone-separator"/>
+              <xul:menuitem value="--more--"
+                            label="&collab.dateTimeApplet.more.label;"/>
+            </xul:menupopup>
+          </xul:menulist>
+        </xul:box>
+      </xul:hbox>
+    </content>
+    <implementation>
+      <field name="mTimezone">null</field>
+      <field name="mParentApplet">null</field>
+      <field name="mITimezones">null</field>
+      <field name="mTimezoneLabel">null</field>
+      <field name="mTimezoneMenulist">null</field>
+      <field name="mTimezonePopup">null</field>
+      <field name="mKey">null</field>
+      <field name="mSelectedIndex">null</field>
+      <field name="mIsSelected">false</field>
+      <property name="selected" onget="return this.mIsSelected;">
+         <setter><![CDATA[
+            if (val)
+               document.getAnonymousElementByAttribute(this,"anonid", "aclock-outerbox")
+                  .setAttribute("style", "border: 1px solid red");
+            else 
+               document.getAnonymousElementByAttribute(this,"anonid", "aclock-outerbox")
+                  .removeAttribute("style");
+
+            return this.mIsSelected = val;
+          ]]>
+         </setter>
+      </property>
+
+      <method name="init">
+        <parameter name="applet" />
+        <parameter name="aTzId" />
+        <parameter name="aKey" />
+        <body>
+          <![CDATA[
+            this.mKey = aKey;
+
+            this.mParentApplet = applet;
+
+            this.mITimezones = Components.classes["@synovel.com/collab/collab/timezones;1"]
+                                         .getService().QueryInterface(Components.interfaces.csITimezones);
+
+            this.mTimezoneLabel = document.getAnonymousElementByAttribute(this, "anonid", "aclock-timezone-label");
+            this.mTimezoneMenulist = document.getAnonymousElementByAttribute(this, "anonid", "aclock-timezone-menulist");
+            this.mTimezonePopup = document.getAnonymousElementByAttribute(this, "anonid", "aclock-timezone-popup");
+
+            this.mTimezone = aTzId;
+            this.setTimezoneLabel();
+          ]]>
+        </body>
+      </method>
+      <method name="showPopup">
+        <body>
+          <![CDATA[
+            this.mTimezoneLabel.setAttribute("collapsed", "true");
+
+            this.mTimezoneMenulist.removeAttribute("collapsed");
+            this.addTimezones(this.mTimezonePopup);
+
+            this.mTimezoneMenulist.selectedIndex = this.mSelectedIndex;
+          ]]>
+        </body>
+      </method>
+      <method name="hidePopup">
+        <body>
+          <![CDATA[
+            this.mTimezoneMenulist.setAttribute("collapsed", "true");
+
+            this.mTimezoneLabel.removeAttribute("collapsed");
+            this.setTimezoneLabel();
+          ]]>
+        </body>
+      </method>
+      <method name="setTimezoneLabel">
+        <body>
+          <![CDATA[
+            var label = document.getAnonymousElementByAttribute(this, "anonid", "aclock-timezone-label");
+
+            // Set the label value to mTimezone name
+            if (this.mTimezone == "--default--")
+            {
+              var defaultMenuItem = document.getAnonymousElementByAttribute(this, "anonid", "aclock-timezone-default");
+              if (defaultMenuItem)
+                label.value = defaultMenuItem.label;
+            }
+            else
+            {
+              var names = this.mTimezone.split('/');
+              label.value = names[names.length - 1];
+              label.value = label.value.replace(/_/g, " ");
+            }
+          ]]>
+        </body>
+      </method>
+      <method name="doChangeTimezone">
+        <parameter name="aEvent" />
+        <body>
+          <![CDATA[
+            var tzId = aEvent.target.value;
+
+            if (tzId == "--more--") {
+               this.mTimezoneMenulist.selectedIndex = this.mSelectedIndex;
+               openTimezoneSelectDialog();
+            }
+            else {
+              this.mTimezone = tzId;
+              this.mParentApplet.updatedTimezone(this.mKey, this.mTimezone);
+              this.mSelectedIndex = aEvent.target.selectedIndex;
+
+              this.update();
+            }
+          ]]>
+        </body>
+      </method>
+      <method name="addTimezones">
+        <parameter name="aElement" />
+        <body>
+          <![CDATA[
+            var popup = aElement;
+
+            // Clear existing values
+            var child;
+            while (popup.lastChild && 
+                   (child = popup.lastChild.previousSibling) && 
+                   (child.getAttribute("anonid") != 
+                                    "aclock-timezone-separator"))
+            {
+              popup.removeChild(child);
+            }
+
+            var defaultTzIds = this.mITimezones.getDefaultTimezoneIds({});
+
+            if (this.mTimezone == "--default--")
+              this.mSelectedIndex = 0;
+            else
+              this.mSelectedIndex = -1;
+
+            for (var i=0; i<defaultTzIds.length; i++) {
+              var item = document.createElement('menuitem');
+              item.setAttribute('value', defaultTzIds[i]);
+              item.setAttribute('class', "aclock-timezone-menu");
+
+              // If not default, set mSelectedIndex
+              if (this.mTimezone == defaultTzIds[i])
+                this.mSelectedIndex = i+2; // 'Localtime', 'Separator'
+
+              var names = defaultTzIds[i].split('/');
+              var label = names[names.length - 1];
+              label = label.replace(/_/g, " ");
+              item.setAttribute('label', label);
+
+              if (popup.lastChild)
+                popup.insertBefore(item, popup.lastChild);
+              else
+                popup.appendChild(item);
+            }
+          ]]>
+        </body>
+      </method>
+      <method name="update">
+        <body>
+          <![CDATA[
+            var self = this;
+            var now = new Date();
+
+            // Get time according to the timezone set.
+            if (this.mTimezone != "--default--") {
+              var offset = this.mITimezones.getTimezoneOffset(this.mTimezone);
+              now.setTime(now.getTime() + offset * 1000 
+                            + now.getTimezoneOffset() * 60 * 1000);
+            }
+
+            var sec = now.getSeconds();
+            var min = now.getMinutes();
+            var hr  = now.getHours();
+
+            var img;
+            
+            if (hr >=13 && hr < 19)
+              img = this.mParentApplet.mBackgrounds[2];
+            else if (hr >=5 && hr < 11)
+              img = this.mParentApplet.mBackgrounds[0];
+            else if (hr >=11 && hr < 14)
+              img = this.mParentApplet.mBackgrounds[1];
+            else
+              img = this.mParentApplet.mBackgrounds[3];
+            hr = hr >= 12 ? hr - 12 : hr;
+            
+            var ctx = document.getAnonymousElementByAttribute(self, "anonid", "aclock-canvas")
+                              .getContext("2d");
+
+            ctx.save();
+
+            ctx.clearRect(0, 0, 150, 150);
+
+            if (img.complete) 
+              ctx.drawImage(img, 5, 5);
+
+            ctx.translate(75, 75);
+            ctx.scale(0.4, 0.4);
+            ctx.rotate(-Math.PI/2);
+            ctx.strokeStyle = "#3465A4";
+            ctx.lineWidth = 8;
+            ctx.lineCap = "square";
+      
+            ctx.save();
+            for (var i=0;i<12;i++){
+              ctx.beginPath();
+              ctx.rotate(Math.PI/6);
+              ctx.moveTo(120,0);
+              ctx.lineTo(130,0);
+              ctx.stroke();
+            }
+            ctx.restore();
+        
+            ctx.fillStyle = "black";
+            ctx.strokeStyle = "black";
+        
+            // Draw Hours 
+            ctx.save();
+            ctx.rotate( hr*(Math.PI/6) + (Math.PI/360)*min + (Math.PI/21600)*sec )
+            ctx.lineWidth = 12;
+            ctx.beginPath();
+            ctx.moveTo(-9, 0);
+            ctx.lineTo(80, 0);
+            ctx.stroke();
+            ctx.restore();
+        
+            // Draw Minutes
+            ctx.save();
+            ctx.rotate( (Math.PI/30)*min + (Math.PI/1800)*sec )
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            ctx.moveTo(-15, 0);
+            ctx.lineTo(112, 0);
+            ctx.stroke();
+            ctx.restore();
+ 
+            if (this.mParentApplet.mShowSeconds) {
+              ctx.save();
+              ctx.rotate(sec * Math.PI/30);
+              ctx.strokeStyle = "#a40000";
+              ctx.fillStyle = "#a40000";
+              ctx.lineWidth = 6;
+ 
+              ctx.beginPath();
+              ctx.moveTo(-30,0);
+              ctx.lineTo(120,0);
+              ctx.stroke();
+              ctx.restore();
+            }
+ 
+            // Restore the original context
+            ctx.restore();
+ 
+            if (this.mParentApplet.mShowDate) {
+              var month = now.toLocaleFormat ("%B");
+              var day = now.toLocaleFormat ("%A");
+              var date = now.getDate();
+
+              document.getAnonymousElementByAttribute(this, "anonid", "aclock-month")
+                      .setAttribute("value", month);
+              document.getAnonymousElementByAttribute(this, "anonid", "aclock-day")
+                      .setAttribute("value", day);
+              document.getAnonymousElementByAttribute(this, "anonid", "aclock-date")
+                      .setAttribute("value", date);
+              document.getAnonymousElementByAttribute(this, "anonid", "aclock-text-labels")
+                      .removeAttribute("collapsed");
+            } else {
+              document.getAnonymousElementByAttribute(this, "anonid", "aclock-text-labels")
+                      .setAttribute("collapsed", "true");
+            }
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+</bindings>
+

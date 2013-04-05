@@ -1,0 +1,39 @@
+im.jar:
+% content imcontent %content/imcontent/ contentaccessible=yes
+% override chrome://imcontent/skin/chatBrowser.css chrome://im/skin/chatBrowser.css
+% content im %content/im/ xpcnativewrappers=yes
+* content/im/csIMOverlay.xul
+* content/im/csIMOverlay.js
+* content/im/chatWindow.xul
+* content/im/chatWindow.js
+* content/im/imWidgets.css
+* content/im/imChatWindow.xml
+* content/im/imConnectionsPopup.xml
+* content/im/imContactsList.xml
+* content/im/imContactEditDialog.js
+* content/im/imContactEditDialog.xul
+* content/im/imContactInfoDialog.js
+* content/im/imContactInfoDialog.xul
+* content/im/conversationManager.js
+* content/im/csAddressbookOverlay.xul
+* content/im/csAddressbookOverlay.js
+* content/im/csMsgHdrViewOverlay.xul
+* content/im/csMsgHdrViewOverlay.js
+* content/im/imAccountSetup.xul
+* content/im/imAccountSetup.js
+* content/im/csTPProtocolParams.xml
+* content/im/csTPProtocolParams.css
+* content/im/imQuickStatus.xml
+* content/im/csIMPreferences.xul
+* content/im/csIMPreferences.js
+* content/im/csChatHistory.xul
+* content/im/csChatHistory.xml
+* content/im/csChatHistory.js
+* content/im/csChatHistory.css
+* content/im/telepathy/telepathy.js         (telepathy/telepathy.js)
+* content/im/telepathy/ui.js                (telepathy/ui.js)
+* content/im/telepathy/functions.js         (telepathy/functions.js)
+* content/im/telepathy/accounts.js          (telepathy/accounts.js)
+* content/im/telepathy/utils.js             (telepathy/utils.js)
+% style   chrome://global/content/customizeToolbar.xul chrome://im/skin/imContacts.css
+% overlay chrome://messenger/content/preferences/preferences.xul chrome://im/content/csIMPreferences.xul

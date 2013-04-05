@@ -1,0 +1,60 @@
+diff --git a/chrome/src/nsChromeRegistry.cpp b/chrome/src/nsChromeRegistry.cpp
+--- a/chrome/src/nsChromeRegistry.cpp
++++ b/chrome/src/nsChromeRegistry.cpp
+@@ -1262,16 +1262,56 @@ nsChromeRegistry::CheckForNewChrome()
+                      getter_AddRefs(chromeDir));
+     if (NS_FAILED(rv))
+       return rv;
+     rv = NS_NewSingletonEnumerator(getter_AddRefs(chromeML), chromeDir);
+     if (NS_FAILED(rv))
+       return rv;
+   }
+ 
++  /* Check for applications.manifest in the user profile directory */
++  PRBool appManifestInUserProfile = PR_FALSE;
++  nsCOMPtr<nsIFile> appManifest;
++  rv = dirSvc->Get(NS_APP_PROFILE_DIR_STARTUP, NS_GET_IID(nsIFile),
++                   getter_AddRefs(appManifest));
++  if (NS_SUCCEEDED(rv) && appManifest) {
++    rv = appManifest->AppendNative(NS_LITERAL_CSTRING(
++                                     "applications.manifest"));
++    if (NS_SUCCEEDED(rv)) {
++      PRBool exists;
++      if (NS_SUCCEEDED(appManifest->Exists(&exists)) && exists) {
++        nsCOMPtr<nsILocalFile> appManifestLocal =
++                                 do_QueryInterface(appManifest, &rv);
++        if (NS_SUCCEEDED(rv) && appManifestLocal) {
++          ProcessManifest(appManifestLocal, PR_FALSE);
++          appManifestInUserProfile = PR_TRUE;
++        }
++      }
++    }
++  }
++  /* If applications.manifest is not found in user profile directory, process
++     it from applications defaults directoy */
++  if (!appManifestInUserProfile) {
++    rv = dirSvc->Get(NS_APP_DEFAULTS_50_DIR, NS_GET_IID(nsIFile),
++                    getter_AddRefs(appManifest));
++    if (NS_SUCCEEDED(rv) && appManifest) {
++      rv = appManifest->AppendNative(NS_LITERAL_CSTRING(
++                                       "applications.manifest"));
++      if (NS_SUCCEEDED(rv)) {
++        PRBool exists;
++        if (NS_SUCCEEDED(appManifest->Exists(&exists)) && exists) {
++          nsCOMPtr<nsILocalFile> appManifestLocal =
++                                   do_QueryInterface(appManifest, &rv);
++          if (NS_SUCCEEDED(rv) && appManifestLocal)
++            ProcessManifest(appManifestLocal, PR_FALSE);
++        }
++      }
++    }
++  }
++
+   nsCOMPtr<nsISupports> next;
+   while (NS_SUCCEEDED(chromeML->HasMoreElements(&exists)) && exists) {
+     chromeML->GetNext(getter_AddRefs(next));
+     nsCOMPtr<nsILocalFile> lmanifest = do_QueryInterface(next);
+     if (!lmanifest) {
+       NS_ERROR("Directory enumerator returned a non-nsILocalFile");
+       continue;
+     }

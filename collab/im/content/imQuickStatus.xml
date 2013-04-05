@@ -1,0 +1,318 @@
+<?xml version="1.0"?>
+<!--
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+# Synovel Software Technologies
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Prasad Sunkari <prasad@synovel.com> (Original Author)
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+-->
+
+<!DOCTYPE bindings [
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
+  <!ENTITY % imOverlayDTD SYSTEM "chrome://im/locale/csIMOverlay.dtd"> %imOverlayDTD;
+]>
+
+<bindings id="imQuickStatusBindings"
+      xmlns="http://www.mozilla.org/xbl"
+      xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="imQuickStatus"
+           extends="chrome://global/content/bindings/textbox.xml#textbox">
+    <resources>
+      <stylesheet src="chrome://im/skin/imQuickStatus.css"/>
+    </resources>
+    <content>
+      <xul:button class="im-qs-button" type="menu"
+                  style="min-width: 10px"
+                  anonid="qs-button" popup="_child" chromedir="&locale.dir;">
+        <xul:image class="status-image"
+                   anonid="status-image" im-status="offline"/>
+        <xul:image class="dropmarker-image" anonid="dropmarker-image"/>
+        <!-- Implementation is dependent on the im-status
+             attribute for the status and im-status-message
+             for the message -->
+        <xul:menupopup class="im-qs-popup"
+                       anonid="menupopup" position="after_start"
+                       onpopupshowing="goUpdateCommand('cmd_im_status')">
+          <xul:menuitem im-status="available" class="menuitem-iconic" 
+                        anonid="available-item"
+                        oncommand="setGlobalStatus(event)"
+                        label="&collab.im.status.available.label;"/>
+          <xul:menuitem im-status="busy" class="menuitem-iconic"
+                        anonid="busy-item"
+                        oncommand="setGlobalStatus(event)"
+                        label="&collab.im.status.busy.label;"/>
+          <xul:menuitem im-status="away" class="menuitem-iconic"
+                        anonid="away-item"
+                        oncommand="setGlobalStatus(event)"
+                        label="&collab.im.status.away.label;"/>
+          <xul:menuitem im-status="invisible" class="menuitem-iconic"
+                        anonid="invisible-item"
+                        oncommand="setGlobalStatus(event)"
+                        label="&collab.im.status.invisible.label;"/>
+          <xul:menuitem im-status="offline" class="menuitem-iconic"
+                        anonid="offline-item"
+                        oncommand="setGlobalStatus(event)"
+                        label="&collab.im.status.offline.label;"/>
+          <xul:menuseparator/>
+          <xul:menu label="&collab.im.quickstatus.recent.label;"
+                    oncommand="setGlobalStatus(event)">
+            <xul:menupopup type="im-recent-statuses"
+                           anonid="recent-statuses-menupopup"/>
+          </xul:menu>
+        </xul:menupopup>
+      </xul:button>
+      <xul:hbox class="quick-search-textbox textbox-input-box" flex="1">
+        <html:input class="textbox-input" flex="1" default-message="true" 
+                    default-value="&collab.im.quickstatus.default.label;"
+                    value="&collab.im.quickstatus.default.label;"
+                    allowevents="true" anonid="input" disabled="true"
+                    xbl:inherits="size,disabled,readonly,tabindex,accesskey"/>
+      </xul:hbox>
+      <xul:image class="im-qs-status-image" anonid="im-progress-image"/>
+    </content>
+
+    <implementation implements="nsIObserver">
+      <constructor>
+        <![CDATA[
+          this.clickSelectsAll = true;
+
+          var service = Components.classes["@mozilla.org/observer-service;1"]
+                                  .getService(Components.interfaces
+                                                        .nsIObserverService);
+          service.addObserver(this, "im-status-sync", false);
+        ]]>
+      </constructor>
+
+      <method name="select">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          var target = aEvent.originalTarget;
+          var status = target.getAttribute("im-status");
+          var message = target.getAttribute("im-status-message");
+
+          gTelepathy.setGlobalStatus(status, message);
+        ]]></body>
+      </method>
+
+      <method name="observe">
+        <parameter name="aSubject"/>
+        <parameter name="aTopic"/>
+        <parameter name="aOnlineStatus"/>
+        <body><![CDATA[
+          if (aTopic != "im-status-sync")
+            return;
+
+          this.showCompleteStatus(gTelepathy.gMyPresence.status,
+                                  gTelepathy.gMyPresence.message);
+        ]]></body>
+      </method>
+
+      <method name="saveNewStatus">
+        <body><![CDATA[
+          // Update that we recently used this
+          var menu = document.getAnonymousElementByAttribute(this,
+                                "anonid", "recent-statuses-menupopup");
+          menu.saveNewStatus(gTelepathy.gMyPresence.status,
+                             gTelepathy.gMyPresence.message);
+        ]]></body>
+      </method>
+
+      <method name="showCompleteStatus">
+        <parameter name="aOnlineStatus"/>
+        <parameter name="aStatusMessage"/>
+        <body><![CDATA[
+          var image = document.getAnonymousElementByAttribute(this,
+                                                              "anonid",
+                                                              "status-image");
+          image.setAttribute("im-status", aOnlineStatus);
+
+          var input = document.getAnonymousElementByAttribute(this,
+                                                              "anonid",
+                                                              "input");
+          if (aStatusMessage) {
+            input.value = aStatusMessage;
+            input.removeAttribute("default-message");
+          } else if (!aStatusMessage) {
+            input.value = input.getAttribute("default-value");
+            input.setAttribute("default-message", "true");
+          }
+          
+          if (aOnlineStatus != "offline") {
+            input.removeAttribute("disabled");
+            if (aStatusMessage)
+              this.saveNewStatus();
+          } else {
+            input.setAttribute("disabled", true);
+          }
+        ]]></body>
+      </method>
+      <method name="setStatusMessage">
+        <body><![CDATA[
+          var item = document.getAnonymousElementByAttribute(this,
+                                                             "anonid", "input");
+          gTelepathy.setGlobalStatus(gTelepathy.gMyPresence.status,
+                                     item.value);
+          this.saveNewStatus();
+        ]]></body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="keypress" keycode="VK_RETURN"
+               phase="capturing" action="return this.setStatusMessage();"/>
+      <handler event="keypress" keycode="VK_ENTER"
+               phase="capturing" action="return this.setStatusMessage();"/>
+    </handlers>
+  </binding>
+
+  <binding id="imRecentStatusesPopup"
+           extends="chrome://global/content/bindings/popup.xml#popup"
+           display="chrome://global/content/bindings/popup.xml#popup">
+    <content>
+      <xul:arrowscrollbox class="popup-internal-box" flex="1" orient="vertical">
+        <xul:menuseparator anonid="clear-separator" collapsed="true"
+                           style="display:-moz-box !important"/>
+        <!--
+        <xul:menuitem label="&collab.im.quickstatus.recent.clear.label;"
+                      oncommand="clearRecentMessages(event)"/>
+        -->
+      </xul:arrowscrollbox>
+    </content>
+    <implementation>
+      <constructor>
+        <![CDATA[
+          this.mClearSeparator = document.getAnonymousElementByAttribute(this,
+                                                   'anonid', 'clear-separator');
+
+          this.mPrefBranch = Components.classes['@mozilla.org/preferences-service;1']
+                               .getService(Components.interfaces.nsIPrefService)
+                               .getBranch('collab.im.statuses.');
+        ]]>
+      </constructor>
+      <method name="saveNewStatus">
+        <parameter name="aOnlineStatus"/>
+        <parameter name="aStatusMessage"/>
+        <body>
+          <![CDATA[
+            var list = new Array();
+            var key = 0;
+
+            try {
+              for (key=0; key<10; key++) {
+                list.push({ 
+                  status: this.mPrefBranch.getCharPref(key + ".status"),
+                  message: this.mPrefBranch.getCharPref(key + ".message")
+                });
+              }
+            } catch (ex) {};
+
+            // Remove the status if it already exists
+            list = list.filter(function(item) {
+                                 return (item.status != aOnlineStatus ||
+                                         item.message != aStatusMessage)
+                               });
+
+            while (list.length >= 10)
+              list.shift();
+
+            list.push({ status: aOnlineStatus, message: aStatusMessage });
+
+            // Iterate through the list and save preferences
+            key = Number(0);
+            for each (var item in list) {
+              this.mPrefBranch.setCharPref(key + ".status", item.status);
+              this.mPrefBranch.setCharPref(key + ".message", item.message);
+              key++;
+            }
+          ]]>
+        </body>
+      </method>
+      <method name="_createNode">
+        <parameter name="key"/>
+        <body>
+          <![CDATA[
+            var element;
+            var status = this.mPrefBranch.getCharPref(key + ".status");
+            var message = this.mPrefBranch.getCharPref(key + ".message");
+
+            element = document.createElement('menuitem');
+            element.setAttribute('class', 'menuitem-iconic');
+            element.setAttribute('im-status', status);
+            element.setAttribute('im-message', message);
+            element.setAttribute('label', message);
+
+            return element;
+          ]]>
+        </body>
+      </method>
+      <method name="populate">
+        <body>
+          <![CDATA[
+            var separator = this.mClearSeparator;
+            var scrollbox = separator.parentNode;
+            var count = 0;
+           
+            while(scrollbox.lastChild && scrollbox.lastChild != separator)
+              scrollbox.removeChild(scrollbox.lastChild);
+
+            var list = this.mPrefBranch.getChildList("", {});
+            for (var i=0; i<list.length; i++) {
+              var status = list[i];
+              if(/[^\.]*\.status/.test(status)) {
+                var key = status.split("\.")[0];
+                try {
+                  scrollbox.appendChild(this._createNode(key));
+                } catch(ex) {}
+              }
+            }
+          ]]>
+        </body>
+      </method>
+    </implementation>
+    <handlers>
+      <handler event="popupshowing" phase="capturing">
+        <![CDATA[
+          if (event.originalTarget != this)
+            return;
+
+          this.populate();
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+</bindings>

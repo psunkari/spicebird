@@ -1,0 +1,120 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Code in this file is generated using a computer program.
+ * Please refer to the corresponding telepathy spec for any help in using the
+ * code here.  You may also feel free to contact the original developer for
+ * any related help.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+
+
+%{C++
+#include "glib/gtypes.h"
+%}
+native gpointer(gpointer);
+
+
+
+/*
+ * A structure representing the capabilities of a single client.
+ */
+[scriptable, uuid(a317630a-673f-4917-9454-8e413840a807)]
+interface csITpHandlerCapabilities : nsISupports
+{
+  /* For implementations of the */
+  readonly attribute AUTF8String wellKnownName;
+  /* An array of channel classes that can be handled by this client.
+          This will usually be a copy of the client's */
+  readonly attribute nsIArray channelClasses;
+  /* An array of client capabilities supported by this client, to be
+          used by the connection manager to determine what capabilities to
+          advertise. This will usually be a copy of the client's */
+  void getCapabilities(out PRUint32 aCapabilitiesCount, [array, size_is(aCapabilitiesCount)] out string aCapabilities);
+
+  [noscript] gpointer toGLib();
+};
+
+[scriptable, uuid(5229a620-12ce-4482-a91d-75f28dfa69db)]
+interface csITpConnectionInterfaceContactCapabilitiesUpdateCapabilitiesCB : nsISupports
+{
+  void onUpdateCapabilitiesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onUpdateCapabilitiesDone();
+};
+
+[scriptable, uuid(5a651cad-b043-4b3f-b0c0-6f67547171f1)]
+interface csITpConnectionInterfaceContactCapabilitiesGetContactCapabilitiesCB : nsISupports
+{
+  void onGetContactCapabilitiesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetContactCapabilitiesDone(in nsIArray aContactCapabilities);
+};
+
+[scriptable, uuid(ab6476d1-a5f1-4cd0-bdec-8abc96b88de5)]
+interface csITpConnectionInterfaceContactCapabilitiesContactCapabilitiesChangedObserver : nsISupports
+{
+  void onContactCapabilitiesChanged(in nsIArray acaps);
+};
+
+/*
+ * A mapping from contact handle to their capabilities.
+ */
+[scriptable, uuid(2a67d3fa-fe00-4b07-9e02-a7989dfbe4e2)]
+interface csITpContactCapabilitiesMap : nsISupports
+{
+  /* A contact handle. */
+  readonly attribute PRUint32 key;
+  /* The contact capabilities. */
+  readonly attribute nsIArray value;
+};
+
+
+
+[scriptable, uuid(a41bea54-e1d9-4242-9e51-fc71129c2614)]
+interface csITpConnectionInterfaceContactCapabilities : nsISupports
+{
+  void callUpdateCapabilities(in nsIArray aHandlerCapabilities, in csITpConnectionInterfaceContactCapabilitiesUpdateCapabilitiesCB cb);
+
+  void callGetContactCapabilities(in PRUint32 ahandlesCount, [array, size_is(ahandlesCount)] in PRUint32 ahandles, in csITpConnectionInterfaceContactCapabilitiesGetContactCapabilitiesCB cb);
+
+  void connectToContactCapabilitiesChanged(in csITpConnectionInterfaceContactCapabilitiesContactCapabilitiesChangedObserver observer);
+  void disconnectFromContactCapabilitiesChanged(in csITpConnectionInterfaceContactCapabilitiesContactCapabilitiesChangedObserver observer);
+
+};

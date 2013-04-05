@@ -1,0 +1,159 @@
+/*
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+# Synovel Software Technologies
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Siva Edpuganti <sivakrishna@synovel.com> (Original Author)
+#   Prasad Sunkari <prasad@synovel.com>
+#   Sunil Mohan Adapa <sunil@synovel.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+*/
+
+[anonid="im-contacts-tree"] {
+  margin: 0px;
+}
+
+[anonid="im-contacts-tree"] > treechildren::-moz-tree-cell(status) {
+  margin-left: 4px;
+  height: 2.4em;
+  line-height: 2.4em;
+}
+
+[anonid="im-contacts-tree"] > treechildren::-moz-tree-cell-text-part(selected) {
+  color: HighlightText;
+}
+
+/* Bold unread conversation's contact address */
+[anonid="im-contacts-tree"] > treechildren::-moz-tree-cell-text-part(unread) {
+  font-weight: bold;
+}
+
+[anonid="im-contacts-tree"] > treechildren::-moz-tree-image(status) {
+  list-style-image: url(chrome://im/skin/16x16/statuses.png);
+}
+
+[anonid="im-contacts-tree"] > treechildren::-moz-tree-image(available) {
+  -moz-image-region: rect(0px,16px,16px,0px);
+}
+
+[anonid="im-contacts-tree"] > treechildren::-moz-tree-image(busy) {
+  -moz-image-region: rect(16px,16px,32px,0px);
+}
+
+[anonid="im-contacts-tree"] > treechildren::-moz-tree-image(away) {
+  -moz-image-region: rect(32px,16px,48px,0px);
+}
+
+[anonid="im-contacts-tree"] > treechildren::-moz-tree-image(offline) {
+  -moz-image-region: rect(48px,16px,64px,0px);
+}
+
+[anonid="im-contacts-tree"] > treechildren::-moz-tree-image(invisible) {
+  -moz-image-region: rect(64px,16px,80px,0px);
+}
+
+[anonid="im-contacts-tree"] > treechildren::-moz-tree-image(remote-pending) {
+  list-style-image: url(chrome://im/skin/16x16/status-not-authorized.png);
+}
+
+[anonid="im-contacts-tree"] > treechildren::-moz-tree-description {
+  margin-left: 24px;
+}
+
+[anonid="im-contacts-tree"] > treechildren::-moz-tree-description-text-part {
+  font-size: smaller;
+  color: ThreeDShadow;
+}
+
+[anonid="im-contacts-tree"] > treechildren::-moz-tree-description-text-part(selected) {
+  color: HighlightText;
+}
+
+[anonid="im-contacts-tree"] > treechildren::-moz-tree-cell(avatar) {
+  height: 2.4em;
+  margin: 2px 0px 0px;
+  padding: 0px;
+}
+
+[anonid="im-contacts-tree"] > treechildren::-moz-tree-image(avatar) {
+  width: 32px;
+  height: 32px;
+}
+
+.im-contacts-button {
+  -moz-box-orient: vertical;
+  list-style-image: url(chrome://im/skin/22x22/im-contacts-toolbar.png);
+}
+
+#im-contacts-add-button, [anonid="im-contacts-add-button"] {
+  -moz-image-region: rect(0px,22px,22px,0px);
+}
+[anonid="im-contacts-add-button"][disabled="true"] {
+  -moz-image-region: rect(22px,22px,44px,0px);
+}
+
+#im-contacts-edit-button, [anonid="im-contacts-edit-button"] {
+  -moz-image-region: rect(0px,132px,22px,110px);
+}
+[anonid="im-contacts-edit-button"][disabled="true"] {
+  -moz-image-region: rect(22px,132px,44px,110px);
+}
+
+#im-contacts-chat-button, [anonid="im-contacts-chat-button"] {
+  -moz-image-region: rect(0px,66px,22px,44px);
+}
+[anonid="im-contacts-chat-button"][disabled="true"] {
+  -moz-image-region: rect(22px,66px,44px,44px);
+}
+
+#im-contacts-talk-button, [anonid="im-contacts-talk-button"] {
+  -moz-image-region: rect(0px,88px,22px,66px);
+}
+[anonid="im-contacts-talk-button"][disabled="true"] {
+  -moz-image-region: rect(22px,88px,44px,66px);
+}
+
+#im-contacts-info-button, [anonid="im-contacts-info-button"] {
+  -moz-image-region: rect(0px,110px,22px,88px);
+}
+[anonid="im-contacts-info-button"][disabled="true"] {
+  -moz-image-region: rect(22px,110px,44px,88px);
+}
+
+#im-contacts-delete-button, [anonid="im-contacts-delete-button"] {
+  -moz-image-region: rect(0px,44px,22px,22px);
+}
+[anonid="im-contacts-delete-button"][disabled="true"] {
+  -moz-image-region: rect(22px,44px,44px,22px);
+}
+

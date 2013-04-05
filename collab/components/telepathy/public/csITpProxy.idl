@@ -1,0 +1,130 @@
+/* -*- Mode: idl; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ * Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008, 2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(c6940140-06e3-46ef-a095-a19c7d18e9de)]
+interface csITpProxy: nsISupports
+{
+  /*
+   * Get list of implemented interfaces
+   */
+  void getSupportedInterfaces(out PRUint32 count, 
+                              [array, size_is(count)] out string aInterfaces);
+
+  /*
+   * The Bus Name
+   */
+  readonly attribute AUTF8String busName;
+
+  /*
+   * The Object Path
+   */
+  readonly attribute ACString objectPath;
+
+  /*
+   * Check if an interface is supported
+   */
+  void supportsInterface(in string aInterfaceName);
+};
+
+%{C++
+
+#define CS_TELEPATHY_DECL_PROXY       \
+  PRUint32 m_ProxyInterfaceCount;     \
+  char **m_ProxySupportedInterfaces;
+
+#define CS_TELEPATHY_INIT_PROXY       \
+  m_ProxySupportedInterfaces = NULL;  \
+  m_ProxyInterfaceCount = 0;
+
+#define CS_TELEPATHY_IMPL_PROXY(_class, _proxy)                                   \
+NS_IMETHODIMP _class::GetBusName(nsACString & aBusName)                           \
+{                                                                                 \
+    if (!_proxy)                                                                  \
+      return NS_ERROR_NOT_INITIALIZED;                                            \
+                                                                                  \
+    char *busName;                                                                \
+    g_object_get(_proxy, "bus-name", &busName, NULL);                             \
+    aBusName.AssignLiteral(busName);                                              \
+                                                                                  \
+    return NS_OK;                                                                 \
+}                                                                                 \
+                                                                                  \
+NS_IMETHODIMP _class::GetObjectPath(nsACString & aObjectPath)                     \
+{                                                                                 \
+    if (!_proxy)                                                                  \
+      return NS_ERROR_NOT_INITIALIZED;                                            \
+                                                                                  \
+    char *objectPath;                                                             \
+    g_object_get(_proxy, "object-path", &objectPath, NULL);                       \
+    aObjectPath.AssignLiteral(objectPath);                                        \
+                                                                                  \
+    return NS_OK;                                                                 \
+}                                                                                 \
+                                                                                  \
+NS_IMETHODIMP _class::SupportsInterface(const char *aInterfaceName)               \
+{                                                                                 \
+    if (!_proxy)                                                                  \
+      return NS_ERROR_NO_INTERFACE;                                               \
+                                                                                  \
+    if (_proxy && tp_proxy_has_interface(_proxy, aInterfaceName))                 \
+      return NS_OK;                                                               \
+                                                                                  \
+    return NS_ERROR_NO_INTERFACE;                                                 \
+}                                                                                 \
+                                                                                  \
+NS_IMETHODIMP _class::GetSupportedInterfaces(PRUint32 *aNum,                      \
+                                             char ***aInterfaces)                 \
+{                                                                                 \
+  if (!_proxy)                                                                    \
+    return NS_ERROR_NOT_INITIALIZED;                                              \
+                                                                                  \
+  if (!m_ProxySupportedInterfaces) {                                              \
+    m_ProxyInterfaceCount = 0;                                                    \
+    g_object_get(_proxy, "interfaces", &m_ProxySupportedInterfaces, NULL);        \
+    for (char **it = m_ProxySupportedInterfaces; it != NULL && *it != NULL; it++) \
+      m_ProxyInterfaceCount++;                                                    \
+  }                                                                               \
+                                                                                  \
+  *aNum = m_ProxyInterfaceCount;                                                  \
+  *aInterfaces = m_ProxySupportedInterfaces;                                      \
+  return NS_OK;                                                                   \
+}                                                                                 \
+
+%}

@@ -1,0 +1,99 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Code in this file is generated using a computer program.
+ * Please refer to the corresponding telepathy spec for any help in using the
+ * code here.  You may also feel free to contact the original developer for
+ * any related help.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+
+
+%{C++
+#include "glib/gtypes.h"
+%}
+native gpointer(gpointer);
+
+
+
+[scriptable, uuid(29ecbf17-a1ff-4a43-b9e6-7283143cf5e3)]
+interface csITpChannelInterfaceCallStateGetCallStatesCB : nsISupports
+{
+  void onGetCallStatesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetCallStatesDone(in nsIArray aStates);
+};
+
+[scriptable, uuid(823ad299-867f-48fc-995e-f749f22726ea)]
+interface csITpChannelInterfaceCallStateCallStateChangedObserver : nsISupports
+{
+  void onCallStateChanged(in PRUint32 aContact, in PRUint32 aState);
+};
+
+/*
+ * A map from contacts to call states.
+ */
+[scriptable, uuid(b9388c94-329d-4530-916b-dea73edd51b4)]
+interface csITpChannelCallStateMap : nsISupports
+{
+  /* A contact involved in this call. */
+  readonly attribute PRUint32 contact;
+  /* State flags for the given contact. */
+  readonly attribute PRUint32 state;
+};
+
+
+
+[scriptable, uuid(397ff6e4-c8ff-4b5c-a56c-7f23383d866c)]
+interface csITpChannelInterfaceCallState : nsISupports
+{
+  void callGetCallStates(in csITpChannelInterfaceCallStateGetCallStatesCB cb);
+
+  void connectToCallStateChanged(in csITpChannelInterfaceCallStateCallStateChangedObserver observer);
+  void disconnectFromCallStateChanged(in csITpChannelInterfaceCallStateCallStateChangedObserver observer);
+
+  /* A set of flags representing call states. */
+  const short Channel_Call_State_Flags_Ringing = 1;
+  const short Channel_Call_State_Flags_Queued = 2;
+  const short Channel_Call_State_Flags_Held = 4;
+  const short Channel_Call_State_Flags_Forwarded = 8;
+  const short Channel_Call_State_Flags_In_Progress = 16;
+
+};

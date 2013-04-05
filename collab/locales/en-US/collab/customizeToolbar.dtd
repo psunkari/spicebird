@@ -1,0 +1,6 @@
+<!ENTITY dialog.title             "Customize Toolbar">
+<!ENTITY dialog.style             "width: 300px; height: 400px;">
+<!ENTITY instructions.description "You can add or remove items by dragging icons to or from the toolbars.">
+<!ENTITY restoreDefaultSet.label  "Default">
+<!ENTITY saveChanges.label        "Done">
+<!ENTITY selectApplication.label  "Select Application:">

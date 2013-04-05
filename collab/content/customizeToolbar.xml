@@ -1,0 +1,217 @@
+<?xml version="1.0"?>
+<!--
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+#   Prasad Sunkari <prasad@synovel.com>
+# Portions created by the Initial Developer are Copyright (C) 2007-2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** 
+-->
+  
+<bindings id="csCustomizeToolbarBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <!-- This toolbar is specific to the collab main window -->
+  <binding id="csToolbar" extends="chrome://global/content/bindings/toolbar.xml#toolbar">
+    <implementation>
+      <property name="currentSet">
+        <getter>
+          <![CDATA[
+            var node = this.firstChild;
+            var currentSet = "";
+            while (node) {
+              if (node.id &&
+                  node.localName == "toolbaritem" || 
+                  node.localName == "toolbarbutton" ||
+                  node.localName == "toolbarseparator" ||
+                  node.localName == "toolbarspring" ||
+                  node.localName == "toolbarspacer")
+              {
+                if (currentSet)
+                  currentSet += ",";
+
+                if (node.localName == "toolbarseparator")
+                  currentSet += "separator";
+                else if (node.localName == "toolbarspring")
+                  currentSet += "spring";
+                else if (node.localName == "toolbarspacer")
+                  currentSet += "spacer";
+                else
+                  currentSet += node.getAttribute("typeid") || node.id;
+              }
+              node = node.nextSibling;
+            }
+            
+            return currentSet ? currentSet : "__empty";
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            // Remove all items before the first permanent child and after the last permanent child.
+            while (this.lastChild) {
+              if (this.lastChild == this.lastPermanentChild ||
+                  (this.lastChild.localName == "toolbarpaletteitem" &&
+                  this.lastChild.firstChild == this.lastPermanentChild))
+                break;
+              this.removeChild(this.lastChild);
+            }
+
+            while (this.firstChild) {
+              if (this.firstChild == this.firstPermanentChild ||
+                  (this.firstChild.localName == "toolbarpaletteitem" &&
+                  this.firstChild.firstChild == this.firstPermanentChild))
+                break;
+              this.removeChild(this.firstChild);
+            }
+
+            var firstChildID = this.firstPermanentChild ? this.firstPermanentChild.id : "";
+            var lastChildID = this.lastPermanentChild ? this.lastPermanentChild.id : "";
+
+            if (val && val != "__empty") {
+              var itemIds = val.split(",");
+              var before = true;
+              for (var i = 0; i < itemIds.length; i++) {
+                if (itemIds[i] == firstChildID || itemIds[i] == lastChildID)
+                  before = false;
+                else
+                  this.insertItem(itemIds[i], null, null, before);
+              }
+            }
+
+            return val;
+          ]]>
+        </setter>
+      </property>
+      
+      <method name="insertItem">
+        <parameter name="aId"/>
+        <parameter name="aBeforeElt"/>
+        <parameter name="aWrapper"/>
+        <parameter name="aBeforePermanent"/>
+        <body>
+          <![CDATA[
+            var newItem = null;
+            
+            // Create special cases of palette items.
+            var uniqueId;
+            if (aId == "separator") {
+              newItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                 "toolbarseparator");
+              uniqueId = (new Date()).getTime()+this.childNodes.length;
+              newItem.id = "separator" + uniqueId;
+            } else if (aId == "spring") {
+              newItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                 "toolbarspring");
+              uniqueId = (new Date()).getTime()+this.childNodes.length;
+              newItem.flex = 1;
+              newItem.id = "spring" + uniqueId;
+            } else if (aId == "spacer") {
+              newItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                 "toolbarspacer");
+              uniqueId = (new Date()).getTime()+this.childNodes.length;
+              newItem.id = "spacer" + uniqueId;
+            } else if (aId == "splitter") {
+              newItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                 "splitter");
+              uniqueId = (new Date()).getTime()+this.childNodes.length;
+              newItem.id = "splitter" + uniqueId;
+            } else if (this.parentNode.localName == "toolbox") {
+              // Attempt to locate an item with a matching id within palette.
+              var paletteItem = this.parentNode.palette.firstChild;
+              while (paletteItem) {
+                var paletteId = paletteItem.id;
+                if (paletteId == aId) {
+                  newItem = paletteItem.cloneNode(true);
+                  break;
+                }
+                paletteItem = paletteItem.nextSibling;
+              }
+            }
+            
+            if (!newItem)
+              return false;
+
+            if (newItem.id && document.getElementById(newItem.id)) {
+              newItem.setAttribute("typeid", newItem.id);
+              newItem.setAttribute("id", newItem.id + "-" + this.getAttribute("id") + "-" + this.childNodes.length);
+            }
+
+            var insertItem = newItem;
+            
+            // Wrap the item in another node if so inclined.
+            if (aWrapper) {
+              aWrapper.appendChild(newItem);
+              insertItem = aWrapper;
+            }
+            
+            // Insert the palette item into the toolbar.
+            if (aBeforeElt)
+              this.insertBefore(insertItem, aBeforeElt);
+            else if (aBeforePermanent && this.firstPermanentChild)
+              this.insertBefore(insertItem, this.firstPermanentChild);
+            else
+              this.appendChild(insertItem);
+
+            return newItem;
+          ]]>
+        </body>
+      </method>      
+    </implementation>
+  </binding>
+
+  <binding id="toolbarpaletteitem-palette" extends="chrome://global/content/bindings/toolbar.xml#toolbarpaletteitem">
+    <content>
+      <xul:hbox class="toolbarpaletteitem-box" xbl:inherits="type,place">
+        <children/>
+      </xul:hbox>
+    </content>
+  </binding>
+
+  <binding id="palettelistitem" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+    <content>
+      <xul:hbox class="palettelistitem-box">
+        <xul:spacer flex="1" />
+        <children />
+        <xul:spacer flex="1" />
+      </xul:hbox>
+      <xul:vbox xbl:inherits="value=title" flex="1">
+        <xul:spacer flex="1" />
+        <xul:label xbl:inherits="value=title" class="toolbaritem-label" crop="end" />
+        <xul:label xbl:inherits="value=tooltiptext" class="toolbaritem-tooltip" crop="end" />
+        <xul:spacer flex="1" />
+      </xul:vbox>
+    </content>
+  </binding>
+</bindings>

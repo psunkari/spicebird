@@ -1,0 +1,87 @@
+<!--
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+#   Prasad Sunkari <prasad@synovel.com>
+# Portions created by the Initial Developer are Copyright (C) 2007-2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** 
+-->
+<!ENTITY    collab.calendar.switch          "Switch to Calendar">
+<!ENTITY    collab.calendar.title           "Calendar">
+
+<!ENTITY    cmd.new.event.label             "Event...">
+<!ENTITY    cmd.new.task.label              "Task...">
+<!ENTITY    cmd.new.task.key                "T">
+<!ENTITY    cmd.new.calendar.label          "Calendar...">
+<!ENTITY    cmd.open.calendar.label         "Open Calendar File...">
+<!ENTITY    cmd.open.calendar.accesskey     "F">
+
+<!ENTITY    cmd.export.calendar.label       "Export Calendar...">
+<!ENTITY    cmd.export.calendar.accesskey   "E">
+<!ENTITY    cmd.import.calendar.label       "Import Calendar...">
+<!ENTITY    cmd.import.calendar.accesskey   "I">
+
+<!ENTITY    cmd.reload.remote.label         "Reload Remote Calendars">
+<!ENTITY    cmd.tools.quickadd.label         "Quick Add">
+
+<!ENTITY    calendar.dialog.quickadd.label   "Enter event text:">
+<!ENTITY    calendar.dialog.quickadd.example "Eg: Meeting with John tomorrow 1 PM">
+
+<!ENTITY    calendar.view.assisttz.label     "Assist Timezone">
+<!ENTITY    calendar.view.assisttz.accesskey "A">
+<!ENTITY    calendar.view.navigation.title   "Navigation">
+<!ENTITY    calendar.unifinder.filter.label  "Filter events">
+
+<!ENTITY    cmd.go.calendar.key              "4">
+
+<!ENTITY    cmd.go.today.label              "Today">
+<!ENTITY    cmd.go.date.label               "Date...">
+
+<!ENTITY    cmd.task.label                  "Task">
+<!ENTITY    cmd.task.accesskey              "k">
+
+<!ENTITY    sidebar.calendar.column.label   "Calendar">
+<!ENTITY    sidebar.show.todo.label         "Tasks">
+<!ENTITY    sidebar.show.calendars.label    "Calendars">
+
+<!ENTITY    calendar.quicksearch.label      "Event Search">
+<!ENTITY    tasks.quicksearch.label         "Task Search">
+
+<!ENTITY    calendar.tasks.progress.label   "Progress">
+<!ENTITY    calendar.tasks.progress.tooltip   "Mark as completed or change the progress">
+
+<!ENTITY    calendar.task.edit.label   "Edit">
+<!ENTITY    calendar.task.edit.tooltip   "Edit selected task">
+
+<!ENTITY    collab.tasks.label "Tasks">
+<!ENTITY    cmd.go.tasks.key "5">

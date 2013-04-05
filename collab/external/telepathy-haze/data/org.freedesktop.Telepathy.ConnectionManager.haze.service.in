@@ -1,0 +1,4 @@
+#filter substitution
+[D-BUS Service]
+Name=org.freedesktop.Telepathy.ConnectionManager.haze
+Exec=telepathy-haze@BIN_SUFFIX@

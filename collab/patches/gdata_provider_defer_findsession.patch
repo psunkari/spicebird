@@ -1,0 +1,33 @@
+diff --git a/calendar/providers/gdata/components/calGoogleCalendar.js b/calendar/providers/gdata/components/calGoogleCalendar.js
+--- a/calendar/providers/gdata/components/calGoogleCalendar.js
++++ b/calendar/providers/gdata/components/calGoogleCalendar.js
+@@ -143,16 +143,29 @@ calGoogleCalendar.prototype = {
+      * @param aIgnoreExistingSession If set, find the session regardless of
+      *                               whether the session has been previously set
+      *                               or not
+      */
+     findSession: function cGC_findSession(aIgnoreExistingSession) {
+         if (this.mSession && !aIgnoreExistingSession) {
+             return true;
+         }
++        
++        var self = this;
++        var timer = Components.classes["@mozilla.org/timer;1"]
++                              .createInstance(Components.interfaces.nsITimer);
++        var callback = {
++          notify: function() { 
++            self.findSessionPrivate();
++          }
++        };
++        timer.initWithCallback(callback, 0, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
++    },
++
++    findSessionPrivate: function cGC_findSessionPrivate() {
+ 
+         // We need to find out which Google account fits to this calendar.
+         var sessionMgr = getGoogleSessionManager();
+         var googleUser = getCalendarPref(this, "googleUser");
+         if (googleUser) {
+             this.mSession = sessionMgr.getSessionByUsername(googleUser, true);
+         } else {
+             // We have no user, therefore we need to ask the user. Show a

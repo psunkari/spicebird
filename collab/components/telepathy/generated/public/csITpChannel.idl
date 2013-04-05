@@ -1,0 +1,178 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Code in this file is generated using a computer program.
+ * Please refer to the corresponding telepathy spec for any help in using the
+ * code here.  You may also feel free to contact the original developer for
+ * any related help.
+ */
+
+
+#include "nsISupports.idl"
+
+
+%{C++
+#include "glib/gtypes.h"
+%}
+native gpointer(gpointer);
+
+
+
+[scriptable, uuid(d69ccf79-bd29-40f3-a3cd-f18d349c3af9)]
+interface csITpChannelChannelTypeCB : nsISupports
+{
+  void getPropertyChannelTypeError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyChannelTypeDone(in AUTF8String aChannelType);
+};
+
+[scriptable, uuid(df62ca79-7e9b-4e86-b621-9776dcc7c5eb)]
+interface csITpChannelInterfacesCB : nsISupports
+{
+  void getPropertyInterfacesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyInterfacesDone(in PRUint32 aInterfacesCount, [array, size_is(aInterfacesCount)] in string aInterfaces);
+};
+
+[scriptable, uuid(ee8503fd-b327-44e5-99b6-e18eef01862b)]
+interface csITpChannelTargetHandleCB : nsISupports
+{
+  void getPropertyTargetHandleError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyTargetHandleDone(in PRUint32 aTargetHandle);
+};
+
+[scriptable, uuid(c155776e-8c57-4b2d-a1ae-4e3ac69b463d)]
+interface csITpChannelTargetIDCB : nsISupports
+{
+  void getPropertyTargetIDError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyTargetIDDone(in AUTF8String aTargetID);
+};
+
+[scriptable, uuid(9be88b56-3419-4a64-a628-9f2933b7405c)]
+interface csITpChannelTargetHandleTypeCB : nsISupports
+{
+  void getPropertyTargetHandleTypeError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyTargetHandleTypeDone(in PRUint32 aTargetHandleType);
+};
+
+[scriptable, uuid(f2d05593-17d7-42dd-8cba-a710a8ea5452)]
+interface csITpChannelCloseCB : nsISupports
+{
+  void onCloseError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onCloseDone();
+};
+
+[scriptable, uuid(dfd0e5b8-2cf7-44bb-a2f7-6e05b349c4c1)]
+interface csITpChannelClosedObserver : nsISupports
+{
+  void onClosed();
+};
+
+[scriptable, uuid(cefee160-8b31-40f6-af07-76707108ec43)]
+interface csITpChannelGetChannelTypeCB : nsISupports
+{
+  void onGetChannelTypeError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetChannelTypeDone(in AUTF8String aChannelType);
+};
+
+[scriptable, uuid(39ba91af-9a0a-4c4e-8722-3035ab085274)]
+interface csITpChannelGetHandleCB : nsISupports
+{
+  void onGetHandleError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetHandleDone(in PRUint32 aTargetHandleType, in PRUint32 aTargetHandle);
+};
+
+[scriptable, uuid(84649758-087d-480d-8b72-1e4d1fad8687)]
+interface csITpChannelGetInterfacesCB : nsISupports
+{
+  void onGetInterfacesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetInterfacesDone(in PRUint32 aInterfacesCount, [array, size_is(aInterfacesCount)] in string aInterfaces);
+};
+
+[scriptable, uuid(1d18053f-bb25-4daf-97ed-e6cdafe74ba0)]
+interface csITpChannelRequestedCB : nsISupports
+{
+  void getPropertyRequestedError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyRequestedDone(in PRBool aRequested);
+};
+
+[scriptable, uuid(3d6b535b-c81a-46b9-9af9-23f84da8f9ea)]
+interface csITpChannelInitiatorHandleCB : nsISupports
+{
+  void getPropertyInitiatorHandleError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyInitiatorHandleDone(in PRUint32 aInitiatorHandle);
+};
+
+[scriptable, uuid(6318ea77-4bac-41d2-9b12-875ea40d7531)]
+interface csITpChannelInitiatorIDCB : nsISupports
+{
+  void getPropertyInitiatorIDError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyInitiatorIDDone(in AUTF8String aInitiatorID);
+};
+
+
+
+[scriptable, uuid(ed4d4d80-0a59-4d98-9309-7fdbe2c57846)]
+interface csITpChannel : nsISupports
+{
+  void getPropertyChannelType(in csITpChannelChannelTypeCB cb);
+
+  void getPropertyInterfaces(in csITpChannelInterfacesCB cb);
+
+  void getPropertyTargetHandle(in csITpChannelTargetHandleCB cb);
+
+  void getPropertyTargetID(in csITpChannelTargetIDCB cb);
+
+  void getPropertyTargetHandleType(in csITpChannelTargetHandleTypeCB cb);
+
+  void callClose(in csITpChannelCloseCB cb);
+
+  void connectToClosed(in csITpChannelClosedObserver observer);
+  void disconnectFromClosed(in csITpChannelClosedObserver observer);
+
+  void callGetChannelType(in csITpChannelGetChannelTypeCB cb);
+
+  void callGetHandle(in csITpChannelGetHandleCB cb);
+
+  void callGetInterfaces(in csITpChannelGetInterfacesCB cb);
+
+  void getPropertyRequested(in csITpChannelRequestedCB cb);
+
+  void getPropertyInitiatorHandle(in csITpChannelInitiatorHandleCB cb);
+
+  void getPropertyInitiatorID(in csITpChannelInitiatorIDCB cb);
+
+};

@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+#   Ashok Gudibandla <ashok@synovel.com>
+# Portions created by the Initial Developer are Copyright (C) 2007-2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** 
+
+<!DOCTYPE googleAccountWizard SYSTEM "chrome://google-account/locale/googleAccount.dtd">
+
+<overlay id="WizardOverlay"
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/x-javascript" src="chrome://google-account/content/GoogleAccountWizard.js"/>
+  <stringbundleset>
+    <stringbundle id="googleAccount-bundle" src="chrome://google-account/locale/googleAccount.properties"/>
+  </stringbundleset>
+  <!-- This is to remove the onpageadvanced attribute from the original
+       window. We are going to do addEventListener later on it-->
+  <wizardpage id="accounttype" onpageadvanced="return true;"/>
+  <!-- Override the event handlers and call the original handlers in the new ones-->
+  <wizardpage id="identitypage" onpageshow="return GoogleIdentityPageLoad();" 
+                          onpageadvanced="return GoogleIdentityPageAdvance();"/>
+
+   <radiogroup id="acctyperadio">
+      <radio id="google-account" value="google-account" label="&googleAccount.label;"
+                    accesskey="&googleAccount.accessKey;"/>
+   </radiogroup>
+
+  <!-- XXX: for some reason, when a unique id is given here, the wizard page
+       does not get added to the original wizard, actually it gets added but
+       not the inside content, so we are using the ispPages provided the 
+       AccountWizard -->
+  <!--  address page: asks for the blog URL and blog type -->
+  <wizardpage id="ispPage7" pageid="ispPage7"
+              label="&googleAccount.servicesSelect.label;"
+         onpageadvanced="return GoogleServerPageAdvance();">
+      <vbox flex="1">
+         <separator/>
+         <vbox>
+            <checkbox id="google-email" label="&googleAccount.email.label;" checked="true"
+                          accesskey="&googleAccount.email.accessKey;" oncommand="showHideProtocolBox(event)"/>
+            <checkbox id="google-calendar" label="&googleAccount.calendar.label;"
+                          accesskey="&googleAccount.calendar.accessKey;"/>
+            <checkbox id="google-im" label="&googleAccount.im.label;"
+                          accesskey="&googleAccount.im.accessKey;"/>
+         </vbox>
+         <separator/>
+         <vbox id="protocol-box">
+           <separator class="groove"/>
+           <description>&googleAccount.serverSelect.desc;</description>
+           <separator class="thin"/>
+           <vbox align="center">
+               <radiogroup id="google-servertype" wsm_persist="true" orient="horizontal">
+                   <radio group="google-servertype" value="imap" id="google-imap" label="IMAP"
+                          wsm_persist="true" accesskey="I"/>
+                   <radio group="google-servertype" value="pop3" id="google-pop3" label="POP3"
+                          wsm_persist="true" accesskey="P"/>
+               </radiogroup>
+               <description>&googleAccount.imap.desc;</description>
+               <description>&googleAccount.pop.desc;</description>
+           </vbox>
+           <separator/>
+         </vbox>
+      </vbox>
+   </wizardpage>
+
+  <wizardpage id="done">
+  </wizardpage>
+</overlay>

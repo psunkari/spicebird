@@ -1,0 +1,47 @@
+diff --git a/calendar/base/src/calTimezoneService.js b/calendar/base/src/calTimezoneService.js
+--- a/calendar/base/src/calTimezoneService.js
++++ b/calendar/base/src/calTimezoneService.js
+@@ -138,39 +138,22 @@ calTimezoneService.prototype = {
+             // lightning.xpi yet doesn't contain the calendar-timezones.xpi, thus we package up
+             // the timezones.sqlite as well as the timezones.properties into lightning for now.
+ 
+             const kCalendarTimezonesXpiId = "calendar-timezones@mozilla.org";
+             var sqlTzFile;
+             var bundleURL;
+ 
+             try {
+-                var extMgr = Components.classes["@mozilla.org/extensions/manager;1"]
+-                                       .getService(Components.interfaces.nsIExtensionManager);
+-                sqlTzFile = extMgr.getInstallLocation(kCalendarTimezonesXpiId).getItemLocation(kCalendarTimezonesXpiId);
++                var directoryService = Components.classes["@mozilla.org/file/directory_service;1"]
++                                                   .getService(Components.interfaces.nsIProperties);
++                sqlTzFile = directoryService.get("CurProcD", Components.interfaces.nsIFile);
+                 bundleURL = "chrome://calendar-timezones/locale/timezones.properties";
+             } catch (exc) {
+-                try {
+-                    if (!isSunbird()) { // probe for lightning; xxx todo, this will vanish when we repackage lightning
+-                        const kLightningXpiId = "{e2fda1a4-762b-4020-b5ad-a41df1933103}";
+-                        sqlTzFile = extMgr.getInstallLocation(kLightningXpiId).getItemLocation(kLightningXpiId);
+-                        bundleURL = "chrome://lightning/locale/timezones.properties";
+-                    }
+-                } catch (exc) { // we land here in case of the unit tests:
+-                    var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
+-                                           .getService(Components.interfaces.nsIProperties);
+-                    sqlTzFile = dirSvc.get("CurProcD", Components.interfaces.nsILocalFile);
+-                    sqlTzFile.append("extensions");
+-                    sqlTzFile.append(kCalendarTimezonesXpiId);
+-                    WARN("\### USING " + sqlTzFile.path);
+-                    var bundleFile = sqlTzFile.clone();
+-                    bundleFile.append("chrome");
+-                    bundleFile.append("calendar-timezones-en-US.jar");
+-                    bundleURL = "jar:" + getIOService().newFileURI(bundleFile).spec + "!/locale/en-US/timezones.properties";
+-                }
++                dump("calTimezoneService : Error in obtaining installation directory :" + exc );
+             }
+ 
+             try {
+                 sqlTzFile.append("timezones.sqlite");
+                 cal.LOG("[calTimezoneService] using " + sqlTzFile.path);
+                 var dbService = Components.classes["@mozilla.org/storage/service;1"]
+                                           .getService(Components.interfaces.mozIStorageService);
+                 this.mDb = dbService.openDatabase(sqlTzFile);

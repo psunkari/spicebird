@@ -1,0 +1,151 @@
+<!--
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+#   Prasad Sunkari <prasad@synovel.com>
+# Portions created by the Initial Developer are Copyright (C) 2007-2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** 
+-->
+<!-- File Commands -->
+<!ENTITY    cmd.file.label "File">
+<!ENTITY    cmd.file.accesskey "F">
+<!ENTITY    cmd.file.new.label "New">
+<!ENTITY    cmd.file.new.accesskey "N">
+<!ENTITY    cmd.file.new.key "N">
+<!ENTITY    cmd.file.new.account.label "Server Account">
+<!ENTITY    cmd.file.new.account.accesskey "A">
+<!ENTITY    cmd.file.new.account.key "A">
+<!ENTITY    cmd.file.import.label "Import">
+<!ENTITY    cmd.file.import.accesskey "I">
+<!ENTITY    cmd.file.export.label "Export">
+<!ENTITY    cmd.file.export.accesskey "E">
+<!ENTITY    cmd.file.import.settings.label "&brandShortName; Settings">
+<!ENTITY    cmd.file.import.settings.accesskey "S">
+<!ENTITY    cmd.file.export.settings.label "&brandShortName; Settings">
+<!ENTITY    cmd.file.export.settings.accesskey "S">
+<!ENTITY    cmd.file.pagesetup.label "Page Setup...">
+<!ENTITY    cmd.file.pagesetup.accesskey "U">
+<!ENTITY    cmd.file.printpreview.label "Print Preview">
+<!ENTITY    cmd.file.printpreview.accesskey "V">
+<!ENTITY    cmd.file.print.label "Print...">
+<!ENTITY    cmd.file.print.accesskey "P">
+<!ENTITY    cmd.file.print.key "P">
+<!ENTITY    cmd.file.disconnect.label "Work Offline">
+<!ENTITY    cmd.file.disconnect.accesskey "F">
+<!ENTITY    cmd.file.close.label "Close">
+<!ENTITY    cmd.file.close.accesskey "C">
+<!ENTITY    cmd.file.exit.label "Quit">
+<!ENTITY    cmd.file.exit.accesskey "Q">
+
+<!-- Edit Commands -->
+<!ENTITY    cmd.edit.label "Edit">
+<!ENTITY    cmd.edit.accesskey "E">
+<!ENTITY    cmd.edit.undo.label "Undo">
+<!ENTITY    cmd.edit.undo.accesskey "U">
+<!ENTITY    cmd.edit.redo.label "Redo">
+<!ENTITY    cmd.edit.redo.accesskey "R">
+<!ENTITY    cmd.edit.cut.label "Cut">
+<!ENTITY    cmd.edit.cut.accesskey "T">
+<!ENTITY    cmd.edit.copy.label "Copy">
+<!ENTITY    cmd.edit.copy.accesskey "C">
+<!ENTITY    cmd.edit.paste.label "Paste">
+<!ENTITY    cmd.edit.paste.accesskey "P">
+<!ENTITY    cmd.edit.delete.label "Delete">
+<!ENTITY    cmd.edit.delete.accesskey "D">
+<!ENTITY    cmd.edit.selectall.label "Select All">
+<!ENTITY    cmd.edit.selectall.accesskey "A">
+<!ENTITY    cmd.edit.selectall.key "A">
+<!ENTITY    cmd.edit.quicksearch.key "K">
+<!ENTITY    cmd.edit.preferences.label "Preferences">
+<!ENTITY    cmd.edit.preferences.accesskey "N">
+
+<!-- View Commands -->
+<!ENTITY    cmd.view.label "View">
+<!ENTITY    cmd.view.accesskey "V">
+<!ENTITY    cmd.view.toolbars.label "Toolbars">
+<!ENTITY    cmd.view.toolbars.accesskey "T">
+<!ENTITY    cmd.view.statusbar.label "Statusbar">
+<!ENTITY    cmd.view.statusbar.accesskey "S">
+<!ENTITY    cmd.view.sidebar.label "Sidebar">
+<!ENTITY    cmd.view.sidebar.accesskey "B">
+<!ENTITY    cmd.view.fullscreen.label "Fullscreen">
+<!ENTITY    cmd.view.fullscreen.accesskey "F">
+
+<!-- Go -->
+<!ENTITY    cmd.go.label "Go">
+<!ENTITY    cmd.go.accesskey "G">
+<!ENTITY    cmd.go.home.label "Home">
+<!ENTITY    cmd.go.home.accesskey "H">
+<!ENTITY    cmd.go.home.key "1">
+
+<!-- Actions -->
+<!ENTITY    cmd.actions.go.previous.label "Previous">
+<!ENTITY    cmd.actions.go.next.label "Next">
+
+<!-- Tools -->
+<!ENTITY    cmd.tools.label "Tools">
+<!ENTITY    cmd.tools.accesskey "T">
+<!ENTITY    cmd.tools.addons.label "Add-ons">
+<!ENTITY    cmd.tools.addons.accesskey "A">
+<!ENTITY    cmd.tools.javascript.label "Error Console">
+<!ENTITY    cmd.tools.javascript.accesskey "C">
+
+<!-- Help Commands -->
+<!ENTITY    cmd.help.label "Help">
+<!ENTITY    cmd.help.accesskey "H">
+<!ENTITY    cmd.help.contents.label "Contents">
+<!ENTITY    cmd.help.contents.accesskey "C">
+<!ENTITY    cmd.help.supportforum.label "Support Forum">
+<!ENTITY    cmd.help.supportforum.accesskey "S">
+<!ENTITY    cmd.help.relnotes.label "Release Notes">
+<!ENTITY    cmd.help.relnotes.accesskey "N">
+<!ENTITY    cmd.help.update.label      "Check for Updates...">
+<!ENTITY    cmd.help.update.accesskey  "o">
+<!ENTITY    cmd.help.translate.label "Translate &brandShortName;">
+<!ENTITY    cmd.help.translate.accesskey "T">
+<!ENTITY    cmd.help.abtmoz.label "About Mozilla">
+<!ENTITY    cmd.help.abtmoz.accesskey "M">
+<!ENTITY    cmd.help.abtom.label "About &vendorShortName;">
+<!ENTITY    cmd.help.abtom.accesskey "O">
+<!ENTITY    cmd.help.about.label "About &brandShortName;">
+<!ENTITY    cmd.help.about.accesskey "A">
+
+<!-- Tabs related commands -->
+<!ENTITY    cmd.tabs.newtab.label   "New Tab">
+<!ENTITY    cmd.tabs.closetab.label "Close Tab">
+<!ENTITY    cmd.tabs.openhome.label "Open Home">
+
+<!-- Toolbar special items -->
+<!ENTITY    searchToolbarItem.title "Search">
+<!ENTITY    viewsToolbarItem.title  "Views">
+<!ENTITY    cmd.file.new.addapplet.label "Add Applets">

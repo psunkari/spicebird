@@ -1,0 +1,15 @@
+blog.jar:
+% content collab-blog %content/collab-blog/ xpcnativewrappers=yes
+% overlay chrome://messenger/content/AccountWizard.xul chrome://collab-blog/content/BlogAccountWizard.xul
+% overlay chrome://messenger/content/messengercompose/messengercompose.xul chrome://collab-blog/content/addressingWidgetOverlay.xul
+*  content/collab-blog/BlogAccountWizard.xul                  (content/BlogAccountWizard.xul)
+*  content/collab-blog/BlogAccountWizard.js                   (content/BlogAccountWizard.js)
+*  content/collab-blog/BlogAccountManagerExtension.js         (content/BlogAccountManagerExtension.js)
+*  content/collab-blog/am-blog.xul                            (content/am-blog.xul)
+*  content/collab-blog/am-blog.js                             (content/am-blog.js)
+*  content/collab-blog/BlogManager.js                         (content/BlogManager.js)
+*  content/collab-blog/BlogUtils.js                   	      (content/BlogUtils.js)
+*  content/collab-blog/performancing_api.js		      (content/performancing_api.js)
+*  content/collab-blog/xmlrpc.js			      (content/xmlrpc.js)
+*  content/collab-blog/addressingWidgetOverlay.xul            (content/addressingWidgetOverlay.xul)
+*  content/collab-blog/addressingWidgetOverlay.js             (content/addressingWidgetOverlay.js)

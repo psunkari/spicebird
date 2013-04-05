@@ -1,0 +1,23 @@
+#filter substition
+
+classic.jar:
+% skin messenger classic/1.0 %skin/classic/messenger/
+*    skin/classic/messenger/addressbook/contacts.css 
+*+   skin/classic/messenger/addressbook/addressbook.css
+*+   skin/classic/messenger/addressbook/abContactsPanel.css
+*+   skin/classic/messenger/addressbook/abResultsPane.css
+*+   skin/classic/messenger/addressbook/cardDialog.css
+*    skin/classic/messenger/addressbook/addressbook-applet.css
+     skin/classic/messenger/addressbook/16x16/address-book-new.png           (16x16/address-book-new.png)
+     skin/classic/messenger/addressbook/16x16/contact-new.png                (16x16/contact-new.png)
+     skin/classic/messenger/addressbook/16x16/x-office-address-book.png      (16x16/x-office-address-book.png)
+     skin/classic/messenger/addressbook/16x16/x-contact-list.png             (16x16/x-contact-list.png)
+     skin/classic/messenger/addressbook/16x16/x-contact-vcard.png            (16x16/x-contact-vcard.png)
+     skin/classic/messenger/addressbook/16x16/network-error.png              (16x16/network-error.png)
+     skin/classic/messenger/addressbook/16x16/network-transmit-receive.png   (16x16/network-transmit-receive.png)
+     skin/classic/messenger/addressbook/16x16/x-network-secure.png           (16x16/x-network-secure.png)
+     skin/classic/messenger/addressbook/22x22/x-view-list.png                (22x22/x-view-list.png)
+     skin/classic/messenger/addressbook/22x22/x-view-card.png                (22x22/x-view-card.png)
+     skin/classic/messenger/addressbook/22x22/x-office-address-book.png      (22x22/x-office-address-book.png)
+     skin/classic/messenger/addressbook/22x22/addressbook-toolbar.png        (22x22/addressbook-toolbar.png)
+     skin/classic/messenger/addressbook/22x22/x-contact-vcard.png            (22x22/x-contact-vcard.png)

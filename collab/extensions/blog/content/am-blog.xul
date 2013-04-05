@@ -1,0 +1,164 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+#   Synove Software Technologies
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Sunil Mohan Adapa <sunil@synovel.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the LGPL or the GPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
+<?xml-stylesheet href="chrome://collab-blog/skin/blog.css" type="text/css"?>
+
+<!DOCTYPE am-blog SYSTEM "chrome://collab-blog/locale/blog.dtd">
+
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.onPanelLoaded('am-blog.xul');">
+
+  <script type="application/x-javascript"
+	  src="chrome://collab-blog/content/am-blog.js"/>
+  <script type="application/x-javascript"
+	  src="chrome://collab-blog/content/BlogUtils.js"/>
+
+  <dialogheader id="am-blog-title" defaultTitle="&blog.accountManager.title;"/>
+
+  <hbox align="center">
+    <label value="&blog.accountName.label;"
+	   accesskey="&blog.accountName.accesskey;"
+	   control="server.prettyName"/>
+    <textbox wsm_persist="true" size="30" id="server.prettyName"
+             prefstring="mail.server.%serverkey%.name"/>
+  </hbox>
+
+  <separator/>
+
+  <groupbox>
+    <caption label="&blog.serverSettings;"/>
+    <grid>
+      <columns>
+	<column/>
+	<column flex="1"/>
+      </columns>
+      <rows>
+	<row align="center">
+          <label value="&blog.blogType.label;"
+		 accesskey="&blog.blogType.accesskey;"
+		 control="server.blogType"/>
+          <menulist wsm_persist="true" id="server.blogType" flex="1"
+		    pref="true" preftype="string" genericattr="true"
+		    prefstring="mail.server.%serverkey%.blogType"
+		    oncommand="onBlogTypeChanged(event);"/>
+	</row>
+	<row align="center">
+          <label value="&blog.apiAddress.label;"
+		 accesskey="&blog.apiAddress.accesskey;"
+		 control="server.rpcURL"/>
+          <textbox wsm_persist="true" id="server.rpcURL" flex="1"
+		   pref="true" preftype="string" genericattr="true"
+                   prefstring="mail.server.%serverkey%.rpcURL"/>
+	</row>
+	<row align="center">
+	  <label/>
+	  <label id="urlTemplate" class="managerFieldHint" crop="end"
+		 value="" valueFormat="&blog.apiAddress.templateFormat;"/>
+	</row>
+      </rows>
+    </grid>
+  </groupbox>
+
+  <groupbox>
+    <caption label="&blog.accountSettings;"/>
+    <grid>
+      <columns>
+	<column/>
+	<column/>
+      </columns>
+      <rows>
+	<row align="center">
+          <label value="&blog.userName.label;"
+		 accesskey="&blog.userName.accesskey;"
+		 control="server.username"/>
+          <textbox wsm_persist="true" size="15" id="server.username"
+                   prefstring="mail.server.%serverkey%.username"/>
+	</row>
+	<row align="center">
+          <label value="&blog.blogID.label;"
+		 accesskey="&blog.blogID.accesskey;"
+		 control="server.blogID"/>
+          <textbox wsm_persist="true" size="15" id="server.blogID"
+		   pref="true" genericattr="true" preftype="string"
+                   prefstring="mail.server.%serverkey%.blogID"/>
+	</row>
+      </rows>
+    </grid>
+  </groupbox>
+
+  <groupbox>
+    <caption label="&blog.advanced;"/>
+    <grid>
+      <columns>
+	<column/>
+	<column/>
+      </columns>
+      <rows>
+	<row align="center">
+          <label value="&blog.apiKey.label;"
+		 accesskey="&blog.apiKey.accesskey;"
+		 control="server.apiKey"/>
+          <textbox wsm_persist="true" size="15" id="server.apiKey"
+		   pref="true" genericattr="true" preftype="string"
+                   prefstring="mail.server.%serverkey%.apiKey"/>
+	</row>
+	<row align="center">
+	  <label/>
+	  <label class="managerFieldHint" value="&blog.apiKey.hint;"/>
+	</row>
+      </rows>
+    </grid>
+    <hbox align="center">
+      <label value="&blog.noOfItemsToSync.label;"
+	     accesskey="&blog.noOfItemsToSync.accesskey;"
+	     control="server.noOfItemsToSync"/>
+      <textbox wsm_persist="true" size="4" id="server.noOfItemsToSync"
+	       pref="true" genericattr="true" preftype="int"
+               prefstring="mail.server.%serverkey%.noOfItemsToSync"
+	       defaultValue="100"/>
+    </hbox>
+    <checkbox id="server.useBooleanForPublish"
+	      label="&blog.useBooleanForPublish.label;"
+	      accesskey="&blog.useBooleanForPublish.accesskey;"
+	      pref="true" genericattr="true" preftype="bool" wsm_persist="true"
+	      prefstring="mail.server.%serverkey%.useBooleanForPublish"/>
+  </groupbox>
+
+</page>

@@ -1,0 +1,265 @@
+/*
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is OEone Calendar Code, released October 31st, 2001.
+#
+# The Initial Developer of the Original Code is
+# OEone Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2001
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Garth Smedley <garths@oeone.com>
+#   Mike Potter <mikep@oeone.com>
+#   Karl Guertin <grayrest@grayrest.com>
+#   Colin Phillips <colinp@oeone.com>
+#   ArentJan Banck <ajbanck@planet.nl>
+#   Eric Belhaire <belhaire@ief.u-psud.fr>
+#   Mark Swaffer <swaff@fudo.org>
+#   Christopher Cook <tangent@intraplanar.net>
+#   Kevin Gerich <webmail@kmgerich.com>
+#   Matthew Willis <mattwillis@gmail.com>
+#   Simon Paquet <bugzilla@babylonsounds.com>
+#   Martin Schroeder <mschroeder@mozilla.x-home.org>
+#   Philipp Kewisch <mozilla@kewis.ch>
+#   Berend Cornelius <berend.cornelius@sun.com>
+#   Prasad Sunkari <prasad@synovel.com> (almost complete rewrite)
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+*/
+
+
+.calendar-toolbarbutton {
+  -moz-box-orient: vertical;
+  min-width: 0px;
+  list-style-image: url("chrome://calendar/skin/22x22/calendar-toolbar.png");
+}
+
+/*
+ * Global new button
+ */
+#calendar-primary-toolbar > #new-toolbutton,
+#calendar-primary-toolbar > [typeid="new-toolbutton"] {
+  list-style-image: url("chrome://calendar/skin/22x22/calendar-toolbar.png");
+  -moz-image-region: rect(0px 22px 22px 0px);
+}
+
+#tasks-primary-toolbar > #new-toolbutton,
+#tasks-primary-toolbar > [typeid="new-toolbutton"] {
+  list-style-image: url("chrome://calendar/skin/22x22/calendar-toolbar.png");
+  -moz-image-region: rect(0px 352px 22px 330px);
+}
+
+
+/*
+ * Button that are can be on tasks and calendar toolbars
+ */
+#calendar-new-event-button, [typeid="calendar-new-event-button"] {
+  -moz-image-region: rect(0px 22px 22px 0px);
+}
+#calendar-new-event-button[disabled], [typeid="calendar-new-event-button"][disabled] {
+  -moz-image-region: rect(44px 22px 66px 0px);
+}
+
+#calendar-new-task-button, [typeid="calendar-new-task-button"] {
+  -moz-image-region: rect(0px 352px 22px 330px);
+}
+#calendar-new-task-button[disabled], [typeid="calendar-new-task-button"][disabled] {
+  -moz-image-region: rect(44px 352px 66px 330px);
+}
+
+#calendar-import-button, [typeid="calendar-import-button"] {
+  -moz-image-region: rect(0px 242px 22px 220px);
+}
+#calendar-import-button[disabled], [typeid="calendar-import-button"][disabled] {
+  -moz-image-region: rect(44px 242px 66px 220px);
+}
+
+#calendar-export-button, [typeid="calendar-export-button"] {
+  -moz-image-region: rect(0px 264px 22px 242px);
+}
+#calendar-export-button[disabled], [typeid="calendar-export-button"][disabled] {
+  -moz-image-region: rect(44px 264px 66px 242px);
+}
+
+#calendar-subscribe-button, [typeid="calendar-subscribe-button"] {
+  -moz-image-region: rect(0px 286px 22px 264px);
+}
+#calendar-subscribe-button[disabled], [typeid="calendar-subscribe-button"][disabled] {
+  -moz-image-region: rect(44px 286px 66px 264px);
+}
+
+#calendar-publish-button, [typeid="calendar-publish-button"] {
+  -moz-image-region: rect(0px 308px 22px 286px);
+}
+#calendar-publish-button[disabled], [typeid="calendar-publish-button"][disabled] {
+  -moz-image-region: rect(44px 308px 66px 286px);
+}
+
+
+/*
+ * Calendar specific buttons
+ */
+
+#calendar-edit-button {
+  -moz-image-region: rect(0px 44px 22px 22px);
+}
+#calendar-edit-button[disabled] {
+  -moz-image-region: rect(44px 44px 66px 22px);
+}
+
+#calendar-go-to-today-button {
+  -moz-image-region: rect(0px 374px 22px 352px);
+}
+#calendar-go-to-today-button[disabled] {
+  -moz-image-region: rect(44px 374px 66px 352px);
+}
+
+#calendar-multiweek-view-button {
+  -moz-image-region: rect(0px 132px 22px 110px);
+}
+#calendar-multiweek-view-button[checked="true"] {
+  -moz-image-region: rect(66px 132px 88px 110px);
+}
+
+#calendar-month-view-button {
+  -moz-image-region: rect(0px 154px 22px 132px);
+}
+#calendar-month-view-button[checked="true"] {
+  -moz-image-region: rect(66px 154px 88px 132px);
+}
+
+#calendar-week-view-button {
+  -moz-image-region: rect(0px 110px 22px 88px);
+}
+#calendar-week-view-button[checked="true"] {
+  -moz-image-region: rect(66px 110px 88px 88px);
+}
+
+#calendar-day-view-button {
+  -moz-image-region: rect(0px 88px 22px 66px);
+}
+#calendar-day-view-button[checked="true"] {
+  -moz-image-region: rect(66px 88px 88px 66px);
+}
+
+#calendar-next-view-button {
+  -moz-image-region: rect(0px 572px 22px 550px);
+}
+#calendar-next-view-button[disabled="true"] {
+  -moz-image-region: rect(44px 572px 66px 550px);
+}
+#calendar-next-view-button[chromedir="rtl"] {
+  -moz-image-region: rect(0px 550px 22px 528px);
+}
+#calendar-next-view-button[disabled="true"][chromedir="rtl"] {
+  -moz-image-region: rect(44px 550px 66px 528px);
+}
+
+#calendar-previous-view-button {
+  -moz-image-region: rect(0px 550px 22px 528px);
+}
+#calendar-previous-view-button[disabled="true"] {
+  -moz-image-region: rect(44px 550px 66px 528px);
+}
+#calendar-previous-view-button[chromedir="rtl"] {
+  -moz-image-region: rect(0px 572px 22px 550px);
+}
+#calendar-previous-view-button[disabled="true"][chromedir="rtl"] {
+  -moz-image-region: rect(44px 572px 66px 550px);
+}
+
+/*
+ * Tasks specific buttons
+ */
+
+#task-category-button {
+  -moz-image-region: rect(0px 484px 22px 462px);
+}
+#task-category-button[disabled="true"] {
+  -moz-image-region: rect(44px 484px 66px 462px);
+}
+
+#task-progress-button {
+  -moz-image-region: rect(0px 528px 22px 506px);
+}
+
+#task-progress-button[disabled="true"] {
+  -moz-image-region: rect(44px 528px 66px 506px);
+}
+
+#task-priority-button {
+  -moz-image-region: rect(0px 506px 22px 484px);
+}
+#task-priority-button[disabled="true"] {
+  -moz-image-region: rect(44px 506px 66px 484px);
+}
+
+#task-edit-button {
+  -moz-image-region: rect(0px 44px 22px 22px);
+}
+#task-edit-button[disabled] {
+  -moz-image-region: rect(44px 44px 66px 22px);
+}
+
+
+/*
+ * Calendar navigation bar
+ */
+
+.calendar-navigation-inner {
+  background-image: url("chrome://collab/skin/images/tabs-background.png");
+  background-position: center center;
+  border: 1px solid ThreeDShadow;
+  -moz-border-radius: 5px;
+  padding: 0 5px;
+}
+
+.calendar-toolbar-navbutton {
+  -moz-appearance: none;
+  padding: 0px 3px;
+  list-style-image: url("chrome://calendar/skin/22x22/calendar-navigation.png");
+}
+
+.calendar-navprev-button {
+  -moz-image-region: rect(0px 11px 22px 0px);
+}
+.calendar-navprev-button[chromedir="rtl"] {
+  -moz-image-region: rect(0px 44px 22px 33px);
+}
+
+.calendar-navtoday-button {
+  -moz-image-region: rect(0px 33px 22px 11px);
+  padding: 0px;
+}
+
+.calendar-navnext-button {
+  -moz-image-region: rect(0px 44px 22px 33px);
+}
+.calendar-navnext-button[chromedir="rtl"] {
+  -moz-image-region: rect(0px 11px 22px 0px);
+}

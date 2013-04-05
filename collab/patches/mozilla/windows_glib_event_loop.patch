@@ -1,0 +1,309 @@
+diff --git a/config/autoconf.mk.in b/config/autoconf.mk.in
+--- a/config/autoconf.mk.in
++++ b/config/autoconf.mk.in
+@@ -647,8 +647,14 @@ HAVE_DTRACE= @HAVE_DTRACE@
+ VISIBILITY_FLAGS = @VISIBILITY_FLAGS@
+ WRAP_SYSTEM_INCLUDES = @WRAP_SYSTEM_INCLUDES@
+ 
+ MOZ_EMBEDDING_LEVEL_DEFAULT = @MOZ_EMBEDDING_LEVEL_DEFAULT@
+ MOZ_EMBEDDING_LEVEL_BASIC = @MOZ_EMBEDDING_LEVEL_BASIC@
+ MOZ_EMBEDDING_LEVEL_MINIMAL = @MOZ_EMBEDDING_LEVEL_MINIMAL@
+ 
+ HAVE_ARM_SIMD= @HAVE_ARM_SIMD@
++
++# For Spicebird
++CS_DISABLE_TELEPATHY_IM = @CS_DISABLE_TELEPATHY_IM@
++CS_GLIB_CFLAGS	= @CS_GLIB_CFLAGS@
++CS_GLIB_LIBS	= @CS_GLIB_LIBS@
++CS_GLIB_DLLS	= @CS_GLIB_DLLS@
+diff --git a/configure.in b/configure.in
+--- a/configure.in
++++ b/configure.in
+@@ -6022,16 +6022,87 @@ case "$target" in
+     fi
+     ;;
+ esac
+ fi
+ fi
+ AC_SUBST(MOZ_DISABLE_PARENTAL_CONTROLS)
+ AC_SUBST(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
+ 
++
++dnl ========================================================
++dnl Telepathy Based IM in Spicebird
++dnl ========================================================
++
++dnl ========================================================
++dnl Disable Telepathy IM
++dnl ========================================================
++MOZ_ARG_DISABLE_BOOL(telepathy-im,
++[  --disable-telepathy-im
++                           Do not build Telepathy code],
++   CS_DISABLE_TELEPATHY_IM=1,
++   CS_DISABLE_TELEPATHY_IM=)
++if test -n "$CS_DISABLE_TELEPATHY_IM"; then
++    AC_DEFINE(CS_DISABLE_TELEPATHY_IM)
++fi
++AC_SUBST(CS_DISABLE_TELEPATHY_IM)
++
++dnl ========================================================
++dnl Windows telepathy dependencies
++dnl ========================================================
++if test -z "$CS_DISABLE_TELEPATHY_IM"; then
++case "$target" in
++*-msvc*|*-mks*|*-cygwin*|*-mingw*)
++    if test -n "$TPDEPS_PREFIX"; then
++        _TPDEPS_PREFIX_DIR=`cd $TPDEPS_PREFIX && pwd`
++        if test "$?" = "0"; then
++            _TPDEPS_PREFIX_DIR=`$CYGPATH_W $_TPDEPS_PREFIX_DIR | $CYGPATH_S`
++        else
++            AC_MSG_ERROR([TPDEPS_PREFIX is set but "${TPDEPS_PREFIX}" is not a directory.])
++        fi
++    else
++        _TPDEPS_PREFIX_DIR=$MOZ_TOOLS_DIR/tpdeps
++    fi
++
++    dnl Check for glib and gobject
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/include/glib-2.0/glib.h"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/include/glib-2.0/glib.h .])
++    fi
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/lib/glib-2.0/include/glibconfig.h"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/lib/glib-2.0/include/glibconfig.h .])
++    fi
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/include/glib-2.0/glib-object.h"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/include/glib-2.0/glib-object.h .])
++    fi
++    CS_GLIB_CFLAGS="-I${_TPDEPS_PREFIX_DIR}/include/glib-2.0 -I${_TPDEPS_PREFIX_DIR}/lib/glib-2.0/include"
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/lib/glib-2.0.lib"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/lib/glib-2.0.lib])
++    fi
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/lib/gobject-2.0.lib"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/lib/gobject-2.0.lib])
++    fi
++    CS_GLIB_LIBS="${_TPDEPS_PREFIX_DIR}/lib/glib-2.0.lib ${_TPDEPS_PREFIX_DIR}/lib/gobject-2.0.lib"
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/bin/libglib-2.0-0.dll"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/bin/libglib-2.0-0.dll])
++    fi
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/bin/libgobject-2.0-0.dll"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/bin/libgobject-2.0-0.dll])
++    fi
++    CS_GLIB_DLLS="${_TPDEPS_PREFIX_DIR}/bin/libglib-2.0-0.dll ${_TPDEPS_PREFIX_DIR}/bin/libgobject-2.0-0.dll"
++    ;;
++*)
++    PKG_CHECK_MODULES(CS_GLIB, glib-2.0 gobject-2.0)
++    ;;
++esac
++fi
++
++AC_SUBST(CS_GLIB_CFLAGS)
++AC_SUBST(CS_GLIB_LIBS)
++AC_SUBST(CS_GLIB_DLLS)
++
+ dnl ========================================================
+ dnl =
+ dnl = Module specific options
+ dnl =
+ dnl ========================================================
+ MOZ_ARG_HEADER(Individual module options)
+ 
+ dnl ========================================================
+diff --git a/widget/src/build/Makefile.in b/widget/src/build/Makefile.in
+--- a/widget/src/build/Makefile.in
++++ b/widget/src/build/Makefile.in
+@@ -87,15 +87,21 @@ SHARED_LIBRARY_LIBS = \
+ 
+ EXTRA_DSO_LDOPTS = \
+ 		$(LIBS_DIR) \
+ 		$(EXTRA_DSO_LIBS) \
+ 		$(MOZ_COMPONENT_LIBS) \
+ 		$(MOZ_UNICHARUTIL_LIBS) \
+ 		$(QCMS_LIBS) \
+ 		$(NULL)
++		
++ifndef CS_DISABLE_TELEPATHY_IM
++EXTRA_DSO_LDOPTS += \
++                $(CS_GLIB_LIBS) \
++		$(NULL)
++endif
+ 
+ include $(topsrcdir)/config/rules.mk
+ 
+ DEFINES		+= -D_IMPL_NS_WIDGET -DMOZ_UNICODE
+ 
+ 
+ 
+diff --git a/widget/src/windows/Makefile.in b/widget/src/windows/Makefile.in
+--- a/widget/src/windows/Makefile.in
++++ b/widget/src/windows/Makefile.in
+@@ -123,15 +123,23 @@ endif # BUILD_STATIC_LIBS
+ EXPORTS		= nsdefs.h
+ 
+ LOCAL_INCLUDES	= \
+ 		-I. \
+ 		-I$(srcdir)/../xpwidgets \
+ 		-I$(srcdir) \
+ 		$(NULL)
+ 
++ifndef CS_DISABLE_TELEPATHY_IM
++LOCAL_INCLUDES  += \
++		$(CS_GLIB_CFLAGS) \
++		$(NULL)
++else
++DEFINES         += -DCS_DISABLE_TELEPATHY_IM
++endif
++
+ FORCE_STATIC_LIB = 1
+ 
+ ifndef WINCE
+ ENABLE_CXX_EXCEPTIONS = 1
+ endif
+ 
+ include $(topsrcdir)/config/rules.mk
+diff --git a/widget/src/windows/nsAppShell.cpp b/widget/src/windows/nsAppShell.cpp
+--- a/widget/src/windows/nsAppShell.cpp
++++ b/widget/src/windows/nsAppShell.cpp
+@@ -36,16 +36,22 @@
+  * the terms of any one of the MPL, the GPL or the LGPL.
+  *
+  * ***** END LICENSE BLOCK ***** */
+ 
+ #include "nsAppShell.h"
+ #include "nsToolkit.h"
+ #include "nsThreadUtils.h"
+ 
++#ifndef CS_DISABLE_TELEPATHY_IM
++#include <glib.h>
++#define GLIB_MAX_EVENT_PROCESSING_BLOCK_MSEC	3
++#define GLIB_MAX_EVENT_STARVE_MSEC		25
++#endif
++
+ #ifdef WINCE
+ BOOL WaitMessage(VOID)
+ {
+   BOOL retval = TRUE;
+   
+   HANDLE hThread = GetCurrentThread();
+   DWORD waitRes = MsgWaitForMultipleObjectsEx(1, &hThread, INFINITE, QS_ALLEVENTS, 0);
+   if((DWORD)-1 == waitRes)
+@@ -139,21 +145,121 @@ nsAppShell::Init()
+ void
+ nsAppShell::ScheduleNativeEventCallback()
+ {
+   // post a message to the native event queue...
+   NS_ADDREF_THIS();
+   ::PostMessage(mEventWnd, sMsgId, 0, reinterpret_cast<LPARAM>(this));
+ }
+ 
++#ifndef CS_DISABLE_TELEPATHY_IM
++/*
++ * The following is the thought process behind glib loop integration into
++ * the Mozilla + Windows event processing intergration work.
++ * 
++ * Mozilla makes sure that when its processing its own events, it never
++ * blocks. Otherwise Windows event will starve. Further, Mozilla makes 
++ * sure that its own events are not starved. So, ProcessNextNativeEvent
++ * keeps getting called reliably.
++ *
++ * So, if we insert glib main loop processing into ProcessNextNativeEvent
++ * glib events are processed. There are two problems however. First, glib
++ * will block on its events and starve Windows and Mozilla events. Second,
++ * if a glib event handler runs its own loop processing, that will also
++ * starve Windows and Mozilla events.
++ *
++ * The first problem is solved by implementing the following function which
++ * essentially runs an iteration of glib main loop with the condition that
++ * it should not block beyond a certain amount of time.
++ *
++ * The second problem simply does not occur for the current usage of glib
++ * for Telepathy because there are no event handlers that run their own
++ * loop iterations so do modals dialogs, synchronous to asynchronous 
++ * conversion etc. So, we don't introduce further complications by
++ * solving this issue.
++ *
++ * Hopefully, this will lead to simpler and reliable glib event processing.
++ */
++static PRBool 
++csTelepathyModuleIterateGlib ()
++{
++  gint max_priority;
++  gint timeout;
++  GPollFD *fds = NULL;
++  GMainContext *context = g_main_context_default();
++  gint nfds, allocated_nfds;
++  GPollFunc poll_func = NULL;
++  static GTimer *timer = NULL;
++  static gboolean previous_run_incomplete = FALSE;
++
++  if (timer == NULL) {
++    timer = g_timer_new ();
++  } else {
++    if (!previous_run_incomplete &&
++	g_timer_elapsed(timer, NULL) * 1000 <
++			(gdouble) GLIB_MAX_EVENT_STARVE_MSEC) {
++      /* We were called just now and we finished processing
++	 of all our events, we will skip the turn */
++      return TRUE;
++    }
++  }
++  
++  /*
++   * We are now going to process our events,
++   * So we record when this happens
++   */
++  g_timer_start (timer);
++
++  nfds = allocated_nfds = 32;
++  fds = g_new (GPollFD, nfds);
++
++  g_main_context_prepare (context, &max_priority);
++
++  while ((nfds = g_main_context_query (context, max_priority, &timeout, fds,
++                                       allocated_nfds)) > allocated_nfds)
++    {
++      g_free (fds);
++      allocated_nfds = nfds;
++      fds = g_new (GPollFD, nfds);
++    }
++
++  if (timeout >=0 && timeout < GLIB_MAX_EVENT_PROCESSING_BLOCK_MSEC)
++    previous_run_incomplete = TRUE;
++  else
++    previous_run_incomplete = FALSE;
++
++  if (timeout < 0 || timeout > GLIB_MAX_EVENT_PROCESSING_BLOCK_MSEC)
++    timeout = GLIB_MAX_EVENT_PROCESSING_BLOCK_MSEC;
++
++  poll_func = g_main_context_get_poll_func (context);
++
++  (*poll_func) (fds, nfds, timeout);
++
++  g_main_context_check (context, max_priority, fds, nfds);
++
++  g_main_context_dispatch (context);
++
++  // Whether the native event loop is allowed to wait
++  return !previous_run_incomplete;
++}
++#endif
++
+ PRBool
+ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
+ {
+   PRBool gotMessage = PR_FALSE;
+ 
++#ifndef CS_DISABLE_TELEPATHY_IM
++  // Call Glib loop event clearing
++  if (!csTelepathyModuleIterateGlib())
++    // The glib event loop told us not to wait here because its got its own
++    // unfinished business.
++    mayWait = FALSE;
++#endif
++  
+   do {
+     MSG msg;
+     // Give priority to system messages (in particular keyboard, mouse, timer,
+     // and paint messages).
+     if (PeekKeyAndIMEMessage(&msg, NULL) ||
+         ::PeekMessageW(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
+         ::PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
+       gotMessage = PR_TRUE;

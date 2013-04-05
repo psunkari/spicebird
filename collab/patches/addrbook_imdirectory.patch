@@ -1,0 +1,1286 @@
+diff --git a/mail/components/addrbook/content/abCardOverlay.js b/mail/components/addrbook/content/abCardOverlay.js
+--- a/mail/components/addrbook/content/abCardOverlay.js
++++ b/mail/components/addrbook/content/abCardOverlay.js
+@@ -113,18 +113,21 @@ function OnLoadNewCard()
+ 
+     if ("selectedAB" in window.arguments[0]) {
+       // check if selected ab is a mailing list
+       var abURI = window.arguments[0].selectedAB;
+       
+       var directory = GetDirectoryFromURI(abURI);
+       if (directory.isMailList) {
+         var parentURI = GetParentDirectoryFromMailingListURI(abURI);
+-        if (parentURI)
+-          gEditCard.selectedAB = parentURI;
++        if (parentURI) {
++          directory = GetDirectoryFromURI(parentURI);
++          if (directory.operations & directory.opWrite)
++            gEditCard.selectedAB = parentURI;
++        }
+       }
+       else if (!directory.readOnly)
+         gEditCard.selectedAB = window.arguments[0].selectedAB;
+     }
+ 
+     // we may have been given properties to pre-initialize the window with....
+     // we'll fill these in here...
+     if ("primaryEmail" in window.arguments[0])
+diff --git a/mailnews/addrbook/build/nsAbFactory.cpp b/mailnews/addrbook/build/nsAbFactory.cpp
+--- a/mailnews/addrbook/build/nsAbFactory.cpp
++++ b/mailnews/addrbook/build/nsAbFactory.cpp
+@@ -47,19 +47,21 @@
+ #include "nsIServiceManager.h"
+ #include "rdf.h"
+ #include "nsCRT.h"
+ #include "nsCOMPtr.h"
+ 
+ #include "nsDirectoryDataSource.h"
+ #include "nsAbBSDirectory.h"
+ #include "nsAbMDBDirectory.h"
++#include "nsAbIMDirectory.h"
+ #include "nsAbMDBCard.h"
+ #include "nsAbDirFactoryService.h"
+ #include "nsAbMDBDirFactory.h"
++#include "nsAbIMDirFactory.h"
+ #include "nsAddrDatabase.h"
+ #include "nsAbManager.h"
+ #include "nsAbContentHandler.h"
+ #include "nsAbDirProperty.h"
+ #include "nsAbAddressCollector.h"
+ #include "nsAddbookProtocolHandler.h"
+ #include "nsAddbookUrl.h"
+ #include "nsCURILoader.h"
+@@ -100,22 +102,24 @@
+ 
+ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAbManager,Init)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbContentHandler)
+ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAbDirectoryDataSource,Init)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirProperty)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbCardProperty)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbBSDirectory)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbMDBDirectory)
++NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbIMDirectory)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbMDBCard)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddrDatabase)
+ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAbAddressCollector,Init)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddbookUrl)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirFactoryService)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbMDBDirFactory)
++NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbIMDirFactory)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddbookProtocolHandler)
+ 
+ #if defined(XP_WIN) && !defined(__MINGW32__)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbOutlookDirectory)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbOutlookDirFactory)
+ #endif
+ 
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirectoryQueryArguments)
+@@ -201,16 +205,21 @@ static const nsModuleComponentInfo compo
+     NS_ABDIRECTORY_CONTRACTID,
+     nsAbBSDirectoryConstructor },
+ 
+   { "Address MDB Book Directory",
+     NS_ABMDBDIRECTORY_CID,
+     NS_ABMDBDIRECTORY_CONTRACTID,
+     nsAbMDBDirectoryConstructor },
+ 
++  { "Address IM Book Directory",
++    NS_ABIMDIRECTORY_CID,
++    NS_ABIMDIRECTORY_CONTRACTID,
++    nsAbIMDirectoryConstructor },
++
+   { "Address MDB Book Card",
+     NS_ABMDBCARD_CID,
+     NS_ABMDBCARD_CONTRACTID,
+     nsAbMDBCardConstructor },
+ 
+   { "Address Database",
+     NS_ADDRDATABASE_CID,
+     NS_ADDRDATABASE_CONTRACTID,
+@@ -254,16 +263,21 @@ static const nsModuleComponentInfo compo
+     NS_ABDIRFACTORYSERVICE_CONTRACTID,
+     nsAbDirFactoryServiceConstructor },
+ 
+   { "The MDB directory factory interface",
+     NS_ABMDBDIRFACTORY_CID,
+     NS_ABMDBDIRFACTORY_CONTRACTID,
+     nsAbMDBDirFactoryConstructor },
+ 
++  { "The IM directory factory interface",
++    NS_ABIMDIRFACTORY_CID,
++    NS_ABIMDIRFACTORY_CONTRACTID,
++    nsAbIMDirFactoryConstructor },
++
+ #if defined(XP_WIN) && !defined(__MINGW32__)
+   { "Address OUTLOOK Book Directory",
+     NS_ABOUTLOOKDIRECTORY_CID,
+     NS_ABOUTLOOKDIRECTORY_CONTRACTID,
+     nsAbOutlookDirectoryConstructor },
+ 
+   { "The outlook factory Interface", 
+     NS_ABOUTLOOKDIRFACTORY_CID,
+diff --git a/mailnews/addrbook/public/Makefile.in b/mailnews/addrbook/public/Makefile.in
+--- a/mailnews/addrbook/public/Makefile.in
++++ b/mailnews/addrbook/public/Makefile.in
+@@ -46,16 +46,17 @@ include $(DEPTH)/config/autoconf.mk
+ MODULE		= addrbook
+ 
+ XPIDLSRCS	= \
+ 		nsIAbListener.idl \
+ 		nsIAbItem.idl \
+ 		nsIAbCollection.idl \
+ 		nsIAbCard.idl \
+ 		nsIAbDirectory.idl \
++		nsIAbIMDirectory.idl \
+ 		nsIAbMDBDirectory.idl \
+ 		nsIAddrDBAnnouncer.idl \
+ 		nsIAddrDBListener.idl \
+ 		nsIAddrDatabase.idl \
+ 		nsIAbManager.idl \
+ 		nsIAbAddressCollector.idl \
+ 		nsIAddbookUrl.idl \
+ 		nsIAbDirFactory.idl	\
+diff --git a/mailnews/addrbook/public/nsAbBaseCID.h b/mailnews/addrbook/public/nsAbBaseCID.h
+--- a/mailnews/addrbook/public/nsAbBaseCID.h
++++ b/mailnews/addrbook/public/nsAbBaseCID.h
+@@ -105,16 +105,28 @@
+ 
+ #define NS_ABMDBDIRECTORY_CID             		\
+ { /* {e618f894-1dd1-11b2-889c-9aaefaa90dde}*/		\
+     0xe618f894, 0x1dd1, 0x11b2,				\
+     {0x88, 0x9c, 0x9a, 0xae, 0xfa, 0xa9, 0x0d, 0xde}	\
+ }
+ 
+ //
++// nsAbIMDirectory
++//
++#define NS_ABIMDIRECTORY_CONTRACTID \
++  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "moz-abimdirectory"
++
++#define NS_ABIMDIRECTORY_CID             		\
++{ /* {1f88f59a-52ce-4938-a16e-d7f74756feda}*/		\
++    0x1f88f59a, 0x52ce, 0x4938,				\
++    {0xa1, 0x6e, 0xd7, 0xf7, 0x47, 0x56, 0xfe, 0xda}	\
++}
++
++//
+ // nsAbMDBCard
+ //
+ #define NS_ABMDBCARD_CONTRACTID \
+   "@mozilla.org/addressbook/moz-abmdbcard;1"
+ 
+ #define NS_ABMDBCARD_CID				\
+ { /* {f578a5d2-1dd1-11b2-8841-f45cc5e765f8} */		\
+     0xf578a5d2, 0x1dd1, 0x11b2,				\
+@@ -221,16 +233,28 @@
+   NS_AB_DIRECTORY_FACTORY_CONTRACTID_PREFIX "moz-abmdbdirectory"
+ 
+ #define NS_ABMDBDIRFACTORY_CID				\
+ { /* {E1CB9C8A-722D-43E4-9D7B-7CCAE4B0338A}*/			\
+ 	0xE1CB9C8A, 0x722D, 0x43E4,				\
+ 	{0x9D, 0x7B, 0x7C, 0xCA, 0xE4, 0xB0, 0x33, 0x8A}	\
+ }
+ 
++//
++// im directory factory
++//
++#define NS_ABIMDIRFACTORY_CONTRACTID \
++  NS_AB_DIRECTORY_FACTORY_CONTRACTID_PREFIX "moz-abimdirectory"
++
++#define NS_ABIMDIRFACTORY_CID				\
++{ /* {d207cea6-f574-43f2-b89a-6ff013418720}*/			\
++	0xd207cea6, 0xf574, 0x43f2,				\
++	{0xb8, 0x9a, 0x6f, 0xf0, 0x13, 0x41, 0x87, 0x20}	\
++}
++
+ #ifdef XP_WIN
+ //
+ // nsAbOutlookDirectory
+ //
+ #define NS_ABOUTLOOKDIRECTORY_CONTRACTID \
+   NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "moz-aboutlookdirectory"
+ 
+ #define NS_ABOUTLOOKDIRECTORY_CID                       \
+diff --git a/mailnews/addrbook/public/nsIAbDirectory.idl b/mailnews/addrbook/public/nsIAbDirectory.idl
+--- a/mailnews/addrbook/public/nsIAbDirectory.idl
++++ b/mailnews/addrbook/public/nsIAbDirectory.idl
+@@ -47,16 +47,18 @@ interface nsIMutableArray;
+ 
+ %{C++
+ /* RDF root for all types of address books */
+ /* use this to get all directories, create new directory*/
+ #define kAllDirectoryRoot          "moz-abdirectory://" 
+ 
+ #define kPersonalAddressbook       "abook.mab"
+ #define kPersonalAddressbookUri    "moz-abmdbdirectory://abook.mab"
++#define kIMAddressbook             "imbook.mab"
++#define kIMAddressbookUri          "moz-abimdirectory://imbook.mab"
+ #define kCollectedAddressbook      "history.mab"
+ #define kCollectedAddressbookUri   "moz-abmdbdirectory://history.mab"
+ 
+ #define kABFileName_PreviousSuffix ".na2" /* final v2 address book format */
+ #define kABFileName_PreviousSuffixLen 4
+ #define kABFileName_CurrentSuffix ".mab"  /* v3 address book extension */
+ %}
+ 
+diff --git a/mailnews/addrbook/public/nsIAbIMDirectory.idl b/mailnews/addrbook/public/nsIAbIMDirectory.idl
+new file mode 100644
+--- /dev/null
++++ b/mailnews/addrbook/public/nsIAbIMDirectory.idl
+@@ -0,0 +1,48 @@
++/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
++/* ***** BEGIN LICENSE BLOCK *****
++ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
++ *
++ * The contents of this file are subject to the Mozilla Public License Version
++ * 1.1 (the "License"); you may not use this file except in compliance with
++ * the License. You may obtain a copy of the License at
++ * http://www.mozilla.org/MPL/
++ *
++ * Software distributed under the License is distributed on an "AS IS" basis,
++ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
++ * for the specific language governing rights and limitations under the
++ * License.
++ *
++ * The Original Code is mozilla.org code.
++ *
++ * The Initial Developer of the Original Code is
++ * Synovel Software Technologies
++ * Portions created by the Initial Developer are Copyright (C) 2008
++ * the Initial Developer. All Rights Reserved.
++ *
++ * Contributor(s):
++ *   Siva Edpuganti <sivakrishna@synovel.com>
++ *
++ * Alternatively, the contents of this file may be used under the terms of
++ * either of the GNU General Public License Version 2 or later (the "GPL"),
++ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
++ * in which case the provisions of the GPL or the LGPL are applicable instead
++ * of those above. If you wish to allow use of your version of this file only
++ * under the terms of either the GPL or the LGPL, and not to allow others to
++ * use your version of this file under the terms of the MPL, indicate your
++ * decision by deleting the provisions above and replace them with the notice
++ * and other provisions required by the GPL or the LGPL. If you do not delete
++ * the provisions above, a recipient may use your version of this file under
++ * the terms of any one of the MPL, the GPL or the LGPL.
++ *
++ * ***** END LICENSE BLOCK ***** */
++ 
++#include "nsIAbMDBDirectory.idl"
++
++%{C++
++#define kIMDirectoryRoot          "moz-abimdirectory://"
++#define kIMDirectoryRootLen       20
++%}
++
++[scriptable, uuid(0536a5d7-608c-43e7-86b3-8f89b950722c)]
++interface nsIAbIMDirectory : nsIAbMDBDirectory {
++};
+diff --git a/mailnews/addrbook/resources/content/abAddressBookNameDialog.js b/mailnews/addrbook/resources/content/abAddressBookNameDialog.js
+--- a/mailnews/addrbook/resources/content/abAddressBookNameDialog.js
++++ b/mailnews/addrbook/resources/content/abAddressBookNameDialog.js
+@@ -36,16 +36,17 @@
+  *
+  * ***** END LICENSE BLOCK ***** */
+ 
+ var gOkButton;
+ var gNameInput;
+ var gDirectory = null;
+ 
+ const kPersonalAddressbookURI = "moz-abmdbdirectory://abook.mab";
++const kIMAddressbookURI = "moz-abimdirectory://imbook.mab";
+ const kCollectedAddressbookURI = "moz-abmdbdirectory://history.mab";
+ const kPABDirectory = 2; // defined in nsDirPrefs.h
+ 
+ function abNameOnLoad()
+ {
+   // Get the document elements.  
+   gOkButton = document.documentElement.getButton('accept');
+   gNameInput = document.getElementById('name');
+@@ -64,16 +65,17 @@ function abNameOnLoad()
+ 
+   var bundle = document.getElementById("bundle_addressBook");
+ 
+   document.title = bundle.getString(gDirectory ?
+     'renameAddressBookTitle' : 'newAddressBookTitle');
+ 
+   if (gDirectory &&
+      (gDirectory.URI == kCollectedAddressbookURI ||
++       gDirectory.URI == kIMAddressbookURI ||
+        gDirectory.URI == kPersonalAddressbookURI)) {
+     // Address book name is not editable, therefore disable the field and
+     // only have an ok button that doesn't do anything.
+     gNameInput.readOnly = true;
+     document.documentElement.buttons = "accept";
+     document.documentElement.removeAttribute("ondialogaccept");
+   } else {
+     gNameInput.focus();
+diff --git a/mailnews/addrbook/resources/content/abMailListDialog.js b/mailnews/addrbook/resources/content/abMailListDialog.js
+--- a/mailnews/addrbook/resources/content/abMailListDialog.js
++++ b/mailnews/addrbook/resources/content/abMailListDialog.js
+@@ -212,17 +212,21 @@ function OnLoadNewMailList()
+   if (window.arguments && window.arguments[0])
+   {
+     var abURI = window.arguments[0].selectedAB;
+     if (abURI) {
+       var directory = GetDirectoryFromURI(abURI);
+       if (directory.isMailList) {
+         var parentURI = GetParentDirectoryFromMailingListURI(abURI);
+         if (parentURI) {
+-          selectedAB = parentURI;
++          directory = GetDirectoryFromURI(parentURI);
++          if (!(directory.operations & directory.opWrite))
++            selectedAB = kPersonalAddressbookURI;
++          else
++            selectedAB = parentURI;
+         }
+   }
+       else if (directory.readOnly) {
+         selectedAB = kPersonalAddressbookURI;
+         
+       }      
+       else {
+         selectedAB = abURI;
+diff --git a/mailnews/addrbook/src/Makefile.in b/mailnews/addrbook/src/Makefile.in
+--- a/mailnews/addrbook/src/Makefile.in
++++ b/mailnews/addrbook/src/Makefile.in
+@@ -81,22 +81,24 @@ CPPSRCS		= \
+ 		nsDirectoryDataSource.cpp \
+ 		nsAbCardProperty.cpp \
+ 		nsDirPrefs.cpp \
+ 		nsAddrDatabase.cpp \
+ 		nsAbDirProperty.cpp \
+ 		nsAbAddressCollector.cpp \
+ 		nsAddbookProtocolHandler.cpp  \
+ 		nsAbMDBDirProperty.cpp \
++		nsAbIMDirectory.cpp \
+ 		nsAbMDBDirectory.cpp \
+ 		nsAbMDBCard.cpp \
+ 		nsAbBSDirectory.cpp \
+ 		nsAddbookUrl.cpp    \
+ 		nsAbDirFactoryService.cpp	\
+ 		nsAbMDBDirFactory.cpp	\
++		nsAbIMDirFactory.cpp	\
+                 nsAbDirectoryQuery.cpp    \
+                 nsAbDirectoryQueryProxy.cpp    \
+                 nsAbBooleanExpression.cpp \
+                 nsAbDirectoryRDFResource.cpp \
+                 nsAbQueryStringToExpression.cpp \
+                 nsAbView.cpp \
+                 nsVCard.cpp \
+                 nsVCardObj.cpp \
+diff --git a/mailnews/addrbook/src/nsAbBSDirectory.cpp b/mailnews/addrbook/src/nsAbBSDirectory.cpp
+--- a/mailnews/addrbook/src/nsAbBSDirectory.cpp
++++ b/mailnews/addrbook/src/nsAbBSDirectory.cpp
+@@ -45,19 +45,21 @@
+ #include "nsRDFCID.h"
+ #include "nsIRDFService.h"
+ 
+ #include "nsDirPrefs.h"
+ #include "nsAbBaseCID.h"
+ #include "nsAddrDatabase.h"
+ #include "nsIAbManager.h"
+ #include "nsIAbMDBDirectory.h"
++#include "nsIAbIMDirectory.h"
+ #include "nsServiceManagerUtils.h"
+ #include "nsAbDirFactoryService.h"
+ #include "nsAbMDBDirFactory.h"
++#include "nsAbIMDirFactory.h"
+ #include "nsArrayEnumerator.h"
+ 
+ #include "nsCRTGlue.h"
+ 
+ nsAbBSDirectory::nsAbBSDirectory()
+ : nsRDFResource(),
+ mInitialized(PR_FALSE)
+ {
+@@ -157,17 +159,17 @@ nsresult nsAbBSDirectory::EnsureInitiali
+     // mozilla can't handle 4.x .na2 addressbooks
+     // note, the filename might be na2 for 4.x LDAP directories
+     // (we used the .na2 file for replication), and we don't want to skip
+     // those.  see bug #127007
+     PRUint32 fileNameLen = strlen(server->fileName);
+     if (((fileNameLen > kABFileName_PreviousSuffixLen) && 
+       strcmp(server->fileName + fileNameLen - kABFileName_PreviousSuffixLen,
+              kABFileName_PreviousSuffix) == 0) &&
+-      (server->dirType == PABDirectory))
++      (server->dirType == PABDirectory || server->dirType == IMDirectory))
+       continue;
+       
+     // Set the uri property
+     nsCAutoString URI (server->uri);
+     // This is in case the uri is never set
+     // in the nsDirPref.cpp code.
+     if (!server->uri) 
+     {
+@@ -230,37 +232,52 @@ NS_IMETHODIMP nsAbBSDirectory::CreateNew
+                              (DirectoryType)aType, aPrefName, &server);
+   NS_ENSURE_SUCCESS (rv, rv);
+   
+   if (aType == PABDirectory) {
+     // Add the URI property
+     URI.AssignLiteral(kMDBDirectoryRoot);
+     URI.Append(nsDependentCString(server->fileName));
+   }
++  else if (aType == IMDirectory) {
++    // Add the URI property
++    URI.AssignLiteral(kIMDirectoryRoot);
++    URI.Append(nsDependentCString(server->fileName));
++  }
+ 
+   aResult.Assign(server->prefName);
+ 
+   rv = CreateDirectoriesFromFactory(URI, server, PR_TRUE /* notify */);
+   NS_ENSURE_SUCCESS(rv,rv);
+   return rv;
+ }
+ 
+ NS_IMETHODIMP nsAbBSDirectory::CreateDirectoryByURI(const nsAString &aDisplayName,
+                                                     const nsACString &aURI)
+ {
+   nsresult rv = EnsureInitialized();
+   NS_ENSURE_SUCCESS(rv, rv);
+ 
+   nsCString fileName;
+-  if (StringBeginsWith(aURI, NS_LITERAL_CSTRING(kMDBDirectoryRoot)))
+-    fileName = StringTail(aURI, aURI.Length() - kMDBDirectoryRootLen);
++  DIR_Server * server = nsnull;
+ 
+-  DIR_Server * server = nsnull;
+-  rv = DIR_AddNewAddressBook(aDisplayName, fileName, aURI,
+-                             PABDirectory, EmptyCString(), &server);
++  if (StringBeginsWith(aURI, NS_LITERAL_CSTRING(kIMDirectoryRoot))) {
++    fileName = StringTail(aURI, aURI.Length() - kIMDirectoryRootLen);
++
++    rv = DIR_AddNewAddressBook(aDisplayName, fileName, aURI,
++                               IMDirectory, EmptyCString(), &server);
++  }
++  else {
++    if (StringBeginsWith(aURI, NS_LITERAL_CSTRING(kMDBDirectoryRoot)))
++      fileName = StringTail(aURI, aURI.Length() - kMDBDirectoryRootLen);
++
++    rv = DIR_AddNewAddressBook(aDisplayName, fileName, aURI,
++                               PABDirectory, EmptyCString(), &server);
++
++  }
+   NS_ENSURE_SUCCESS(rv,rv);
+ 
+   rv = CreateDirectoriesFromFactory(aURI, server, PR_TRUE /* notify */);
+   NS_ENSURE_SUCCESS(rv,rv);
+ 	return rv;
+ }
+ 
+ struct GetDirectories
+diff --git a/mailnews/addrbook/src/nsAbIMDirFactory.cpp b/mailnews/addrbook/src/nsAbIMDirFactory.cpp
+new file mode 100644
+--- /dev/null
++++ b/mailnews/addrbook/src/nsAbIMDirFactory.cpp
+@@ -0,0 +1,163 @@
++/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
++/* ***** BEGIN LICENSE BLOCK *****
++ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
++ *
++ * The contents of this file are subject to the Mozilla Public License Version
++ * 1.1 (the "License"); you may not use this file except in compliance with
++ * the License. You may obtain a copy of the License at
++ * http://www.mozilla.org/MPL/
++ *
++ * Software distributed under the License is distributed on an "AS IS" basis,
++ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
++ * for the specific language governing rights and limitations under the
++ * License.
++ *
++ * The Original Code is mozilla.org code.
++ *
++ * The Initial Developer of the Original Code is
++ * Sun Microsystems, Inc.
++ * Portions created by the Initial Developer are Copyright (C) 2001
++ * the Initial Developer. All Rights Reserved.
++ *
++ * Contributor(s):
++ *   Paul Sandoz <paul.sandoz@sun.com>
++ *   Csaba Borbola <csaba.borbola@sun.com>
++ *   Seth Spitzer <sspitzer@netscape.com>
++ *   Mark Banner <mark@standard8.demon.co.uk>
++ *   Siva Edpuganti <sivakrishna@synovel.com>
++ *
++ * Alternatively, the contents of this file may be used under the terms of
++ * either of the GNU General Public License Version 2 or later (the "GPL"),
++ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
++ * in which case the provisions of the GPL or the LGPL are applicable instead
++ * of those above. If you wish to allow use of your version of this file only
++ * under the terms of either the GPL or the LGPL, and not to allow others to
++ * use your version of this file under the terms of the MPL, indicate your
++ * decision by deleting the provisions above and replace them with the notice
++ * and other provisions required by the GPL or the LGPL. If you do not delete
++ * the provisions above, a recipient may use your version of this file under
++ * the terms of any one of the MPL, the GPL or the LGPL.
++ *
++ * ***** END LICENSE BLOCK ***** */
++
++#include "nsAbIMDirFactory.h"
++#include "nsAbUtils.h"
++
++#include "nsIRDFService.h"
++#include "nsIRDFResource.h"
++#include "nsRDFResource.h"
++#include "nsServiceManagerUtils.h"
++#include "nsILocalFile.h"
++#include "nsIAbManager.h"
++#include "nsIAddrDBListener.h"
++#include "nsIAddrDatabase.h"
++#include "nsEnumeratorUtils.h"
++#include "nsIMutableArray.h"
++#include "nsArrayUtils.h"
++#include "nsAbBaseCID.h"
++#include "nsIAbIMDirectory.h"
++
++NS_IMPL_ISUPPORTS1(nsAbIMDirFactory, nsIAbDirFactory)
++
++nsAbIMDirFactory::nsAbIMDirFactory()
++{
++}
++
++nsAbIMDirFactory::~nsAbIMDirFactory()
++{
++}
++
++NS_IMETHODIMP nsAbIMDirFactory::GetDirectories(const nsAString &aDirName,
++                                                const nsACString &aURI,
++                                                const nsACString &aPrefName,
++                                                nsISimpleEnumerator **_retval)
++{
++  NS_ENSURE_ARG_POINTER(_retval);
++  
++  nsresult rv;
++
++  nsCOMPtr<nsIRDFService> rdf = do_GetService (NS_RDF_CONTRACTID "/rdf-service;1", &rv);
++  NS_ENSURE_SUCCESS(rv, rv);
++
++  nsCOMPtr<nsIRDFResource> resource;
++  rv = rdf->GetResource(aURI, getter_AddRefs(resource));
++  NS_ENSURE_SUCCESS(rv, rv);
++
++  nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(resource, &rv));
++  NS_ENSURE_SUCCESS(rv, rv);
++
++  rv = directory->SetDirPrefId(aPrefName);
++  NS_ENSURE_SUCCESS(rv, rv);
++
++  nsCOMPtr<nsIAbManager> abManager = do_GetService(NS_ABMANAGER_CONTRACTID, &rv);
++  NS_ENSURE_SUCCESS(rv, rv);
++
++  nsCOMPtr<nsILocalFile> dbPath;
++  rv = abManager->GetUserProfileDirectory(getter_AddRefs(dbPath));
++
++  nsCOMPtr<nsIAddrDatabase> listDatabase;
++  if (NS_SUCCEEDED(rv))
++  {
++    nsCAutoString fileName;
++      
++    if (StringBeginsWith(aURI, NS_LITERAL_CSTRING(kIMDirectoryRoot)))
++      fileName = Substring(aURI, kIMDirectoryRootLen, aURI.Length() - kIMDirectoryRootLen);
++
++    rv = dbPath->AppendNative(fileName);
++    NS_ENSURE_SUCCESS(rv, rv);
++
++    nsCOMPtr<nsIAddrDatabase> addrDBFactory = do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
++    NS_ENSURE_SUCCESS(rv, rv);
++
++    rv = addrDBFactory->Open(dbPath, PR_TRUE, PR_TRUE, getter_AddRefs(listDatabase));
++  }
++  NS_ENSURE_SUCCESS(rv, rv);
++
++  rv = listDatabase->GetMailingListsFromDB(directory);
++  NS_ENSURE_SUCCESS(rv, rv);
++
++  return NS_NewSingletonEnumerator(_retval, directory);
++}
++
++/* void deleteDirectory (in nsIAbDirectory directory); */
++NS_IMETHODIMP nsAbIMDirFactory::DeleteDirectory(nsIAbDirectory *directory)
++{
++    if (!directory)
++        return NS_ERROR_NULL_POINTER;
++    
++    nsresult rv = NS_OK;
++
++    nsCOMPtr<nsIMutableArray> pAddressLists;
++    rv = directory->GetAddressLists(getter_AddRefs(pAddressLists));
++    NS_ENSURE_SUCCESS(rv, rv);
++
++    PRUint32 total;
++    rv = pAddressLists->GetLength(&total);
++    NS_ENSURE_SUCCESS(rv, rv);
++
++    for (PRUint32 i = 0; i < total; i++)
++    {
++        nsCOMPtr<nsIAbDirectory> listDir(do_QueryElementAt(pAddressLists, i, &rv));
++        if (NS_FAILED(rv))
++            break;
++
++        nsCOMPtr<nsIAbIMDirectory> dblistDir(do_QueryInterface(listDir, &rv));
++        if (NS_FAILED(rv))
++            break;
++
++        rv = directory->DeleteDirectory(listDir);
++        if (NS_FAILED(rv))
++            break;
++
++        rv = dblistDir->RemoveElementsFromAddressList();
++        if (NS_FAILED(rv))
++            break;
++    }
++    pAddressLists->Clear();
++
++    nsCOMPtr<nsIAbIMDirectory> dbdirectory(do_QueryInterface(directory, &rv));
++    NS_ENSURE_SUCCESS(rv, rv);
++
++    return dbdirectory->ClearDatabase();
++}
++
+diff --git a/mailnews/addrbook/src/nsAbIMDirFactory.h b/mailnews/addrbook/src/nsAbIMDirFactory.h
+new file mode 100644
+--- /dev/null
++++ b/mailnews/addrbook/src/nsAbIMDirFactory.h
+@@ -0,0 +1,55 @@
++/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
++/* ***** BEGIN LICENSE BLOCK *****
++ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
++ *
++ * The contents of this file are subject to the Mozilla Public License Version
++ * 1.1 (the "License"); you may not use this file except in compliance with
++ * the License. You may obtain a copy of the License at
++ * http://www.mozilla.org/MPL/
++ *
++ * Software distributed under the License is distributed on an "AS IS" basis,
++ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
++ * for the specific language governing rights and limitations under the
++ * License.
++ *
++ * The Original Code is mozilla.org code.
++ *
++ * The Initial Developer of the Original Code is
++ * Synovel Software Technologies
++ * Portions created by the Initial Developer are Copyright (C) 2008
++ * the Initial Developer. All Rights Reserved.
++ *
++ * Contributor(s):
++ *   Siva Edpuganti  <sivakrishna@synovel.com>
++ *
++ * Alternatively, the contents of this file may be used under the terms of
++ * either of the GNU General Public License Version 2 or later (the "GPL"),
++ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
++ * in which case the provisions of the GPL or the LGPL are applicable instead
++ * of those above. If you wish to allow use of your version of this file only
++ * under the terms of either the GPL or the LGPL, and not to allow others to
++ * use your version of this file under the terms of the MPL, indicate your
++ * decision by deleting the provisions above and replace them with the notice
++ * and other provisions required by the GPL or the LGPL. If you do not delete
++ * the provisions above, a recipient may use your version of this file under
++ * the terms of any one of the MPL, the GPL or the LGPL.
++ *
++ * ***** END LICENSE BLOCK ***** */
++
++#ifndef nsAbIMDirFactory_h__
++#define nsAbIMDirFactory_h__
++
++#include "nsIAbDirFactory.h"
++
++class nsAbIMDirFactory : public nsIAbDirFactory
++{
++public:
++  NS_DECL_ISUPPORTS
++  NS_DECL_NSIABDIRFACTORY
++
++  nsAbIMDirFactory();
++  virtual ~nsAbIMDirFactory();
++};
++
++
++#endif
+diff --git a/mailnews/addrbook/src/nsAbIMDirectory.cpp b/mailnews/addrbook/src/nsAbIMDirectory.cpp
+new file mode 100644
+--- /dev/null
++++ b/mailnews/addrbook/src/nsAbIMDirectory.cpp
+@@ -0,0 +1,139 @@
++/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
++/* ***** BEGIN LICENSE BLOCK *****
++ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
++ *
++ * The contents of this file are subject to the Mozilla Public License Version
++ * 1.1 (the "License"); you may not use this file except in compliance with
++ * the License. You may obtain a copy of the License at
++ * http://www.mozilla.org/MPL/
++ *
++ * Software distributed under the License is distributed on an "AS IS" basis,
++ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
++ * for the specific language governing rights and limitations under the
++ * License.
++ *
++ * The Original Code is mozilla.org code.
++ *
++ * The Initial Developer of the Original Code is
++ * Netscape Communications Corporation.
++ * Portions created by the Initial Developer are Copyright (C) 1998
++ * the Initial Developer. All Rights Reserved.
++ *
++ * Contributor(s):
++ *   Seth Spitzer <sspitzer@netscape.com>
++ *   Pierre Phaneuf <pp@ludusdesign.com>
++ *   Siva Edpuganti <sivakrishna@synovel.com>
++ *
++ * Alternatively, the contents of this file may be used under the terms of
++ * either of the GNU General Public License Version 2 or later (the "GPL"),
++ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
++ * in which case the provisions of the GPL or the LGPL are applicable instead
++ * of those above. If you wish to allow use of your version of this file only
++ * under the terms of either the GPL or the LGPL, and not to allow others to
++ * use your version of this file under the terms of the MPL, indicate your
++ * decision by deleting the provisions above and replace them with the notice
++ * and other provisions required by the GPL or the LGPL. If you do not delete
++ * the provisions above, a recipient may use your version of this file under
++ * the terms of any one of the MPL, the GPL or the LGPL.
++ *
++ * ***** END LICENSE BLOCK ***** */
++
++#include "nsAbIMDirectory.h" 
++#include "nsAbMDBDirectory.h" 
++#include "nsIAbIMDirectory.h" 
++#include "nsIPrefService.h"
++#include "nsServiceManagerUtils.h"
++
++nsAbIMDirectory::nsAbIMDirectory(void):
++     nsAbMDBDirectory()
++{
++}
++
++nsAbIMDirectory::~nsAbIMDirectory(void)
++{
++}
++
++NS_IMPL_ISUPPORTS_INHERITED0(nsAbIMDirectory, nsAbMDBDirectory)
++
++NS_IMETHODIMP nsAbIMDirectory::GetOperations(PRInt32 *aOperations)
++{
++  NS_ENSURE_ARG_POINTER(aOperations);
++  *aOperations = nsIAbDirectory::opRead |
++                 nsIAbDirectory::opSearch;
++
++  return NS_OK;
++}
++
++NS_IMETHODIMP nsAbIMDirectory::Init(const char *aUri)
++{
++  // We need to ensure  that the m_DirPrefId is initialized properly
++  nsDependentCString uri(aUri);
++
++  if (uri.Find("MailList") != -1)
++    m_IsMailList = PR_TRUE;
++
++  // Mailing lists don't have their own prefs.
++  if (m_DirPrefId.IsEmpty() && !m_IsMailList)
++  {
++    // Find the first ? (of the search params) if there is one.
++    // We know we can start at the end of the moz-abmdbdirectory:// because
++    // that's the URI we should have been passed.
++    PRInt32 searchCharLocation = uri.FindChar('?', kIMDirectoryRootLen);
++
++    nsCAutoString filename;
++
++    // extract the filename from the uri.
++    if (searchCharLocation == -1)
++      filename = StringTail(uri, uri.Length() - kIMDirectoryRootLen);
++    else
++      filename = Substring(uri, kIMDirectoryRootLen, searchCharLocation - kIMDirectoryRootLen);
++
++    // Get the pref servers and the address book directory branch
++    nsresult rv;
++    nsCOMPtr<nsIPrefService> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
++    NS_ENSURE_SUCCESS(rv, rv);
++
++    nsCOMPtr<nsIPrefBranch> prefBranch;
++    rv = prefService->GetBranch(NS_LITERAL_CSTRING(PREF_LDAP_SERVER_TREE_NAME ".").get(),
++                                getter_AddRefs(prefBranch));
++    NS_ENSURE_SUCCESS(rv, rv);
++
++    char** childArray;
++    PRUint32 childCount, i;
++    PRInt32 dotOffset;
++    nsCString childValue;
++    nsDependentCString child;
++
++    rv = prefBranch->GetChildList("", &childCount, &childArray);
++    NS_ENSURE_SUCCESS(rv, rv);
++
++    for (i = 0; i < childCount; ++i)
++    {
++      child.Assign(childArray[i]);
++
++      if (StringEndsWith(child, NS_LITERAL_CSTRING(".filename")))
++      {
++        if (NS_SUCCEEDED(prefBranch->GetCharPref(child.get(),
++                                                 getter_Copies(childValue))))
++        {
++          if (childValue == filename)
++          {
++            dotOffset = child.RFindChar('.');
++            if (dotOffset != -1)
++            {
++              nsCAutoString prefName(StringHead(child, dotOffset));
++              m_DirPrefId.AssignLiteral(PREF_LDAP_SERVER_TREE_NAME ".");
++              m_DirPrefId.Append(prefName);
++            }
++          }
++        }
++      }
++    }     
++    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(childCount, childArray);
++
++    NS_ASSERTION(!m_DirPrefId.IsEmpty(),
++                 "Error, Could not set m_DirPrefId in nsAbIMDirectory::Init");
++  }
++
++  return nsAbMDBDirectory::Init(aUri);
++}
+diff --git a/mailnews/addrbook/src/nsAbIMDirectory.h b/mailnews/addrbook/src/nsAbIMDirectory.h
+new file mode 100644
+--- /dev/null
++++ b/mailnews/addrbook/src/nsAbIMDirectory.h
+@@ -0,0 +1,68 @@
++/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
++/* ***** BEGIN LICENSE BLOCK *****
++ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
++ *
++ * The contents of this file are subject to the Mozilla Public License Version
++ * 1.1 (the "License"); you may not use this file except in compliance with
++ * the License. You may obtain a copy of the License at
++ * http://www.mozilla.org/MPL/
++ *
++ * Software distributed under the License is distributed on an "AS IS" basis,
++ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
++ * for the specific language governing rights and limitations under the
++ * License.
++ *
++ * The Original Code is mozilla.org code.
++ *
++ * The Initial Developer of the Original Code is
++ * Synovel Software Technologies
++ * Portions created by the Initial Developer are Copyright (C) 2008
++ * the Initial Developer. All Rights Reserved.
++ *
++ * Contributor(s):
++ *   Siva Edpuganti  <sivakrishna@synovel.com>
++ *
++ * Alternatively, the contents of this file may be used under the terms of
++ * either of the GNU General Public License Version 2 or later (the "GPL"),
++ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
++ * in which case the provisions of the GPL or the LGPL are applicable instead
++ * of those above. If you wish to allow use of your version of this file only
++ * under the terms of either the GPL or the LGPL, and not to allow others to
++ * use your version of this file under the terms of the MPL, indicate your
++ * decision by deleting the provisions above and replace them with the notice
++ * and other provisions required by the GPL or the LGPL. If you do not delete
++ * the provisions above, a recipient may use your version of this file under
++ * the terms of any one of the MPL, the GPL or the LGPL.
++ *
++ * ***** END LICENSE BLOCK ***** */
++
++/********************************************************************************************************
++ 
++   Interface for representing IM Address Book Directory
++ 
++*********************************************************************************************************/
++
++#ifndef nsAbIMDirectory_h__
++#define nsAbIMDirectory_h__
++
++#include "nsIAbIMDirectory.h"  
++#include "nsAbMDBDirectory.h"  
++
++/* 
++ * IM Address Book Directory
++ */ 
++
++class nsAbIMDirectory:
++  public nsAbMDBDirectory
++{
++public: 
++  nsAbIMDirectory(void);
++  virtual ~nsAbIMDirectory(void);
++
++  NS_DECL_ISUPPORTS_INHERITED
++
++  NS_IMETHOD GetOperations(PRInt32 *aOperations);
++  NS_IMETHOD Init(const char *aUri);
++};
++
++#endif
+diff --git a/mailnews/addrbook/src/nsAddrDatabase.cpp b/mailnews/addrbook/src/nsAddrDatabase.cpp
+--- a/mailnews/addrbook/src/nsAddrDatabase.cpp
++++ b/mailnews/addrbook/src/nsAddrDatabase.cpp
+@@ -42,16 +42,18 @@
+ 
+ #include "nsAddrDatabase.h"
+ #include "nsStringGlue.h"
+ #include "nsAutoPtr.h"
+ #include "nsRDFCID.h"
+ #include "nsUnicharUtils.h"
+ #include "nsAbBaseCID.h"
+ #include "nsIAbMDBDirectory.h"
++#include "nsIAbIMDirectory.h"
++#include "nsDirPrefs.h"
+ #include "nsServiceManagerUtils.h"
+ #include "nsComponentManagerUtils.h"
+ #include "nsRDFCID.h"
+ #include "nsMsgUtils.h"
+ #include "nsMorkCID.h"
+ #include "nsIMdbFactoryFactory.h"
+ #include "nsIRDFService.h"
+ #include "nsIProxyObjectManager.h"
+@@ -2888,17 +2890,28 @@ nsresult nsAddrDatabase::CreateABListCar
+     if (listRow->GetOid(m_mdbEnv, &outOid) == NS_OK)
+         rowID = outOid.mOid_Id;
+ 
+     char* listURI = nsnull;
+ 
+     nsAutoString fileName;
+     rv = m_dbName->GetLeafName(fileName);
+     NS_ENSURE_SUCCESS(rv, rv);
+-    listURI = PR_smprintf("%s%s/MailList%ld", kMDBDirectoryRoot, NS_ConvertUTF16toUTF8(fileName).get(), rowID);
++
++    if (m_dbDirectory) {
++      // Get directory type.
++      PRInt32 dirType;
++      rv = m_dbDirectory->GetDirType(&dirType);
++      NS_ENSURE_SUCCESS(rv, rv);
++
++      if (dirType == IMDirectory)
++        listURI = PR_smprintf("%s%s/MailList%ld", kIMDirectoryRoot, NS_ConvertUTF16toUTF8(fileName).get(), rowID);
++      else
++        listURI = PR_smprintf("%s%s/MailList%ld", kMDBDirectoryRoot, NS_ConvertUTF16toUTF8(fileName).get(), rowID);
++    }
+ 
+     nsCOMPtr<nsIAbCard> personCard;
+     nsCOMPtr<nsIAbMDBDirectory> dbm_dbDirectory(do_QueryInterface(m_dbDirectory, &rv));
+     if(NS_SUCCEEDED(rv) && dbm_dbDirectory)
+     {
+     personCard = do_CreateInstance(NS_ABMDBCARD_CONTRACTID, &rv);
+         NS_ENSURE_SUCCESS(rv,rv);
+ 
+@@ -2934,17 +2947,25 @@ nsresult nsAddrDatabase::CreateABList(ns
+         rowID = outOid.mOid_Id;
+ 
+     char* listURI = nsnull;
+ 
+     nsAutoString fileName;
+     m_dbName->GetLeafName(fileName);
+     NS_ENSURE_SUCCESS(rv, rv);
+ 
+-    listURI = PR_smprintf("%s%s/MailList%ld", kMDBDirectoryRoot, NS_ConvertUTF16toUTF8(fileName).get(), rowID);
++    // Get directory type.
++    PRInt32 dirType;
++    rv = m_dbDirectory->GetDirType(&dirType);
++    NS_ENSURE_SUCCESS(rv, rv);
++
++    if (dirType == IMDirectory)
++      listURI = PR_smprintf("%s%s/MailList%ld", kIMDirectoryRoot, NS_ConvertUTF16toUTF8(fileName).get(), rowID);
++    else
++      listURI = PR_smprintf("%s%s/MailList%ld", kMDBDirectoryRoot, NS_ConvertUTF16toUTF8(fileName).get(), rowID);
+ 
+     nsCOMPtr<nsIAbDirectory> mailList;
+     nsCOMPtr<nsIAbMDBDirectory> dbm_dbDirectory(do_QueryInterface(m_dbDirectory, &rv));
+     if(NS_SUCCEEDED(rv) && dbm_dbDirectory)
+     {
+         rv = dbm_dbDirectory->AddDirectory(listURI, getter_AddRefs(mailList));
+ 
+         nsCOMPtr<nsIAbMDBDirectory> dbmailList (do_QueryInterface(mailList, &rv));
+diff --git a/mailnews/addrbook/src/nsDirPrefs.cpp b/mailnews/addrbook/src/nsDirPrefs.cpp
+--- a/mailnews/addrbook/src/nsDirPrefs.cpp
++++ b/mailnews/addrbook/src/nsDirPrefs.cpp
+@@ -49,16 +49,17 @@
+ #include "nsServiceManagerUtils.h"
+ #include "nsMemory.h"
+ #include "nsIAddrDatabase.h"
+ #include "nsAbBaseCID.h"
+ #include "nsIAbManager.h"
+ #include "nsILocalFile.h"
+ #include "nsWeakReference.h"
+ #include "nsIAbMDBDirectory.h"
++#include "nsIAbIMDirectory.h"
+ #if defined(MOZ_LDAP_XPCOM)
+ #include "nsIAbLDAPDirectory.h"
+ #endif
+ #include "prmem.h"
+ #include "prprf.h"
+ #include "plstr.h"
+ #include "nsQuickSort.h"
+ 
+@@ -305,20 +306,22 @@ nsresult DIR_AddNewAddressBook(const nsA
+     NS_ConvertUTF16toUTF8 utf8str(dirName);
+     server->description = ToNewCString(utf8str);
+     server->position = kDefaultPosition; // don't set position so alphabetic sort will happen.
+     
+     if (!fileName.IsEmpty())
+       server->fileName = ToNewCString(fileName);
+     else if (dirType == PABDirectory) 
+       DIR_SetFileName(&server->fileName, kPersonalAddressbook);
++    else if (dirType == IMDirectory) 
++      DIR_SetFileName(&server->fileName, kIMAddressbook);
+     else if (dirType == LDAPDirectory)
+       DIR_SetFileName(&server->fileName, kMainLdapAddressBook);
+ 
+-    if (dirType != PABDirectory) {
++    if (dirType != PABDirectory && dirType != IMDirectory) {
+       if (!uri.IsEmpty())
+         server->uri = ToNewCString(uri);
+     }
+ 
+     if (!prefName.IsEmpty())
+       server->prefName = ToNewCString(prefName);
+ 
+     dir_ServerList->AppendElement(server);
+@@ -528,17 +531,17 @@ static PRBool dir_ValidateAndAddNewServe
+ 
+       PL_strncpyz(prefname, fullprefname, endname - fullprefname + 1);
+ 
+       dirType = DIR_GetIntPref(prefname, "dirType", -1);
+       if (dirType != -1 &&
+           DIR_GetIntPref(prefname, "position", 0) != 0 &&
+           (t1 = DIR_GetStringPref(prefname, "description", nsnull)) != nsnull)
+       {
+-        if (dirType == PABDirectory ||
++        if (dirType == PABDirectory || dirType == IMDirectory ||
+            (t2 = DIR_GetStringPref(prefname, "serverName",  nsnull)) != nsnull)
+         {
+           DIR_Server *server = (DIR_Server *)PR_Malloc(sizeof(DIR_Server));
+           if (server)
+           {
+             DIR_InitServer(server, (DirectoryType)dirType);
+             server->prefName = prefname;
+             DIR_GetPrefsForOneServer(server);
+@@ -994,16 +997,18 @@ void DIR_SetServerFileName(DIR_Server *s
+           PR_FREEIF(server->fileName); // might be one byte empty string.
+     /* make sure we have a pref name...*/
+     if (!server->prefName || !*server->prefName)
+       server->prefName = dir_CreateServerPrefName(server);
+ 
+     /* set default personal address book file name*/
+     if ((server->position == 1) && (server->dirType == PABDirectory))
+             server->fileName = strdup(kPersonalAddressbook);
++    else if ((server->position == 1) && (server->dirType == IMDirectory))
++            server->fileName = strdup(kIMAddressbook);
+     else
+     {
+       /* now use the pref name as the file name since we know the pref name
+          will be unique */
+       prefName = server->prefName;
+       if (prefName && *prefName)
+       {
+         /* extract just the pref name part and not the ldap tree name portion from the string */
+@@ -1115,23 +1120,33 @@ static void DIR_GetPrefsForOneServer(DIR
+   server->fileName = DIR_GetStringPref (prefstring, "filename", "");
+   // if we don't have a file name try and get one
+   if (!server->fileName || !*(server->fileName)) 
+     DIR_SetServerFileName (server);
+   if (server->fileName && *server->fileName)
+     DIR_ConvertServerFileName(server);
+ 
+   // the string "s" is the default uri ( <scheme> + "://" + <filename> )
+-  nsCString s((server->dirType == PABDirectory || server->dirType == MAPIDirectory) ?
++  nsCString s;
++  switch (server->dirType) {
++    case PABDirectory:
++    case MAPIDirectory:
++      s.Append(kMDBDirectoryRoot);
++      break;
++    case IMDirectory:
++      s.Append(kIMDirectoryRoot);
++      break;
++    default:
+ #if defined(MOZ_LDAP_XPCOM)
+-    kMDBDirectoryRoot : kLDAPDirectoryRoot);
++      s.Append(kLDAPDirectoryRoot);
+ #else
+-    // Fallback to the all directory root in the non-ldap enabled case.
+-    kMDBDirectoryRoot : kAllDirectoryRoot);
++      s.Append(kAllDirectoryRoot);
+ #endif
++      break;
++  }
+   s.Append (server->fileName);
+   server->uri = DIR_GetStringPref (prefstring, "uri", s.get ());
+ }
+ 
+ static nsresult dir_GetPrefs(nsVoidArray **list)
+ {
+     nsresult rv;
+     nsCOMPtr<nsIPrefBranch> pPref(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+@@ -1163,16 +1178,17 @@ static nsresult dir_GetPrefs(nsVoidArray
+         server = (DIR_Server *)PR_Calloc(1, sizeof(DIR_Server));
+         if (server)
+         {
+             DIR_InitServer(server);
+             server->prefName = strdup(children[i]);
+             DIR_GetPrefsForOneServer(server);
+             if (server->description && server->description[0] && 
+                 ((server->dirType == PABDirectory ||
++                  server->dirType == IMDirectory ||
+                   server->dirType == MAPIDirectory ||
+                   server->dirType == FixedQueryLDAPDirectory ||  // this one might go away
+                   server->dirType == LDAPDirectory)))
+             {
+                 if (!dir_IsServerDeleted(server))
+                 {
+                     (*list)->AppendElement(server);
+                 }
+@@ -1426,17 +1442,17 @@ void DIR_SavePrefsForOneServer(DIR_Serve
+   DIR_SetIntPref (prefstring, "position", server->position, kDefaultPosition);
+ 
+   // Only save the non-default address book name
+   DIR_SetLocalizedStringPref(prefstring, "description", server->description);
+ 
+   DIR_SetStringPref(prefstring, "filename", server->fileName, "");
+   DIR_SetIntPref(prefstring, "dirType", server->dirType, LDAPDirectory);
+ 
+-  if (server->dirType != PABDirectory)
++  if (server->dirType != PABDirectory && server->dirType != IMDirectory)
+     DIR_SetStringPref(prefstring, "uri", server->uri, "");
+ 
+   server->savingServer = PR_FALSE;
+ }
+ 
+ static void DIR_SaveServerPreferences(nsVoidArray *wholeList)
+ {
+   if (wholeList)
+diff --git a/mailnews/addrbook/src/nsDirPrefs.h b/mailnews/addrbook/src/nsDirPrefs.h
+--- a/mailnews/addrbook/src/nsDirPrefs.h
++++ b/mailnews/addrbook/src/nsDirPrefs.h
+@@ -56,16 +56,17 @@ class nsVoidArray;
+ 
+ /* DIR_Server.dirType */
+ typedef enum
+ {
+ 	LDAPDirectory,
+ 	HTMLDirectory,
+   PABDirectory,
+   MAPIDirectory,
++  IMDirectory,
+   FixedQueryLDAPDirectory = 777
+ } DirectoryType;
+ 
+ typedef enum
+ {
+ 	idNone = 0,					/* Special value                          */ 
+ 	idPrefName,
+ 	idPosition, 
+diff --git a/mailnews/addrbook/src/nsDirectoryDataSource.cpp b/mailnews/addrbook/src/nsDirectoryDataSource.cpp
+--- a/mailnews/addrbook/src/nsDirectoryDataSource.cpp
++++ b/mailnews/addrbook/src/nsDirectoryDataSource.cpp
+@@ -574,16 +574,18 @@ nsAbDirectoryDataSource::createDirectory
+         sortString.AppendInt(1);  // Collected addrbook
+       else
+         sortString.AppendInt(2);  // Normal addrbook
+     }
+     else if (dirType == LDAPDirectory)
+       sortString.AppendInt(3);    // LDAP addrbook
+     else if (dirType == MAPIDirectory)
+       sortString.AppendInt(4);    // MAPI addrbook
++    else if (dirType == IMDirectory)
++      sortString.AppendInt(5);    // IM addrbook
+     else
+       sortString.AppendInt(6);    // everything else comes last
+   }
+ 
+   sortString += name;
+   PRUint8 *sortKey = nsnull;
+   PRUint32 sortKeyLength;
+   rv = CreateCollationKey(sortString, &sortKey, &sortKeyLength);
+diff --git a/mailnews/build/nsMailModule.cpp b/mailnews/build/nsMailModule.cpp
+--- a/mailnews/build/nsMailModule.cpp
++++ b/mailnews/build/nsMailModule.cpp
+@@ -148,19 +148,21 @@
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+ // addrbook includes
+ ////////////////////////////////////////////////////////////////////////////////
+ #include "nsAbBaseCID.h"
+ #include "nsDirectoryDataSource.h"
+ #include "nsAbBSDirectory.h"
+ #include "nsAbMDBDirectory.h"
++#include "nsAbIMDirectory.h"
+ #include "nsAbMDBCard.h"
+ #include "nsAbDirFactoryService.h"
+ #include "nsAbMDBDirFactory.h"
++#include "nsAbIMDirFactory.h"
+ #include "nsAddrDatabase.h"
+ #include "nsAbManager.h"
+ #include "nsAbContentHandler.h"
+ #include "nsAbDirProperty.h"
+ #include "nsAbAddressCollector.h"
+ #include "nsAddbookProtocolHandler.h"
+ #include "nsAddbookUrl.h"
+ 
+@@ -384,22 +386,24 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsStopwat
+ ////////////////////////////////////////////////////////////////////////////////
+ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAbManager,Init)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbContentHandler)
+ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAbDirectoryDataSource,Init)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirProperty)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbCardProperty)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbBSDirectory)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbMDBDirectory)
++NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbIMDirectory)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbMDBCard)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddrDatabase)
+ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAbAddressCollector,Init)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddbookUrl)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirFactoryService)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbMDBDirFactory)
++NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbIMDirFactory)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddbookProtocolHandler)
+ 
+ #if defined(XP_WIN) && !defined(__MINGW32__)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbOutlookDirectory)
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbOutlookDirFactory)
+ #endif
+ 
+ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirectoryQueryArguments)
+@@ -939,16 +943,18 @@ static const nsModuleComponentInfo gComp
+     { "Address Book Mananger", NS_ABMANAGER_CID,
+       NS_ABMANAGER_CONTRACTID, nsAbManagerConstructor },
+     { "Address Book Directory Datasource", NS_ABDIRECTORYDATASOURCE_CID,
+       NS_ABDIRECTORYDATASOURCE_CONTRACTID, nsAbDirectoryDataSourceConstructor },
+     { "Address Boot Strap Directory", NS_ABDIRECTORY_CID,
+       NS_ABDIRECTORY_CONTRACTID, nsAbBSDirectoryConstructor },
+     { "Address MDB Book Directory", NS_ABMDBDIRECTORY_CID,
+       NS_ABMDBDIRECTORY_CONTRACTID, nsAbMDBDirectoryConstructor },
++    { "Address IM Book Directory", NS_ABIMDIRECTORY_CID,
++      NS_ABIMDIRECTORY_CONTRACTID, nsAbIMDirectoryConstructor },
+     { "Address MDB Book Card", NS_ABMDBCARD_CID,
+        NS_ABMDBCARD_CONTRACTID, nsAbMDBCardConstructor },
+     { "Address Database", NS_ADDRDATABASE_CID,
+       NS_ADDRDATABASE_CONTRACTID, nsAddrDatabaseConstructor },
+     { "Address Book Card Property", NS_ABCARDPROPERTY_CID,
+       NS_ABCARDPROPERTY_CONTRACTID, nsAbCardPropertyConstructor },
+     { "Address Book Directory Property", NS_ABDIRPROPERTY_CID,
+       NS_ABDIRPROPERTY_CONTRACTID, nsAbDirPropertyConstructor },
+@@ -964,16 +970,18 @@ static const nsModuleComponentInfo gComp
+     { "add vCard content handler", NS_ABCONTENTHANDLER_CID,
+       NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/x-vcard",
+       nsAbContentHandlerConstructor },
+ 
+     { "The directory factory service interface", NS_ABDIRFACTORYSERVICE_CID,
+       NS_ABDIRFACTORYSERVICE_CONTRACTID, nsAbDirFactoryServiceConstructor },
+     { "The MDB directory factory interface", NS_ABMDBDIRFACTORY_CID,
+       NS_ABMDBDIRFACTORY_CONTRACTID, nsAbMDBDirFactoryConstructor },
++    { "The IM directory factory interface", NS_ABIMDIRFACTORY_CID,
++      NS_ABIMDIRFACTORY_CONTRACTID, nsAbIMDirFactoryConstructor },
+ #if defined(XP_WIN) && !defined(__MINGW32__)
+     { "Address OUTLOOK Book Directory", NS_ABOUTLOOKDIRECTORY_CID,
+       NS_ABOUTLOOKDIRECTORY_CONTRACTID, nsAbOutlookDirectoryConstructor },
+     { "The outlook factory Interface", NS_ABOUTLOOKDIRFACTORY_CID,
+       NS_ABOUTLOOKDIRFACTORY_CONTRACTID, nsAbOutlookDirFactoryConstructor },
+ #endif
+     { "The addbook query arguments", NS_ABDIRECTORYQUERYARGUMENTS_CID,
+       NS_ABDIRECTORYQUERYARGUMENTS_CONTRACTID, nsAbDirectoryQueryArgumentsConstructor },

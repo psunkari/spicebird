@@ -1,0 +1,226 @@
+diff --git a/mailnews/addrbook/public/nsIAbView.idl b/mailnews/addrbook/public/nsIAbView.idl
+--- a/mailnews/addrbook/public/nsIAbView.idl
++++ b/mailnews/addrbook/public/nsIAbView.idl
+@@ -31,16 +31,17 @@
+  * decision by deleting the provisions above and replace them with the notice
+  * and other provisions required by the GPL or the LGPL. If you do not delete
+  * the provisions above, a recipient may use your version of this file under
+  * the terms of any one of the MPL, the GPL or the LGPL.
+  *
+  * ***** END LICENSE BLOCK ***** */
+ 
+ #include "nsISupports.idl"
++#include "nsITreeView.idl"
+ 
+ interface nsIAbCard;
+ interface nsIAbDirectory;
+ interface nsIArray;
+ 
+ /// Define a class using this interface to listen to updates from nsIAbView.
+ [scriptable, uuid(79ad5d6e-1dd2-11b2-addd-f547dab50d75)]
+ interface nsIAbViewListener : nsISupports
+@@ -48,25 +49,39 @@ interface nsIAbViewListener : nsISupport
+   /// Called when the selection is changed in the tree
+   void onSelectionChanged();
+ 
+   /// Called when the total count of cards is changed.
+   void onCountChanged(in long total);
+ };
+ 
+ /**
++ * Allow extensions to add custom columns.  Currently
++ * the values here are not stored along with the addresses, but
++ * this will let the extension developers have derived or dynamic
++ * values like the IM online status.
++ */
++[scriptable, uuid(9a6b419a-4971-44c8-bd5a-4f21fe81c530)]
++interface nsIAbCustomColumnHandler : nsITreeView
++{
++  AString getSortStringForRow(in nsIAbCard aCard);
++  unsigned long getSortLongForRow(in nsIAbCard aCard);
++  boolean isString();
++};
++
++/**
+  * This interface and its associated nsAbView object provides an interface
+  * to allow a tree to be associated with an address book, and the results
+  * to be displayed in that tree.
+  *
+  * If you wish for the tree to display the results of a different address
+  * book, then call setView again. There is no need to delete and recreate the
+  * nsAbView object. If you wish to clear the view, then just call clearView.
+  */
+-[scriptable, uuid(c7c454bd-1901-4a4b-aac7-a3f9918b3616)]
++[scriptable, uuid(89bd785d-9d07-4e2f-a4c3-3d27607ab391)]
+ interface nsIAbView : nsISupports
+ {
+   /**
+    * Sets up the nsIAbView to look at the specified directory. This may be
+    * called multiple times.
+    *
+    * @param aDirectory      The directory to search, this may be a directory
+    *                        with a query string.
+@@ -133,9 +148,24 @@ interface nsIAbView : nsISupports
+    * preference.
+    */
+   void swapFirstNameLastName();
+ 
+   /**
+    *  Returns an array of the currently selected addresses.
+    */
+   readonly attribute nsIArray selectedAddresses; 
++
++   /**
++    * Add a custom column
++    */
++   void addColumnHandler(in AString aColumn, in nsIAbCustomColumnHandler aHandler);
++   
++   /**
++    * Remove the custom column
++    */
++   void removeColumnHandler(in AString aColumn);
++
++   /**
++    * Get column handler for a given custom column
++    */
++   nsIAbCustomColumnHandler getColumnHandler(in AString aColumn);
+ };
+diff --git a/mailnews/addrbook/src/nsAbView.cpp b/mailnews/addrbook/src/nsAbView.cpp
+--- a/mailnews/addrbook/src/nsAbView.cpp
++++ b/mailnews/addrbook/src/nsAbView.cpp
+@@ -73,16 +73,17 @@
+ NS_IMPL_ISUPPORTS4(nsAbView, nsIAbView, nsITreeView, nsIAbListener, nsIObserver)
+ 
+ nsAbView::nsAbView() : mInitialized(PR_FALSE),
+                        mSuppressSelectionChange(PR_FALSE),
+                        mSuppressCountChange(PR_FALSE),
+                        mGeneratedNameFormat(0)
+ {
+   mMailListAtom = do_GetAtom("MailList");
++  mCustomColumnHandlers.Init();
+ }
+ 
+ nsAbView::~nsAbView()
+ {
+   if (mInitialized) {
+     NS_ASSERTION(NS_SUCCEEDED(ClearView()), "failed to close view");
+   }
+ }
+@@ -331,16 +332,23 @@ NS_IMETHODIMP nsAbView::GetCellPropertie
+ {
+   NS_ENSURE_TRUE(row >= 0, NS_ERROR_UNEXPECTED);
+ 
+   if (mCards.Count() <= row)
+     return NS_OK;
+ 
+   const PRUnichar* colID;
+   col->GetIdConst(&colID);
++
++  // Give custom handlers a chance to set the properties
++  nsIAbCustomColumnHandler *colHandler = nsnull;
++  mCustomColumnHandlers.Get(nsDependentString(colID), &colHandler);
++  if (colHandler) 
++    colHandler->GetCellProperties(row, col, properties);
++
+   // "G" == "GeneratedName"
+   if (colID[0] != PRUnichar('G'))
+     return NS_OK;
+ 
+   nsIAbCard *card = ((AbCard *)(mCards.ElementAt(row)))->card;
+ 
+   PRBool isMailList;
+   nsresult rv = card->GetIsMailList(&isMailList);
+@@ -500,16 +508,24 @@ nsresult nsAbView::RefreshTree()
+ 
+ NS_IMETHODIMP nsAbView::GetCellText(PRInt32 row, nsITreeColumn* col, nsAString& _retval)
+ {
+   NS_ENSURE_TRUE(row >= 0 && row < mCards.Count(), NS_ERROR_UNEXPECTED);
+ 
+   nsIAbCard *card = ((AbCard *)(mCards.ElementAt(row)))->card;
+   const PRUnichar* colID;
+   col->GetIdConst(&colID);
++
++  nsIAbCustomColumnHandler *colHandler = nsnull;
++  mCustomColumnHandlers.Get(nsDependentString(colID), &colHandler);
++  if (colHandler){
++    colHandler->GetCellText(row, col, _retval);
++    return NS_OK;
++  }
++
+   return GetCardValue(card, colID, _retval);
+ }
+ 
+ NS_IMETHODIMP nsAbView::SetTree(nsITreeBoxObject *tree)
+ {
+   mTree = tree;
+   return NS_OK;
+ }
+@@ -1365,8 +1381,34 @@ NS_IMETHODIMP nsAbView::GetSelectedAddre
+       }
+     }    
+   }
+ 
+   NS_IF_ADDREF(*_retval = addresses);
+ 
+   return NS_OK;
+ }
++
++NS_IMETHODIMP nsAbView::AddColumnHandler(const nsAString& aColID, nsIAbCustomColumnHandler* aHandler)
++{
++  NS_ENSURE_ARG_POINTER(aHandler);
++
++  return mCustomColumnHandlers.Put(aColID, aHandler);
++}
++
++NS_IMETHODIMP nsAbView::RemoveColumnHandler(const nsAString& aColID)
++{
++  if (!mCustomColumnHandlers.Get(aColID, NULL))
++    return NS_ERROR_FAILURE;
++
++  mCustomColumnHandlers.Remove(aColID);
++  return NS_OK;
++}
++
++NS_IMETHODIMP nsAbView::GetColumnHandler(const nsAString& aColID, nsIAbCustomColumnHandler** aHandler)
++{
++  NS_ENSURE_ARG_POINTER(aHandler);
++  
++  mCustomColumnHandlers.Get(aColID, aHandler);
++  NS_IF_ADDREF(*aHandler);
++  
++  return (*aHandler) ? NS_OK : NS_ERROR_FAILURE;
++}
+diff --git a/mailnews/addrbook/src/nsAbView.h b/mailnews/addrbook/src/nsAbView.h
+--- a/mailnews/addrbook/src/nsAbView.h
++++ b/mailnews/addrbook/src/nsAbView.h
+@@ -50,16 +50,17 @@
+ #include "nsIAtom.h"
+ #include "nsICollation.h"
+ #include "nsIAbListener.h"
+ #include "nsIObserver.h"
+ #include "nsServiceManagerUtils.h"
+ #include "nsComponentManagerUtils.h"
+ #include "nsMemory.h"
+ #include "nsIStringBundle.h"
++#include "nsInterfaceHashtable.h"
+ 
+ typedef struct AbCard
+ {
+   nsIAbCard *card;
+   PRUint32 primaryCollationKeyLen;
+   PRUint32 secondaryCollationKeyLen;
+   PRUint8 *primaryCollationKey;
+   PRUint8 *secondaryCollationKey;
+@@ -106,11 +107,12 @@ private:
+   nsCOMPtr<nsICollation> mCollationKeyGenerator;
+   nsCOMPtr<nsIAbViewListener> mAbViewListener;
+   nsCOMPtr<nsIStringBundle> mABBundle;
+ 
+   PRPackedBool mInitialized;
+   PRPackedBool mSuppressSelectionChange;
+   PRPackedBool mSuppressCountChange;
+   PRInt32 mGeneratedNameFormat;
++  nsInterfaceHashtable<nsStringHashKey, nsIAbCustomColumnHandler> mCustomColumnHandlers;
+ };
+ 
+ #endif /* _nsAbView_H_ */

@@ -1,0 +1,133 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Code in this file is generated using a computer program.
+ * Please refer to the corresponding telepathy spec for any help in using the
+ * code here.  You may also feel free to contact the original developer for
+ * any related help.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+
+
+%{C++
+#include "glib/gtypes.h"
+%}
+native gpointer(gpointer);
+
+
+
+[scriptable, uuid(d4aebff4-ecc9-4a22-921f-dfe25ff463d6)]
+interface csITpChannelTypeDBusTubeOfferCB : nsISupports
+{
+  void onOfferError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onOfferDone(in AUTF8String aaddress);
+};
+
+[scriptable, uuid(cf932a36-429c-4050-83dd-1868feaab52c)]
+interface csITpChannelTypeDBusTubeAcceptCB : nsISupports
+{
+  void onAcceptError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onAcceptDone(in AUTF8String aaddress);
+};
+
+[scriptable, uuid(37b520a6-6aae-40e2-9438-6317ce8e0f99)]
+interface csITpChannelTypeDBusTubeDBusNamesChangedObserver : nsISupports
+{
+  void onDBusNamesChanged(in nsIArray aAdded, in PRUint32 aRemovedCount, [array, size_is(aRemovedCount)] in PRUint32 aRemoved);
+};
+
+[scriptable, uuid(125bd0d2-9d1a-4010-8541-f4c52926d2a6)]
+interface csITpChannelTypeDBusTubeServiceNameCB : nsISupports
+{
+  void getPropertyServiceNameError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyServiceNameDone(in AUTF8String aServiceName);
+};
+
+[scriptable, uuid(f7e9586f-7e60-4e05-bd0d-84ee2183efdb)]
+interface csITpChannelTypeDBusTubeDBusNamesCB : nsISupports
+{
+  void getPropertyDBusNamesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyDBusNamesDone(in nsIArray aDBusNames);
+};
+
+/*
+ * Represents the participants in a multi-user D-Bus tube, as
+        used by the
+ */
+[scriptable, uuid(49e4a0e3-5f02-48b1-9e89-8f9a56caf9e8)]
+interface csITpDBusTubeParticipants : nsISupports
+{
+  /* The handle of a participant in this D-Bus tube. */
+  readonly attribute PRUint32 handle;
+  /* That participant's unique name. */
+  readonly attribute AUTF8String uniqueName;
+};
+
+[scriptable, uuid(032b9d8f-4829-4414-9fe8-4f825819e041)]
+interface csITpChannelTypeDBusTubeSupportedAccessControlsCB : nsISupports
+{
+  void getPropertySupportedAccessControlsError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertySupportedAccessControlsDone(in PRUint32 aSupportedAccessControlsCount, [array, size_is(aSupportedAccessControlsCount)] in PRUint32 aSupportedAccessControls);
+};
+
+
+
+[scriptable, uuid(05850e94-a896-4a65-87d5-643a443d8976)]
+interface csITpChannelTypeDBusTube : nsISupports
+{
+  void callOffer(in nsIArray aparameters, in PRUint32 aaccesscontrol, in csITpChannelTypeDBusTubeOfferCB cb);
+
+  void callAccept(in PRUint32 aaccesscontrol, in csITpChannelTypeDBusTubeAcceptCB cb);
+
+  void connectToDBusNamesChanged(in csITpChannelTypeDBusTubeDBusNamesChangedObserver observer);
+  void disconnectFromDBusNamesChanged(in csITpChannelTypeDBusTubeDBusNamesChangedObserver observer);
+
+  void getPropertyServiceName(in csITpChannelTypeDBusTubeServiceNameCB cb);
+
+  /* For a multi-user (i.e. Handle_Type_Room) D-Bus tube, a mapping
+        between contact handles and their unique bus names on this tube.
+        For a peer-to-peer (i.e. Handle_Type_Contact) D-Bus tube, the empty
+        dictionary.  Change notification is via */
+  void getPropertyDBusNames(in csITpChannelTypeDBusTubeDBusNamesCB cb);
+
+  void getPropertySupportedAccessControls(in csITpChannelTypeDBusTubeSupportedAccessControlsCB cb);
+
+};

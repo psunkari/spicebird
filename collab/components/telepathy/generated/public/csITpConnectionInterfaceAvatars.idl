@@ -1,0 +1,258 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Code in this file is generated using a computer program.
+ * Please refer to the corresponding telepathy spec for any help in using the
+ * code here.  You may also feel free to contact the original developer for
+ * any related help.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+
+
+%{C++
+#include "glib/gtypes.h"
+%}
+native gpointer(gpointer);
+
+
+
+/*
+ * A dictionary whose keys are contact handles and whose
+        values are avatar tokens.
+ */
+[scriptable, uuid(31b1cb3d-0049-473f-9972-a784138cffd0)]
+interface csITpAvatarTokenMap : nsISupports
+{
+  readonly attribute PRUint32 handle;
+  readonly attribute AUTF8String token;
+};
+
+[scriptable, uuid(95c1d42c-a5a3-4f9b-9a5c-8666f5eed30f)]
+interface csITpConnectionInterfaceAvatarsAvatarUpdatedObserver : nsISupports
+{
+  void onAvatarUpdated(in PRUint32 aContact, in AUTF8String aNewAvatarToken);
+};
+
+[scriptable, uuid(eefa7345-4eef-445a-99c4-fdda4b95c54f)]
+interface csITpConnectionInterfaceAvatarsAvatarRetrievedObserver : nsISupports
+{
+  void onAvatarRetrieved(in PRUint32 aContact, in AUTF8String aToken, in PRUint32 aAvatarCount, [array, size_is(aAvatarCount)] in PRUint8 aAvatar, in AUTF8String aType);
+};
+
+[scriptable, uuid(21dbf20f-e8ad-4499-8784-a5dfaf656a41)]
+interface csITpConnectionInterfaceAvatarsSupportedAvatarMIMETypesCB : nsISupports
+{
+  void getPropertySupportedAvatarMIMETypesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertySupportedAvatarMIMETypesDone(in PRUint32 aSupportedAvatarMIMETypesCount, [array, size_is(aSupportedAvatarMIMETypesCount)] in string aSupportedAvatarMIMETypes);
+};
+
+[scriptable, uuid(c8b97b55-e506-4c8e-bc3e-c9444894cc4a)]
+interface csITpConnectionInterfaceAvatarsMinimumAvatarHeightCB : nsISupports
+{
+  void getPropertyMinimumAvatarHeightError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyMinimumAvatarHeightDone(in PRUint32 aMinimumAvatarHeight);
+};
+
+[scriptable, uuid(e71ce6ef-62b5-41be-a61a-9869b6c2db54)]
+interface csITpConnectionInterfaceAvatarsMinimumAvatarWidthCB : nsISupports
+{
+  void getPropertyMinimumAvatarWidthError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyMinimumAvatarWidthDone(in PRUint32 aMinimumAvatarWidth);
+};
+
+[scriptable, uuid(3cd4c932-da34-4b15-b8c4-75d7a1b33392)]
+interface csITpConnectionInterfaceAvatarsRecommendedAvatarHeightCB : nsISupports
+{
+  void getPropertyRecommendedAvatarHeightError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyRecommendedAvatarHeightDone(in PRUint32 aRecommendedAvatarHeight);
+};
+
+[scriptable, uuid(15479d81-c2ad-469a-9585-e0aae62fe4fe)]
+interface csITpConnectionInterfaceAvatarsRecommendedAvatarWidthCB : nsISupports
+{
+  void getPropertyRecommendedAvatarWidthError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyRecommendedAvatarWidthDone(in PRUint32 aRecommendedAvatarWidth);
+};
+
+[scriptable, uuid(c194da96-a14a-4c1a-810a-8c0840ecba9f)]
+interface csITpConnectionInterfaceAvatarsMaximumAvatarHeightCB : nsISupports
+{
+  void getPropertyMaximumAvatarHeightError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyMaximumAvatarHeightDone(in PRUint32 aMaximumAvatarHeight);
+};
+
+[scriptable, uuid(18a5acb9-6e34-4b1f-a6af-d04b621ccc59)]
+interface csITpConnectionInterfaceAvatarsMaximumAvatarWidthCB : nsISupports
+{
+  void getPropertyMaximumAvatarWidthError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyMaximumAvatarWidthDone(in PRUint32 aMaximumAvatarWidth);
+};
+
+[scriptable, uuid(cdcee3ce-69e0-4b91-b218-b00adb34bc65)]
+interface csITpConnectionInterfaceAvatarsMaximumAvatarBytesCB : nsISupports
+{
+  void getPropertyMaximumAvatarBytesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyMaximumAvatarBytesDone(in PRUint32 aMaximumAvatarBytes);
+};
+
+[scriptable, uuid(70eab6a1-7492-49d5-8ffd-96b1567a0f80)]
+interface csITpConnectionInterfaceAvatarsGetAvatarRequirementsCB : nsISupports
+{
+  void onGetAvatarRequirementsError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetAvatarRequirementsDone(in PRUint32 aMIMETypesCount, [array, size_is(aMIMETypesCount)] in string aMIMETypes, in PRUint16 aMinWidth, in PRUint16 aMinHeight, in PRUint16 aMaxWidth, in PRUint16 aMaxHeight, in PRUint32 aMaxBytes);
+};
+
+[scriptable, uuid(34480697-4dce-4a79-a447-d25831a5a8dd)]
+interface csITpConnectionInterfaceAvatarsGetAvatarTokensCB : nsISupports
+{
+  void onGetAvatarTokensError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetAvatarTokensDone(in PRUint32 aTokensCount, [array, size_is(aTokensCount)] in string aTokens);
+};
+
+[scriptable, uuid(af4bd504-1f59-4e39-a088-af934f7371bd)]
+interface csITpConnectionInterfaceAvatarsGetKnownAvatarTokensCB : nsISupports
+{
+  void onGetKnownAvatarTokensError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetKnownAvatarTokensDone(in nsIArray aTokens);
+};
+
+[scriptable, uuid(b167fc72-ff04-44f5-aee9-ce6994c6b26e)]
+interface csITpConnectionInterfaceAvatarsRequestAvatarCB : nsISupports
+{
+  void onRequestAvatarError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onRequestAvatarDone(in PRUint32 aDataCount, [array, size_is(aDataCount)] in PRUint8 aData, in AUTF8String aMIMEType);
+};
+
+[scriptable, uuid(8dc9223c-d715-4922-a5a7-3c47028799a7)]
+interface csITpConnectionInterfaceAvatarsRequestAvatarsCB : nsISupports
+{
+  void onRequestAvatarsError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onRequestAvatarsDone();
+};
+
+[scriptable, uuid(85c3a325-eaa4-4cda-83a5-d85318097cf4)]
+interface csITpConnectionInterfaceAvatarsSetAvatarCB : nsISupports
+{
+  void onSetAvatarError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onSetAvatarDone(in AUTF8String aToken);
+};
+
+[scriptable, uuid(dd84b54a-cd2d-4e01-b23c-3edcc1bf7cdb)]
+interface csITpConnectionInterfaceAvatarsClearAvatarCB : nsISupports
+{
+  void onClearAvatarError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onClearAvatarDone();
+};
+
+
+
+[scriptable, uuid(e1d5319a-e2db-4dfa-8bbd-55dc8d093595)]
+interface csITpConnectionInterfaceAvatars : nsISupports
+{
+  void connectToAvatarUpdated(in csITpConnectionInterfaceAvatarsAvatarUpdatedObserver observer);
+  void disconnectFromAvatarUpdated(in csITpConnectionInterfaceAvatarsAvatarUpdatedObserver observer);
+
+  void connectToAvatarRetrieved(in csITpConnectionInterfaceAvatarsAvatarRetrievedObserver observer);
+  void disconnectFromAvatarRetrieved(in csITpConnectionInterfaceAvatarsAvatarRetrievedObserver observer);
+
+  /* An array of supported MIME types (e.g. "image/jpeg").
+        Clients MAY assume that the first type in this array is preferred.
+        This property cannot change after the Connection goes to the Connected
+        state. */
+  void getPropertySupportedAvatarMIMETypes(in csITpConnectionInterfaceAvatarsSupportedAvatarMIMETypesCB cb);
+
+  /* The minimum height in pixels of an avatar on this protocol, which MAY
+        be 0.
+        This property cannot change after the Connection goes to the Connected
+        state. */
+  void getPropertyMinimumAvatarHeight(in csITpConnectionInterfaceAvatarsMinimumAvatarHeightCB cb);
+
+  /* The minimum width in pixels of an avatar on this protocol, which MAY
+        be 0.
+        This property cannot change after the Connection goes to the Connected
+        state. */
+  void getPropertyMinimumAvatarWidth(in csITpConnectionInterfaceAvatarsMinimumAvatarWidthCB cb);
+
+  /* The recommended height in pixels of an avatar on this protocol, or 0 if
+        there is no preferred height.
+        This property cannot change after the Connection goes to the Connected
+        state. */
+  void getPropertyRecommendedAvatarHeight(in csITpConnectionInterfaceAvatarsRecommendedAvatarHeightCB cb);
+
+  /* The recommended width in pixels of an avatar on this protocol, or 0 if
+        there is no preferred width.
+        This property cannot change after the Connection goes to the Connected
+        state. */
+  void getPropertyRecommendedAvatarWidth(in csITpConnectionInterfaceAvatarsRecommendedAvatarWidthCB cb);
+
+  /* The maximum height in pixels of an avatar on this protocol, or 0 if
+        there is no limit.
+        This property cannot change after the Connection goes to the Connected
+        state. */
+  void getPropertyMaximumAvatarHeight(in csITpConnectionInterfaceAvatarsMaximumAvatarHeightCB cb);
+
+  /* The maximum width in pixels of an avatar on this protocol, or 0 if
+        there is no limit.
+        This property cannot change after the Connection goes to the Connected
+        state. */
+  void getPropertyMaximumAvatarWidth(in csITpConnectionInterfaceAvatarsMaximumAvatarWidthCB cb);
+
+  /* The maximum size in bytes of an avatar on this protocol, or 0 if
+        there is no limit.
+        This property cannot change after the Connection goes to the Connected
+        state. */
+  void getPropertyMaximumAvatarBytes(in csITpConnectionInterfaceAvatarsMaximumAvatarBytesCB cb);
+
+  void callGetAvatarRequirements(in csITpConnectionInterfaceAvatarsGetAvatarRequirementsCB cb);
+
+  void callGetAvatarTokens(in PRUint32 aContactsCount, [array, size_is(aContactsCount)] in PRUint32 aContacts, in csITpConnectionInterfaceAvatarsGetAvatarTokensCB cb);
+
+  void callGetKnownAvatarTokens(in PRUint32 aContactsCount, [array, size_is(aContactsCount)] in PRUint32 aContacts, in csITpConnectionInterfaceAvatarsGetKnownAvatarTokensCB cb);
+
+  void callRequestAvatar(in PRUint32 aContact, in csITpConnectionInterfaceAvatarsRequestAvatarCB cb);
+
+  void callRequestAvatars(in PRUint32 aContactsCount, [array, size_is(aContactsCount)] in PRUint32 aContacts, in csITpConnectionInterfaceAvatarsRequestAvatarsCB cb);
+
+  void callSetAvatar(in PRUint32 aAvatarCount, [array, size_is(aAvatarCount)] in PRUint8 aAvatar, in AUTF8String aMIMEType, in csITpConnectionInterfaceAvatarsSetAvatarCB cb);
+
+  void callClearAvatar(in csITpConnectionInterfaceAvatarsClearAvatarCB cb);
+
+};

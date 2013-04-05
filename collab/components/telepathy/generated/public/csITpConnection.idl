@@ -1,0 +1,267 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Code in this file is generated using a computer program.
+ * Please refer to the corresponding telepathy spec for any help in using the
+ * code here.  You may also feel free to contact the original developer for
+ * any related help.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+
+
+%{C++
+#include "glib/gtypes.h"
+%}
+native gpointer(gpointer);
+
+
+
+/*
+ * A struct representing a channel, as returned by
+        ListChannels on the Connection interface.
+ */
+[scriptable, uuid(4b261fef-f372-4f50-97c5-8460654c3cd4)]
+interface csITpChannelInfo : nsISupports
+{
+  /* The object path of the channel, which is on the
+          same bus name as the connection */
+  readonly attribute ACString channel;
+  /* The channel's type */
+  readonly attribute AUTF8String channelType;
+  /* The type of the handle that the channel communicates
+          with, or Handle_Type_None if there is no associated
+          handle */
+  readonly attribute PRUint32 handleType;
+  /* The handle that the channel communicates with,
+          or 0 if there is no associated handle */
+  readonly attribute PRUint32 handle;
+
+  [noscript] gpointer toGLib();
+};
+
+[scriptable, uuid(00a50005-c990-4cfc-9d70-0a5f5a95f9df)]
+interface csITpConnectionConnectCB : nsISupports
+{
+  void onConnectError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onConnectDone();
+};
+
+[scriptable, uuid(1bcf2254-e526-44c8-836f-f65d475a202f)]
+interface csITpConnectionDisconnectCB : nsISupports
+{
+  void onDisconnectError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onDisconnectDone();
+};
+
+[scriptable, uuid(15ae71e3-baad-4d45-a65c-9e36f8161cea)]
+interface csITpConnectionGetInterfacesCB : nsISupports
+{
+  void onGetInterfacesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetInterfacesDone(in PRUint32 aInterfacesCount, [array, size_is(aInterfacesCount)] in string aInterfaces);
+};
+
+[scriptable, uuid(cbac415b-2808-4886-949a-b71970965b51)]
+interface csITpConnectionGetProtocolCB : nsISupports
+{
+  void onGetProtocolError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetProtocolDone(in AUTF8String aProtocol);
+};
+
+[scriptable, uuid(6018f12b-9a0f-402c-93cc-5f902d507171)]
+interface csITpConnectionSelfHandleChangedObserver : nsISupports
+{
+  void onSelfHandleChanged(in PRUint32 aSelfHandle);
+};
+
+[scriptable, uuid(029e9ea2-346d-4fa4-8007-940d49402960)]
+interface csITpConnectionSelfHandleCB : nsISupports
+{
+  void getPropertySelfHandleError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertySelfHandleDone(in PRUint32 aSelfHandle);
+};
+
+[scriptable, uuid(bca8fd6a-a7a9-47ac-997b-f77289dad777)]
+interface csITpConnectionGetSelfHandleCB : nsISupports
+{
+  void onGetSelfHandleError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetSelfHandleDone(in PRUint32 aSelfHandle);
+};
+
+[scriptable, uuid(8537baa4-269e-471b-a439-a46c4a0d1b3f)]
+interface csITpConnectionGetStatusCB : nsISupports
+{
+  void onGetStatusError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetStatusDone(in PRUint32 aStatus);
+};
+
+[scriptable, uuid(8ee6f63f-a8ab-4143-aee2-bc95588a7853)]
+interface csITpConnectionHoldHandlesCB : nsISupports
+{
+  void onHoldHandlesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onHoldHandlesDone();
+};
+
+[scriptable, uuid(05210791-caee-4257-a255-34e6404c8152)]
+interface csITpConnectionInspectHandlesCB : nsISupports
+{
+  void onInspectHandlesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onInspectHandlesDone(in PRUint32 aIdentifiersCount, [array, size_is(aIdentifiersCount)] in string aIdentifiers);
+};
+
+[scriptable, uuid(7fa3d093-6933-458d-9254-e001b37f2927)]
+interface csITpConnectionListChannelsCB : nsISupports
+{
+  void onListChannelsError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onListChannelsDone(in nsIArray aChannelInfo);
+};
+
+[scriptable, uuid(07dfc4ae-f7a8-444e-ade0-f4f29ca7293d)]
+interface csITpConnectionNewChannelObserver : nsISupports
+{
+  void onNewChannel(in ACString aObjectPath, in AUTF8String aChannelType, in PRUint32 aHandleType, in PRUint32 aHandle, in PRBool aSuppressHandler);
+};
+
+[scriptable, uuid(ec8e0ad5-1522-4158-ab7e-242ccd4e0cc1)]
+interface csITpConnectionReleaseHandlesCB : nsISupports
+{
+  void onReleaseHandlesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onReleaseHandlesDone();
+};
+
+[scriptable, uuid(ff2d7005-3c37-4b0d-92df-4d34df2e7acf)]
+interface csITpConnectionRequestChannelCB : nsISupports
+{
+  void onRequestChannelError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onRequestChannelDone(in ACString aObjectPath);
+};
+
+[scriptable, uuid(5ddec942-30ef-493d-98a4-eb4cf551e566)]
+interface csITpConnectionRequestHandlesCB : nsISupports
+{
+  void onRequestHandlesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onRequestHandlesDone(in PRUint32 aHandlesCount, [array, size_is(aHandlesCount)] in PRUint32 aHandles);
+};
+
+[scriptable, uuid(6533dda1-9e42-4910-8050-3aca3fecbcfb)]
+interface csITpConnectionConnectionErrorObserver : nsISupports
+{
+  void onConnectionError(in AUTF8String aError, in nsIArray aDetails);
+};
+
+[scriptable, uuid(615cf5e4-0f00-4d33-879e-d601647d9e22)]
+interface csITpConnectionStatusChangedObserver : nsISupports
+{
+  void onStatusChanged(in PRUint32 aStatus, in PRUint32 aReason);
+};
+
+
+
+[scriptable, uuid(932bf60c-de2b-4a3f-a6e0-ac3fcaec3944)]
+interface csITpConnection : nsISupports
+{
+  void callConnect(in csITpConnectionConnectCB cb);
+
+  void callDisconnect(in csITpConnectionDisconnectCB cb);
+
+  void callGetInterfaces(in csITpConnectionGetInterfacesCB cb);
+
+  void callGetProtocol(in csITpConnectionGetProtocolCB cb);
+
+  void connectToSelfHandleChanged(in csITpConnectionSelfHandleChangedObserver observer);
+  void disconnectFromSelfHandleChanged(in csITpConnectionSelfHandleChangedObserver observer);
+
+  /* The handle which represents the user on this connection, which will
+        remain valid for the lifetime of this connection, or until a change
+        in the user's identifier is signalled by the */
+  void getPropertySelfHandle(in csITpConnectionSelfHandleCB cb);
+
+  void callGetSelfHandle(in csITpConnectionGetSelfHandleCB cb);
+
+  void callGetStatus(in csITpConnectionGetStatusCB cb);
+
+  void callHoldHandles(in PRUint32 aHandleType, in PRUint32 aHandlesCount, [array, size_is(aHandlesCount)] in PRUint32 aHandles, in csITpConnectionHoldHandlesCB cb);
+
+  void callInspectHandles(in PRUint32 aHandleType, in PRUint32 aHandlesCount, [array, size_is(aHandlesCount)] in PRUint32 aHandles, in csITpConnectionInspectHandlesCB cb);
+
+  void callListChannels(in csITpConnectionListChannelsCB cb);
+
+  void connectToNewChannel(in csITpConnectionNewChannelObserver observer);
+  void disconnectFromNewChannel(in csITpConnectionNewChannelObserver observer);
+
+  void callReleaseHandles(in PRUint32 aHandleType, in PRUint32 aHandlesCount, [array, size_is(aHandlesCount)] in PRUint32 aHandles, in csITpConnectionReleaseHandlesCB cb);
+
+  void callRequestChannel(in AUTF8String aType, in PRUint32 aHandleType, in PRUint32 aHandle, in PRBool aSuppressHandler, in csITpConnectionRequestChannelCB cb);
+
+  const short Handle_Type_None = 0;
+  const short Handle_Type_Contact = 1;
+  const short Handle_Type_Room = 2;
+  const short Handle_Type_List = 3;
+  const short Handle_Type_Group = 4;
+
+  void callRequestHandles(in PRUint32 aHandleType, in PRUint32 aIdentifiersCount, [array, size_is(aIdentifiersCount)] in string aIdentifiers, in csITpConnectionRequestHandlesCB cb);
+
+  const short Connection_Status_Connected = 0;
+  const short Connection_Status_Connecting = 1;
+  const short Connection_Status_Disconnected = 2;
+
+  /*  */
+  const short Connection_Status_Reason_None_Specified = 0;
+  const short Connection_Status_Reason_Requested = 1;
+  const short Connection_Status_Reason_Network_Error = 2;
+  const short Connection_Status_Reason_Authentication_Failed = 3;
+  const short Connection_Status_Reason_Encryption_Error = 4;
+  const short Connection_Status_Reason_Name_In_Use = 5;
+  const short Connection_Status_Reason_Cert_Not_Provided = 6;
+  const short Connection_Status_Reason_Cert_Untrusted = 7;
+  const short Connection_Status_Reason_Cert_Expired = 8;
+  const short Connection_Status_Reason_Cert_Not_Activated = 9;
+  const short Connection_Status_Reason_Cert_Hostname_Mismatch = 10;
+  const short Connection_Status_Reason_Cert_Fingerprint_Mismatch = 11;
+  const short Connection_Status_Reason_Cert_Self_Signed = 12;
+  const short Connection_Status_Reason_Cert_Other_Error = 13;
+
+  void connectToConnectionError(in csITpConnectionConnectionErrorObserver observer);
+  void disconnectFromConnectionError(in csITpConnectionConnectionErrorObserver observer);
+
+  void connectToStatusChanged(in csITpConnectionStatusChangedObserver observer);
+  void disconnectFromStatusChanged(in csITpConnectionStatusChangedObserver observer);
+
+};

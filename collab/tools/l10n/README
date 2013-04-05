@@ -1,0 +1,18 @@
+Synchronizing locales from BabelZilla:
+=====================================
+
+1) Download the all locales pack from BabelZilla (this should be strip untranslated messages version)
+2) run ./extract_rename_babezilla.sh TARBALL. This will delete and extract to "babelzilla" directory. Then rename 4 char locales code in babelzilla into 2 char code when necessary using the map_locale_names.pl script. Cleanup binary garbage files produced by BabelZilla (a bug reported and work on). And also convert collab/defines.inc file from dos2unix format. Otherwise there build fails for that locale.
+3) Do an l10n-checkout by running "./checkout_latest_locales.pl `cat locales`". This step creates "l10n_upstream" directory by getting all the upstream locales and required source code in "mozilla". It also creates "l10n_stage1" which is a merge of l10n_upstream and en-US. And finally it creates "l10n" directory which is a merge of l10n_upstream + en-US + Spicebird translations. "l10n_upstream" directory will also contain "l10n_upstream/xx-yy" which is en-US copy. Only these two directories are of importance further on. If we tar the l10n_upstream and extract it as "l10n" before this step in the next sync, this step will have happen faster.
+4) Run the diff process by calling "./diff_all_locales.sh" which uses "locales" file to see what locales to work on and uses "./diff_locale_directories.pl" for actual work. The output is a "diff" directory. 
+5) Remove ru and fr which don't want to be maintained in BabelZilla.
+6) "rsync -a" this to a checked out collab l10n directory and make a commit.
+
+Updating BabelZilla
+===================
+
+1) Get the "l10n_upstream" directory from above process.
+2) merge it with checked out collab l10n using "merge_locale_directories.pl"
+3) Rename 2 char codes into 4 char codes as per BabelZilla
+4) Rename xx-yy to en-US
+4) Zip and send.

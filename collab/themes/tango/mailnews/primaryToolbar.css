@@ -1,0 +1,254 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998-1999
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Prasad Sunkari <prasad@synovel.com>
+ *  Sivakrishna Edpuganti <sivakrishna@synovel.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* mailnews toolbar */
+
+menuitem#folder-toolbar, #select-app-menulist[value~="folder"] {
+  list-style-image: url("chrome://messenger/skin/16x16/folder-pane.png");
+  -moz-image-region: rect(0 16px 16px 0);
+}
+
+.mailnews-toolbarbutton {
+  -moz-box-orient: vertical;
+  list-style-image: url("chrome://messenger/skin/22x22/mailnews-toolbar.png");
+}
+
+#button-getmsg, [typeid="button-getmsg"] {
+  -moz-image-region: rect(0px 22px 22px 0px);
+}
+
+#button-getmsg[disabled], [typeid="button-getmsg"][disabled] {
+  -moz-image-region: rect(22px 22px 44px 0px) !important;
+} 
+
+#mailnews-primary-toolbar > #new-toolbutton,
+#mailnews-primary-toolbar > [typeid="new-toolbutton"] {
+  list-style-image: url("chrome://messenger/skin/22x22/mailnews-toolbar.png");
+  -moz-image-region: rect(0px 44px 22px 22px);
+}
+
+#button-newmsg {
+  -moz-image-region: rect(0px 44px 22px 22px);
+}
+
+#button-newmsg[disabled] {
+   -moz-image-region: rect(22px 44px 44px 22px) !important;
+} 
+
+#button-reply {
+  -moz-image-region: rect(0px 88px 22px 66px);
+}
+
+#button-reply[disabled] {
+  -moz-image-region: rect(22px 88px 44px 66px) !important;
+} 
+
+#button-replyall {
+  -moz-image-region: rect(0px 110px 22px 88px);
+}
+
+#button-replyall[disabled] {
+  -moz-image-region: rect(22px 110px 44px 88px) !important;
+} 
+
+#button-forward {
+  -moz-image-region: rect(0px 132px 22px 110px);
+}
+
+#button-forward[disabled] {
+  -moz-image-region: rect(22px 132px 44px 110px) !important;
+} 
+
+.junk-button {
+  -moz-image-region: rect(0px 176px 22px 154px);
+}
+
+.junk-button[disabled] {
+  -moz-image-region: rect(22px 176px 44px 154px) !important;
+}
+
+#button-stop {
+  -moz-image-region: rect(0px 220px 22px 198px);
+}
+
+#button-stop[disabled] {
+  -moz-image-region: rect(22px 220px 44px 198px) !important;
+}
+
+#button-file {
+  -moz-image-region: rect(0px 242px 22px 220px);
+}
+
+#button-file[disabled] {
+  -moz-image-region: rect(22px 242px 44px 220px) !important;
+} 
+
+#button-next, #button-previous[chromedir="rtl"] {
+  -moz-image-region: rect(0px 264px 22px 242px);
+}
+
+#button-next[disabled], #button-previous[chromedir="rtl"][disabled] {
+  -moz-image-region: rect(22px 264px 44px 242px) !important;
+} 
+
+#button-previous, #button-next[chromedir="rtl"] {
+  -moz-image-region: rect(0px 286px 22px 264px);
+}
+
+#button-previous[disabled], #button-next[chromedir="rtl"][disabled] {
+  -moz-image-region: rect(22px 286px 44px 264px) !important;
+} 
+
+#button-mark {
+  -moz-image-region: rect(0px 308px 22px 286px);
+}
+
+#button-mark[disabled] {
+  -moz-image-region: rect(22px 308px 44px 286px) !important;
+} 
+
+#button-tag {
+  -moz-image-region: rect(0px 330px 22px 308px);
+}
+
+#button-tag[disabled] {
+  -moz-image-region: rect(22px 330px 44px 308px) !important;
+} 
+
+#button-goback, #button-goforward[chromedir="rtl"] {
+  -moz-image-region: rect(0px 352px 22px 330px);
+}
+
+#button-goback[disabled], #button-goforward[chromedir="rtl"][disabled] {
+  -moz-image-region: rect(22px 352px 44px 330px) !important;
+} 
+
+#button-goforward, #button-goback[chromedir="rtl"] {
+  -moz-image-region: rect(0px 374px 22px 352px);
+}
+
+#button-goforward[disabled], #button-goback[chromedir="rtl"][disabled] {
+  -moz-image-region: rect(22px 374px 44px 352px) !important;
+} 
+
+#button-compact {
+  -moz-image-region: rect(0px 396px 22px 374px);
+}
+
+#button-compact[disabled] {
+  -moz-image-region: rect(22px 396px 44px 374px);
+}
+
+#button-replylist {
+  -moz-image-region: rect(0px 418px 22px 396px);
+}
+
+#button-replylist[disabled] {
+  -moz-image-region: rect(22px 418px 44px 396px);
+}
+
+#button-archive {
+  -moz-image-region: rect(0px 440px 22px 418px);
+}
+
+#button-archive[disabled] {
+  -moz-image-region: rect(22px 440px 44px 418px);
+}
+
+/* Message Notification Bar */
+
+.msgNotificationBar {
+  background-color: InfoBackground;
+  color: InfoText;  
+  border-bottom: 1px solid ThreeDShadow;
+  padding: 1px;
+  padding-left: 3px;
+  padding-right: 3px;
+}
+
+.msgNotificationButton {
+  -moz-appearance: none;
+  padding: 0px;
+  margin: 1px 5px 1px 5px;
+  min-width: 6.3em;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDLightShadow;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDLightShadow;
+  background-color: ThreeDFace;
+  color: ButtonText;
+}
+
+.msgNotificationButton > toolbarbutton {
+  -moz-appearance: none;
+  margin: 0px;
+  padding: 0px;
+  border: 2px solid transparent;
+  background-color: ThreeDFace;
+  color: ButtonText;
+}
+
+.msgNotificationButton > toolbarbutton:hover {
+  -moz-border-top-colors: ThreeDShadow ThreeDLightShadow;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDLightShadow;
+}
+
+.msgNotificaton-smallText {
+  padding-left: 10px;
+  font-size: 90%;
+}
+
+#junkBarImage {
+  list-style-image: url("chrome://messenger/skin/16x16/mail-mark-junk.png");
+}
+
+#junkIcon {
+  list-style-image: url("chrome://messenger/skin/16x16/mail-mark-junk.png");
+}
+
+#remoteContentImage {
+  list-style-image: url("chrome://messenger/skin/16x16/network-error.png"); 
+}
+
+#phishingBarImage {
+  list-style-image: url("chrome://messenger/skin/16x16/face-devilish.png");
+}

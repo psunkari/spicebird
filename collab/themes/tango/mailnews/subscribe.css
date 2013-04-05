@@ -1,0 +1,71 @@
+/* ===== subscribe.css ==================================================
+  == Styles for the Subscribe dialog.
+  ======================================================================= */
+
+@import url("chrome://messenger/skin/");
+@import url("chrome://messenger/skin/folderMenus.css");
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: Subscription Icons  :::::: */
+
+treechildren::-moz-tree-image(subscribedColumn),
+treechildren::-moz-tree-image(subscribedColumn2) {
+  -moz-margin-end: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/notchecked.gif");
+}
+
+treechildren::-moz-tree-image(subscribedColumn, Subscribed-true),
+treechildren::-moz-tree-image(subscribedColumn2, subscribed) {
+  list-style-image: url("chrome://messenger/skin/icons/check.gif");
+}
+
+treechildren::-moz-tree-image(subscribedColumn, Subscribable-false) {
+  list-style-image: none;
+}
+
+treechildren::-moz-tree-cell-text(nameColumn, Subscribable-false) {
+  color: gray;
+  font-style: italic;
+}
+
+/* IMAP Folders*/
+treechildren::-moz-tree-image(nameColumn) {
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-color: transparent;
+  background-attachment: scroll;
+  -moz-background-clip: border;
+  -moz-background-inline-policy: continuous;
+  -moz-background-origin: border;
+  -moz-margin-end: 2px;
+  list-style-image: url("chrome://messenger/skin/16x16/folder-pane.png");
+  -moz-image-region: rect(0 112px 16px 96px);
+}
+
+/* Newsgroups */
+treechildren::-moz-tree-image(nameColumn, ServerType-nntp),
+treechildren::-moz-tree-image(nameColumn2, nntp) {
+  -moz-margin-end: 2px;
+  list-style-image: url("chrome://messenger/skin/16x16/folder-pane.png");
+  -moz-image-region: rect(0 256px 16px 240px);
+}
+
+/* ::::: Servers :::::: */
+
+.subscribeMenuItem {
+  list-style-image: url("chrome://messenger/skin/16x16/folder-pane.png");
+  -moz-image-region: rect(0 16px 16px 0);
+}
+
+.subscribeMenuItem[ServerType="imap"][IsSecure="true"] {
+  -moz-image-region: rect(0 32px 16px 16px);
+}
+
+.subscribeMenuItem[ServerType="nntp"] {
+  -moz-image-region: rect(0 64px 16px 48px);
+}
+
+.subscribeMenuItem[ServerType="nntp"][IsSecure="true"] {
+  -moz-image-region: rect(0 80px 16px 64px);
+}

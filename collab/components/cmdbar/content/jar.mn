@@ -1,0 +1,6 @@
+collab.jar:
+*  content/collab/csCmdBarOverlay.xul
+*  content/collab/csCmdBarOverlay.js
+*  content/collab/csCmdBar.xml
+*  content/collab/csCmdBar.css
+% overlay chrome://collab/content/collab.xul  chrome://collab/content/csCmdBarOverlay.xul

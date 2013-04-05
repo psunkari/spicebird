@@ -1,0 +1,472 @@
+<?xml version="1.0"?>
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+#   Prasad Sunkari <prasad@synovel.com>
+# Portions created by the Initial Developer are Copyright (C) 2007-2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+<?xul-overlay href="chrome://messenger/content/msgHdrViewOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/csMailWindowOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/mailOverlay.xul"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://collab/content/collab.css" type="text/css"?>
+<?xml-stylesheet href="chrome://collab/skin/collab.css" type="text/css"?>
+<?xml-stylesheet href="chrome://collab/content/homebox.css" type="text/css"?>
+
+<?xml-stylesheet href="chrome://messenger/skin/messageWindow.css" type="text/css"?>
+
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
+
+<!DOCTYPE window [
+    <!ENTITY % brandDTD    SYSTEM "chrome://branding/locale/brand.dtd">     %brandDTD;
+    <!ENTITY % globalDTD   SYSTEM "chrome://global/locale/global.dtd">      %globalDTD;
+    <!ENTITY % collabDTD   SYSTEM "chrome://collab/locale/collab.dtd">      %collabDTD;
+    <!ENTITY % commandsDTD SYSTEM "chrome://collab/locale/commands.dtd">    %commandsDTD;
+    <!ENTITY % toolbarsDTD SYSTEM "chrome://collab/locale/toolbars.dtd">    %toolbarsDTD;
+    <!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd" > %messengerDTD;
+]>
+
+<window id="cs-message-window"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&titledefault.label;"
+        titlemodifier="&titledefault.label;"
+        titlemenuseparator="&titleSeparator.label;"
+        onload="OnLoadMessageWindow()"
+        onunload="OnUnloadMessageWindow()"
+        width="750"
+        height="500"
+        persist="width height screenX screenY sizemode"
+        windowtype="mail:messageWindow">
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_collab" src="chrome://collab/locale/collab.properties" />
+    <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
+    <stringbundle id="bundle_offlinePrompts" src="chrome://messenger/locale/offline.properties"/>
+  </stringbundleset>
+
+  <!-- XXX: Replace strres.js when nsContextMenu.js is converted -->
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://collab/content/collab.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/shareglue.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/commandglue.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/folderDisplay.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/messageDisplay.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/messageWindow.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/nsContextMenu.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailContextMenus.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/phishingDetector.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/msgViewNavigation.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
+
+    <commandset id="framework-commands">
+
+        <commandset id="edit-select-menuitems"
+                  commandupdater="true"
+                  events="select"
+                  oncommandupdate="goUpdateSelectEditMenuItems()"/>
+        <commandset id="undo-edit-menuitems"
+                  commandupdater="true"
+                  events="undo"
+                  oncommandupdate="goUpdateUndoEditMenuItems()"/>
+        <commandset id="paste-menuitems"
+                  commandupdater="true"
+                  events="clipboard"
+                  oncommandupdate="goUpdatePasteMenuItems()"/>
+        <commandset id="edit-menuitems"
+                  commandupdater="true"
+                  events="focus"
+                  oncommandupdate="goUpdateGlobalEditMenuItems()"/>
+        <commandset id="toolbar-items"
+                  commandupdater="true"
+                  events="focus"
+                  oncommandupdate="goUpdateCollabToolbarItems()" />
+
+        <command id="cmd_new" oncommand="goDoCommand('cmd_new')"/>
+
+        <!-- File Commands -->
+        <command id="cmd_pageSetup" oncommand="goDoCommand('cmd_pageSetup')"/>
+        <command id="cmd_printPreview" oncommand="goDoCommand('cmd_printPreview')"/>
+        <command id="cmd_print" oncommand="goDoCommand('cmd_print')"/>
+        <command id="cmd_close" oncommand="window.close()"/>
+        <command id="goOfflineMenuItem" type="checkbox" oncommand="MailOfflineMgr.toggleOfflineStatus();"/>
+
+        <!-- File/Import Commands -->
+        <command id="cmd_importSettings" />
+
+        <!-- File/Export Commands -->
+        <command id="cmd_exportSettings" />
+
+        <!-- Edit Commands -->
+        <command id="cmd_undo" />
+        <command id="cmd_redo" />
+        <command id="cmd_cut" />
+        <command id="cmd_copy" />
+        <command id="cmd_paste" />
+        <command id="cmd_delete" />
+        <command id="cmd_shiftDelete" oncommand="goDoCommand('cmd_shiftDelete')" />
+        <command id="cmd_selectAll" />
+        <command id="cmd_find" oncommand="goDoCommand('cmd_find')" disabled="true"/>
+        <command id="cmd_findAgain" oncommand="goDoCommand('cmd_findAgain')" disabled="true"/>
+        <command id="cmd_editOptions" />
+        <command id="button_delete" /> <!-- Let the toolbar button not change with context -->
+
+        <!-- View Commands -->
+        <command id="cmd_viewStatusbar" oncommand="toggleStatusbar()" />
+        <command id="cmd_viewSidebar" oncommand="toggleSidebar()" />
+        <command id="cmd_customizeFWToolbar" oncommand="CustomizeFrameworkToolbar()" />
+
+        <!-- Toolbar Commands -->
+        <command id="cmd-toolbar-mode-none" oncommand="setToolbarMode('framework-toolbox', 'none')" />
+        <command id="cmd-toolbar-mode-icons" oncommand="setToolbarMode('framework-toolbox', 'icons')" />
+        <command id="cmd-toolbar-mode-text" oncommand="setToolbarMode('framework-toolbox', 'text')" />
+        <command id="cmd-toolbar-mode-full" oncommand="setToolbarMode('framework-toolbox', 'full')" />
+
+    </commandset>
+
+  <commandset id="mailCommands">
+    <commandset id="mailFileMenuItems"/>
+    <commandset id="mailViewMenuItems"/>
+    <commandset id="mailEditMenuItems"/>
+    <commandset id="mailEditContextMenuItems"/>
+    <commandset id="mailSearchMenuItems"/>
+    <commandset id="mailGoMenuItems"/>
+    <commandset id="mailMessageMenuItems"/>
+    <commandset id="mailToolbarItems"/>
+    <commandset id="mailGetMsgMenuItems"/>
+    <commandset id="mailMarkMenuItems"/>
+    <commandset id="mailToolsMenuItems"/>
+    <commandset id="globalEditMenuItems"/>
+    <commandset id="selectEditMenuItems"/>
+    <commandset id="clipboardEditMenuItems"/>
+    <!-- commandset id="FocusRingUpdate_Mail"
+                commandupdater="true"
+                events="focus"
+                oncommandupdate="FocusRingUpdate_Mail()"/ -->
+    <commandset id="tasksCommands"/>
+#ifdef XP_MACOSX
+    <commandset id="macWindowMenuItems"/>
+#endif
+  </commandset>
+
+    <keyset id="framework-keyset">
+        <!-- File Menu Keys -->
+        <key id="key_new" command="cmd_new" modifiers="accel" key="&cmd.file.new.key;"/>
+        <key id="key_close" />
+        <key id="key_print" key="&cmd.file.print.key;" modifiers="accel" oncommand="goDoCommand('cmd_print')" />
+
+        <!-- Edit Menu Keys -->
+        <key id="key_undo" />
+        <key id="key_redo" />
+        <key id="key_cut" />
+        <key id="key_copy" />
+        <key id="key_paste" />
+        <key id="key_delete" oncommand="goDoCommand('cmd_delete')" shift="false" />
+        <key id="key_shiftDelete" keycode="VK_DELETE"
+             oncommand="goDoCommand('cmd_shiftDelete');" modifiers="shift"/>
+        <key id="key_selectAll2" modifiers="accel" key="&cmd.edit.selectall.key;"/>
+        <key id="key_quickSearchFocus" key="&cmd.edit.quicksearch.key;"  oncommand="QuickSearchFocus()" modifiers="accel"/>
+
+        <!-- Go menu -->
+        <key id="key_goHome" command="switch-to-home" modifiers="alt" key="&cmd.go.home.key;"/>
+    </keyset>
+
+    <broadcasterset id="framework-broadcasterset" />
+
+    <popupset id="framework-popupset">
+    <panel id="editContactPanel"/>
+    <popup id="emailAddressPopup" class="emailAddressPopup" position="after_start"
+           onpopupshowing="setupEmailAddressPopup(findEmailNodeFromPopupNode(document.popupNode, 'emailAddressPopup')); goUpdateCommand('cmd_createFilterFromPopup')"
+           onpopuphiding="hideEmailAddressPopup(findEmailNodeFromPopupNode(document.popupNode, 'emailAddressPopup'))">
+      <menuitem id="emailAddressPlaceHolder" label=""
+                disabled="true"/>
+      <menuseparator/>
+      <menuitem id="addToAddressBookItem"
+                label="&AddDirectlyToAddressBook.label;"
+                accesskey="&AddDirectlyToAddressBook.accesskey;"
+                oncommand="AddContact(findEmailNodeFromPopupNode(document.popupNode, 'emailAddressPopup'))"/>
+      <menuitem id="editContactItem" label="&EditContact.label;" hidden="true"
+                accesskey="&EditContact.accesskey;"
+                oncommand="EditContact(findEmailNodeFromPopupNode(document.popupNode, 'emailAddressPopup'))"/>
+      <menuitem id="viewContactItem" label="&ViewContact.label;" hidden="true"
+                accesskey="&ViewContact.accesskey;"
+                oncommand="EditContact(findEmailNodeFromPopupNode(document.popupNode, 'emailAddressPopup'))"/>
+      <menuitem id="sendMailToItem" label="&SendMessageTo.label;"
+                accesskey="&SendMessageTo.accesskey;"
+                oncommand="SendMailToNode(findEmailNodeFromPopupNode(document.popupNode, 'emailAddressPopup'))"/>
+      <menuitem id="copyEmailAddressItem" label="&CopyEmailAddress.label;"
+                accesskey="&CopyEmailAddress.accesskey;"
+                oncommand="CopyEmailNewsAddress(findEmailNodeFromPopupNode(document.popupNode, 'emailAddressPopup'))"/>
+      <menuseparator/>
+      <menuitem id="createFilterFromItem" label="&CreateFilterFrom.label;"
+                accesskey="&CreateFilterFrom.accesskey;"
+                oncommand="CreateFilter(findEmailNodeFromPopupNode(document.popupNode, 'emailAddressPopup'))"
+                observes="cmd_createFilterFromPopup"/>
+    </popup>
+
+    <popup id="messageIdContext"/>
+
+    <popup id="mailContext"/>
+  </popupset>
+
+  <popup id="attachmentListContext"/>
+  <popup id="header-toolbar-context-menu"/>
+  <popup id="copyUrlPopup"/>
+  <popup id="framework-toolbar-context"
+         onpopupshowing="initViewToolbarsPopup(event, 'framework-toolbox')">
+      <menuitem id="toolbar-view-none"
+                accesskey="&toolbars.hide.accesskey;"
+                label="&toolbars.hide.label;" type="radio"
+                name="toolbar-mode-type" observes="cmd-toolbar-mode-none"/>
+      <menuitem id="toolbar-view-icons"
+                accesskey="&toolbars.icons.accesskey;"
+                label="&toolbars.icons.label;" type="radio"
+                name="toolbar-mode-type" observes="cmd-toolbar-mode-icons"/>
+      <menuitem id="toolbar-view-text"
+                accesskey="&toolbars.text.accesskey;"
+                label="&toolbars.text.label;" type="radio"
+                name="toolbar-mode-type" observes="cmd-toolbar-mode-text"/>
+      <menuitem id="toolbar-view-full"
+                accesskey="&toolbars.full.accesskey;"
+                label="&toolbars.full.label;" type="radio"
+                name="toolbar-mode-type" observes="cmd-toolbar-mode-full"/>
+      <menuseparator />
+      <menuitem observes="cmd_customizeFWToolbar"
+              id="toolbar-context-menu-customize"
+              label="&toolbar.context.customize.label;" />
+  </popup>
+
+    <toolbox id="framework-toolbox" class="toolbox-top" mode="full" toolbars="visible">
+        <toolbar type="menubar" id="framework-menu-toolbar" mode="full"
+                 iconsize="small" customizable="true"
+                 defaultset="framework-menubar-items"
+                 class="chromeclass-menubar"
+                 context="framework-toolbar-context">
+            <toolbaritem id="framework-menubar-items">
+            <menubar id="framework-menubar"
+                     style="border:0px;padding:0px;margin:0px;-moz-appearance:none">
+            <menu id="file-menu" label="&cmd.file.label;"
+                  accesskey="&cmd.file.accesskey;">
+                <menupopup id="file-menupopup" onpopupshowing="initFileMenu();" >
+                    <menu id="file-new-menu" label="&cmd.file.new.label;"
+                          accesskey="&cmd.file.new.accesskey;">
+                        <menupopup id="file-new-menupopup">
+                        </menupopup>
+                    </menu>
+                    <menuseparator id="file-new-separator"/>
+                    <menuseparator/>
+                    <menuseparator id="file-print-separator" />
+                    <menuseparator id="file-exit-separator" />
+                    <menuitem id="file-go-offline-item" command="goOfflineMenuItem"
+                              label="&cmd.file.disconnect.label;"
+                              accesskey="&cmd.file.disconnect.accesskey;" />
+                    <menuitem id="file-close-item" command="cmd_close"
+                              label="&cmd.file.close.label;"
+                              key="key_close"
+                              accesskey="&cmd.file.close.accesskey;" />
+                </menupopup>
+            </menu>
+
+            <menu id="edit-menu" label="&cmd.edit.label;" accesskey="&cmd.edit.accesskey;">
+                <menupopup id="edit-menupopup" onpopupshowing="initEditMenu();">
+                    <menuitem id="edit-undo-item" command="cmd_undo"
+                              label="&cmd.edit.undo.label;"
+                              key="key_undo"
+                              accesskey="&cmd.edit.undo.accesskey;" />
+                    <menuitem id="edit-redo-item" command="cmd_redo"
+                              label="&cmd.edit.redo.label;"
+                              key="key_redo"
+                              accesskey="&cmd.edit.redo.accesskey;" />
+                    <menuseparator />
+                    <menuitem id="edit-cut-item" command="cmd_cut"
+                              label="&cmd.edit.cut.label;"
+                              key="key_cut"
+                              accesskey="&cmd.edit.cut.accesskey;" />
+                    <menuitem id="edit-copy-item" command="cmd_copy"
+                              label="&cmd.edit.copy.label;"
+                              key="key_copy"
+                              accesskey="&cmd.edit.copy.accesskey;" />
+                    <menuitem id="edit-paste-item" command="cmd_paste"
+                              label="&cmd.edit.paste.label;"
+                              key="key_paste"
+                              accesskey="&cmd.edit.paste.accesskey;" />
+                    <menuitem id="edit-delete-item" command="cmd_delete"
+                              label="&cmd.edit.delete.label;"
+                              key="key_delete"
+                              accesskey="&cmd.edit.delete.accesskey;" />
+                    <menuseparator />
+                    <menuitem id="edit-select-all-item" command="cmd_selectAll"
+                              label="&cmd.edit.selectall.label;"
+                              key="key_selectAll2"
+                              accesskey="&cmd.edit.selectall.accesskey;" />
+                </menupopup>
+            </menu>
+            <menu id="view-menu" label="&cmd.view.label;" accesskey="&cmd.view.accesskey;">
+                <menupopup id="view-menupopup" onpopupshowing="initViewMenu()">
+                    <menu id="view-toolbars-menu" label="&cmd.view.toolbars.label;"
+                          accesskey="&cmd.view.toolbars.accesskey;">
+                        <menupopup id="view-toolbars-menupopup"
+                                   onpopupshowing="initViewToolbarsPopup(event, 'framework-toolbox')">
+                            <menuitem id="toolbar-view-none2"
+                                      accesskey="&toolbars.hide.accesskey;"
+                                      label="&toolbars.hide.label;" type="radio"
+                                      name="toolbar-mode-type" observes="cmd-toolbar-mode-none"/>
+                            <menuitem id="toolbar-view-icons2"
+                                      accesskey="&toolbars.icons.accesskey;"
+                                      label="&toolbars.icons.label;" type="radio"
+                                      name="toolbar-mode-type" observes="cmd-toolbar-mode-icons"/>
+                            <menuitem id="toolbar-view-text2"
+                                      accesskey="&toolbars.text.accesskey;"
+                                      label="&toolbars.text.label;" type="radio"
+                                      name="toolbar-mode-type" observes="cmd-toolbar-mode-text"/>
+                            <menuitem id="toolbar-view-full2"
+                                      accesskey="&toolbars.full.accesskey;"
+                                      label="&toolbars.full.label;" type="radio"
+                                      name="toolbar-mode-type" observes="cmd-toolbar-mode-full"/>
+                            <menuseparator />
+                            <menuitem observes="cmd_customizeFWToolbar"
+                                      id="toolbar-context-menu-customize"
+                                      label="&toolbar.context.customize.label;" />
+                        </menupopup>
+                    </menu>
+                    <menuitem id="view-statusbar-item" type="checkbox"
+                              autocheck="false" oncommand="toggleStatusbar();"
+                              label="&cmd.view.statusbar.label;"
+                              accesskey="&cmd.view.statusbar.accesskey;" />
+                    <menuseparator id="view-separator" />
+                </menupopup>
+            </menu>
+            <menu id="go-menu" label="&cmd.go.label;"
+                  accesskey="&cmd.go.accesskey;">
+                <menupopup id="go-menupopup" onpopupshowing="initGoMenu();">
+                </menupopup>
+            </menu>
+            <menu id="help-menu"
+                  label="&cmd.help.label;" accesskey="&cmd.help.accesskey;">
+                <menupopup id="help-menupopup" onpopupshowing="initHelpMenu();">
+                    <menuitem id="help-contents-item"
+                              label="&cmd.help.contents.label;"
+                              oncommand="openFormattedURL('app.helpURL');"
+                              accesskey="&cmd.help.contents.accesskey;"/>
+                    <menuitem id="help-support-forum-item"
+                              label="&cmd.help.supportforum.label;"
+                              accesskey="&cmd.help.supportforum.accesskey;"
+                              oncommand="openFormattedURL('app.supportForumURL');"/>
+                    <menuitem id="help-release-notes-item"
+                              label="&cmd.help.relnotes.label;"
+                              accesskey="&cmd.help.relnotes.accesskey;"
+                              oncommand="openFormattedURL('app.releaseNotesURL');"/>
+                    <menuseparator />
+                    <menuitem id="help-update-item"
+                              oncommand="checkForUpdates();"
+                              label="&cmd.help.update.label;"
+                              accesskey="&cmd.help.update.accesskey;"/>
+                    <menuseparator/>
+                    <menuitem id="help-translate-item"
+                              label="&cmd.help.translate.label;"
+                              accesskey="&cmd.help.translate.accesskey;"
+                              oncommand="openFormattedURL('app.translateURL');"/>
+#ifndef XP_MACOSX
+                    <menuseparator/>
+#endif
+                    <menuitem id="help-about-item" oncommand="openAboutCollab();"
+                              label="&cmd.help.about.label;"
+#ifdef XP_MACOSX
+                              hidden="true"
+#endif
+                              accesskey="&cmd.help.about.accesskey;"/>
+                </menupopup>
+            </menu>
+        </menubar>
+        </toolbaritem>
+        </toolbar>
+
+        <toolbarpalette id="framework-toolpalette">
+            <toolbarbutton class="framework-toolbarbutton padded-toolbarbutton"
+                    id="cut-toolbutton"
+                    observes="cmd_cut"
+                    label="&cmd.edit.cut.label;" />
+            <toolbarbutton class="framework-toolbarbutton padded-toolbarbutton"
+                    id="copy-toolbutton"
+                    observes="cmd_copy"
+                    label="&cmd.edit.copy.label;" />
+            <toolbarbutton class="framework-toolbarbutton padded-toolbarbutton"
+                    id="paste-toolbutton"
+                    observes="cmd_paste"
+                    label="&cmd.edit.paste.label;" />
+            <toolbarbutton class="framework-toolbarbutton padded-toolbarbutton"
+                    id="delete-toolbutton"
+                    oncommand="goDoCommand(event.ShiftKey ? 'button_shiftDelete' : 'button_delete')"
+                    observes="button_delete"
+                    label="&cmd.edit.delete.label;" />
+            <toolbarbutton class="framework-toolbarbutton padded-toolbarbutton"
+                    id="print-toolbutton"
+                    observes="cmd_print"
+                    label="&cmd.file.print.label;" />
+            <toolbarbutton class="framework-toolbarbutton padded-toolbarbutton"
+                    id="printpreview-toolbutton"
+                    observes="cmd_printPreview"
+                    label="&cmd.file.printpreview.label;" />
+        </toolbarpalette>
+        <toolbarset id="customToolbars" context="framework-toolbar-context"/>
+    </toolbox>
+
+    <hbox flex="1" id="content-hbox">
+        <vbox id="messagepanebox" flex="3" persist="collapsed"
+              ondragover="nsDragAndDrop.dragOver(event, messagepaneObserver);"
+              ondragdrop="nsDragAndDrop.drop(event, messagepaneObserver);"
+              ondragexit="nsDragAndDrop.dragExit(event, messagepaneObserver);">
+          <deck id="msgNotificationBar" />
+          <hbox id="msgHeaderView"/>
+          <browser id="messagepane" context="mailContext" autofind="false"
+                   minheight="1" flex="1" name="messagepane"
+                   disablehistory="true" type="content-primary" src="about:blank"
+                   disablesecurity="true" onclick="return contentAreaClick(event);"/>
+          <splitter id="attachment-splitter" collapse="after" resizebefore="closest" resizeafter="closest" collapsed="true"/>
+          <hbox id="attachmentView"/>
+          <findbar id="FindToolbar" browserid="messagepane"/>
+        </vbox> 
+    </hbox>
+
+    <statusbar id="status-bar" persist="hidden">
+      <statusbarpanel id="offline-status" class="statusbarpanel-iconic" oncommand="MailOfflineMgr.toggleOfflineStatus();"/>
+      <statusbarpanel id="statusText" class="statusbarpanel-collab" label="" flex="1"/>
+      <statusbarpanel class="statusbarpanel-progress" collapsed="true" id="statusbar-progresspanel">
+        <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
+      </statusbarpanel>
+    </statusbar>
+</window>

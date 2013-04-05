@@ -1,0 +1,41 @@
+diff --git a/mailnews/compose/src/nsMsgSend.cpp b/mailnews/compose/src/nsMsgSend.cpp
+--- a/mailnews/compose/src/nsMsgSend.cpp
++++ b/mailnews/compose/src/nsMsgSend.cpp
+@@ -3043,16 +3043,18 @@ nsMsgComposeAndSend::InitCompositionFiel
+   {
+     rv = mime_sanity_check_fields (mCompFields->GetFrom(), mCompFields->GetReplyTo(),
+                     mCompFields->GetTo(), mCompFields->GetCc(),
+                     mCompFields->GetBcc(), mCompFields->GetFcc(),
+                     mCompFields->GetNewsgroups(), mCompFields->GetFollowupTo(),
+                     mCompFields->GetSubject(), mCompFields->GetReferences(),
+                     mCompFields->GetOrganization(),
+                     mCompFields->GetOtherRandomHeaders());
++    if (rv == NS_MSG_NO_RECIPIENTS && mNeedToPerformSecondFCC)
++      rv = NS_OK;
+   }
+ 
+   return rv;
+ }
+ 
+ // Add default headers to outgoing messages see Bug #61520
+ // mail.identity.<id#>.headers pref is a comma separated value of pref names
+ // containging headers to add headers are stored in
+@@ -3570,16 +3572,18 @@ nsMsgComposeAndSend::DeliverMessage()
+   {
+     if (mail_p)
+       mSendMailAlso = PR_TRUE;
+ 
+     return DeliverFileAsNews();   /* will call DeliverFileAsMail if it needs to */
+   }
+   else if (mail_p)
+     return DeliverFileAsMail();
++  else if (mNeedToPerformSecondFCC) /* mails are allowed to be simply fccs */
++    return DoFcc();
+   else
+     return NS_ERROR_UNEXPECTED;
+   return NS_OK;
+ }
+ 
+ // strip out non-printable characters
+ static void
+ strip_nonprintable(char *string)

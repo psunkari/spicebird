@@ -1,0 +1,73 @@
+/*
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+# Synovel Software Technologies
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Prasad Sunkari <prasad@synovel.com> (Original Author)
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+*/
+
+image[chat-status], menuitem[chat-status],
+menu[chat-status], button[chat-status] {
+  list-style-image: url("chrome://chat/skin/16x16/statuses.png");
+}
+
+image[chat-status="available"], menuitem[chat-status="available"],
+menu[chat-status="available"], button[chat-status="available"] {
+  -moz-image-region: rect(0px 16px 16px 0px);
+} 
+
+image[chat-status="busy"], menuitem[chat-status="busy"],
+menu[chat-status="busy"], button[chat-status="busy"] {
+  -moz-image-region: rect(16px 16px 32px 0px);
+}
+
+image[chat-status="away"], menuitem[chat-status="away"],
+menu[chat-status="away"], button[chat-status="away"] {
+  -moz-image-region: rect(32px 16px 48px 0px);
+}
+
+image[chat-status="offline"], menuitem[chat-status="offline"],
+menu[chat-status="offline"], button[chat-status="offline"] {
+  -moz-image-region: rect(48px 16px 64px 0px);
+} 
+
+image[chat-status="invisible"], menuitem[chat-status="invisible"],
+menu[chat-status="invisible"], button[chat-status="invisible"] {
+  -moz-image-region: rect(64px 16px 80px 0px);
+}
+
+image[chat-status="xa"], menuitem[chat-status="xa"],
+menu[chat-status="xa"], button[chat-status="xa"] {
+  -moz-image-region: rect(80px 16px 96px 0px);
+}

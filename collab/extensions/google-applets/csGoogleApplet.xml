@@ -1,0 +1,977 @@
+<?xml version="1.0"?>
+<!--
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+#   Synovel Software
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Ashok Gudibandla <ashok@synovel.com>
+#   Sunil Mohan Adapa <sunil@synovel.com>
+#   Fred Jendrzejewski <fred.jen@web.de>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** 
+-->
+<!DOCTYPE googleStrings SYSTEM "chrome://google-applets/locale/csGoogleApplet.dtd">
+<bindings id="csCollabAppletsBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+
+  <binding id="applet">
+    <content> 
+      <xul:stringbundleset>
+         <xul:stringbundle anonid="applet-stringbundle"
+            src="chrome://google-applets/locale/csGoogleApplet.properties"/>
+      </xul:stringbundleset>
+      <xul:vbox flex="1" ondragdrop="nsDragAndDrop.drop(event, mDragDropObserver);"
+                         ondragover="nsDragAndDrop.dragOver(event, mDragDropObserver);">
+        <xul:groupbox anonid="googleapplet-config-container" collapsed="true"
+                      class="applet-config-pane">
+          <xul:hbox align="center">
+            <xul:label value="&collab.googleApplet.address;" crop="end"/>
+            <xul:textbox type="timed" timeout="1500" anonid="googleapplet-url"
+                         oncommand="parseAndSetUrl(this.value)" flex="1"/>
+          </xul:hbox>
+          <xul:groupbox anonid="googleapplet-pref-group" collapsed="true">
+            <xul:caption label="&collab.googleApplet.preferences;"/>
+            <xul:grid>
+              <xul:columns>
+                <xul:column flex="5"/>
+                <xul:column flex="1"/>
+              </xul:columns>
+              <xul:rows anonid="googleapplet-pref-rows"/>
+            </xul:grid>
+          </xul:groupbox>
+        </xul:groupbox>
+        <xul:description anonid="googleapplet-status-label" class="applet-status-label" collapsed="true"/>
+        <xul:label class="text-link" anonid="googleapplet-link-desc" value="&collab.googleApplet.linkText;" href="&collab.googleApplet.linkUrl;"/>
+        <xul:iframe anonid="appletFrame" type="content" flex="1"/>
+      </xul:vbox>
+    </content>
+    <implementation>
+      <field name="mPrefBranch">null</field>
+      <field name="mConfigContainer">null</field>
+      <field name="mAppletFrame">null</field>
+      <field name="mStatusLabel">null</field>
+      <field name="mTitle">null</field>
+      <field name="mParent">null</field>
+      <field name="mTitleChangeListener">null</field>
+      <field name="mHeightChangeListener">null</field>
+      <field name="mLoadFinishedListener">null</field>
+      <field name="mURL">null</field>
+      <field name="mURLBox">null</field>
+      <field name="mContentSrc">null</field>
+      <field name="mAppletPrefs">[]</field>
+      <field name="mAppletPrefMeta">[]</field>
+      <field name="mAppletGlobals">[]</field>
+      <field name="mAppletStrings">[]</field>
+      <field name="mAppletArgs">[]</field>
+      <field name="wrappedJSObject">this</field>
+      <field name="mSrc"/>
+      <field name="mDebug">false</field>
+      <field name="mStringBundle"/>
+      <field name="mDocListenersAdded">false</field>
+      <field name="mDragDropObserver"> 
+        <![CDATA[
+        ({
+          googleApplet: this,
+          onDragStart: function(aEvent, aXferData, aDragAction) {
+          },
+          onDragOver: function(aEvent, aFlavour, aDragSession) {
+            aDragSession.canDrop = true;
+          },
+          onDrop: function(aEvent, aXferData, aDragSession) {
+            var url = aXferData.data;
+            this.googleApplet.parseAndSetUrl(url);
+            aEvent.stopPropagation();
+          },
+          getSupportedFlavours: function ()
+          {
+              if (!this._flavourSet) {
+                  this._flavourSet = new FlavourSet();
+                  this._flavourSet.appendFlavour("text/unicode");
+              }
+              return this._flavourSet;
+          }
+        })
+        ]]>
+      </field>
+
+      <constructor>
+        <![CDATA[
+        this.mParent = this.parentNode;
+        this.mWrappedObject = this;
+        while (this.mParent && this.mParent.tagName != "homeapplet")
+          this.mParent = this.mParent.parentNode;
+        if (!this.mParent)
+          return;
+
+        this.mStringBundle = document.getAnonymousElementByAttribute(this, "anonid", "applet-stringbundle");
+        this.mKey = this.mParent.getAttribute("homekey");
+        if (!this.mKey)
+          return;
+
+        this.mPrefBranch = Components
+                .classes["@mozilla.org/preferences-service;1"]
+                .getService(Components.interfaces.nsIPrefService)
+                .getBranch("collab.home.applets." + this.mKey + ".")
+
+        this.mURLBox = document.getAnonymousElementByAttribute
+                                (this, "anonid", "googleapplet-url");
+        this.mAppletFrame = document.getAnonymousElementByAttribute
+                                (this, "anonid", "appletFrame");
+        this.mConfigContainer = document.getAnonymousElementByAttribute
+                                (this, "anonid", "googleapplet-config-container");
+        this.mStatusLabel = document.getAnonymousElementByAttribute
+                                (this, "anonid", "googleapplet-status-label");
+
+        try {
+          this.url = this.mPrefBranch.getCharPref("url");
+        } catch (ex) {
+          var linkDesc = document.getAnonymousElementByAttribute(this, "anonid", "googleapplet-link-desc");
+          linkDesc.removeAttribute("collapsed");
+          this.doConfigOpen();
+          this.showMessage(this.mStringBundle.getString("applets.googleApplet.configureMessage"));
+        }
+
+        this.setUpDocumentListener();
+
+        ]]>
+      </constructor>
+
+      <destructor>
+        <![CDATA[
+        ]]>
+      </destructor>
+  
+      <property name="url" onget="return this.mURL;">
+        <setter>
+        <![CDATA[
+          this.mURL = val;
+          this.mURLBox.value = val;
+          var linkDesc = document.getAnonymousElementByAttribute(this, "anonid", "googleapplet-link-desc");
+          linkDesc.setAttribute("collapsed",true);
+          this.cleanUp();
+          this.loadApplet();
+          this.mPrefBranch.setCharPref("url", this.mURL);
+        ]]>          
+        </setter>
+      </property>
+
+      <property name="title" onget="return this.mTitle;">
+        <setter>
+        <![CDATA[
+          this.mTitle = val;
+        ]]>          
+        </setter>
+      </property>
+
+      <method name="cleanUp">
+        <body>
+          <![CDATA[
+            // remove listeners on current document
+            var doc = this.mAppletFrame.contentDocument;
+            try {
+              doc.getElementById("_CS_title").removeEventListener("DOMAttrModified", this.mTitleChangeListener, false);
+              doc.getElementById("_CS_height_adjust").removeEventListener("DOMAttrModified", this.mHeightChangeListener, false);
+            } catch (e) {};
+            this.mDocListenersAdded = false;
+            // clean up the pref branch
+            this.mPrefBranch.deleteBranch("prefs");
+          ]]>
+        </body>
+      </method>
+
+      <method name="parseAndSetUrl">
+        <parameter name="aURL"/>
+        <body>
+          <![CDATA[
+            if (!aURL) 
+              return;
+            var url = aURL.split("&url=")[1];
+            if (!url) 
+              url = aURL;
+            else {
+              url = url.split("&")[0];
+            }
+            url = unescape(url);
+            if (!url.match("://"))
+              url = "http://" + url;
+            this.url = url;
+          ]]>
+        </body>
+      </method>
+
+      <!-- XXX: Should not need to do this. Need some support in the base applet implementaion -->
+      <method name="doConfigOpen">
+        <body>
+          <![CDATA[
+          var configButton = document.getAnonymousElementByAttribute(this.mParent, "anonid", "applet-config-button");
+          if(configButton.getAttribute("checked") == "true")
+            return;
+          configButton.setAttribute("checked", "true");
+          this.mConfigContainer.removeAttribute("collapsed");
+          ]]>
+        </body>
+      </method>
+
+      <method name="doConfigClose">
+        <body>
+          <![CDATA[
+          var configButton = document.getAnonymousElementByAttribute(this.mParent, "anonid", "applet-config-button");
+          if(configButton.getAttribute("checked") != "true")
+            return;
+          configButton.removeAttribute("checked");
+          this.mConfigContainer.setAttribute("collapsed", "true");
+          ]]>
+        </body>
+      </method>
+
+      <method name="showMessage">
+        <parameter name="aText"/>
+        <body>
+          <![CDATA[
+          if (aText) {
+            while (this.mStatusLabel.firstChild) 
+              this.mStatusLabel.removeChild(this.mStatusLabel.firstChild);
+            this.mStatusLabel.appendChild(document.createTextNode(aText));
+            this.mStatusLabel.collapsed = false;
+          } else {
+            this.mStatusLabel.collapsed = true;
+          }
+          this.adjustHeight();
+          ]]>
+        </body>
+      </method>
+
+      <method name="setUpDocumentListener">
+        <body>
+        <![CDATA[
+          this.mAppletFrame.docShell.allowJavascript = true;
+          this.mAppletFrame.docShell.allowImages = true;
+          this.mAppletFrame.docShell.allowAuth = true;
+          this.mAppletFrame.docShell.appType = Components.interfaces.nsIDocShell.APP_TYPE_COLLAB;
+
+          /* Hook into the iframe and when it loads, hook events */
+          var self = this;
+          var progressListener = {};
+          progressListener.QueryInterface = function (aIID) {
+            if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
+                aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
+                aIID.equals(Components.interfaces.nsISupports))
+              return this;
+            throw Components.results.NS_NOINTERFACE;
+          };
+          progressListener.onStateChange = function (aWebProgress, aRequest, aStateFlags, aStatus) {
+            if ((aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP)
+                && (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_IS_DOCUMENT))
+              self.setOnloadTimer();
+            return 0;
+          };
+          progressListener.onProgressChange = function () {};
+          progressListener.onLocationChange = function () {};
+          progressListener.onSecurityChange = function () {};
+          progressListener.onStatusChange = function () {};
+          var webProgress = this.mAppletFrame.docShell.QueryInterface(Components.interfaces.nsIWebProgress);
+          webProgress.addProgressListener(progressListener, webProgress.NOTIFY_ALL);
+        ]]>
+        </body>
+      </method>
+
+      <method name="setOnloadTimer">
+        <body>
+        <![CDATA[
+          if (this.mOnloadTimer) {
+            clearTimeout(this.mOnloadTimer);
+            this.mOnloadTimer = null;
+          }
+          var self = this;
+          var loadCall = function () { self.onFrameLoad(); };
+          this.mOnloadTimer = setTimeout(loadCall, 2000);
+        ]]>
+        </body>
+      </method>
+
+      <method name="onFrameLoad">
+        <body>
+        <![CDATA[
+          if (this.mDocListenersAdded) {
+            this.adjustHeight();
+            return;
+          }
+          var doc = this.mAppletFrame.contentDocument;
+          var self = this;
+          this.mTitleChangeListener = function () { self.onTitleChange() };
+          this.mHeightChangeListener = function () { self.adjustHeight() };
+          try {
+            doc.getElementById("_CS_title").addEventListener("DOMAttrModified", this.mTitleChangeListener, false);
+            doc.getElementById("_CS_height_adjust").addEventListener("DOMAttrModified", this.mHeightChangeListener, false);
+          } catch (e) { 
+            // Document not loaded yet. Try adding listeners in subsequent callbacks.
+            return; 
+          }
+          this.mDocListenersAdded = true;
+          this.showMessage(null);
+          this.adjustHeight();
+        ]]>
+        </body>
+      </method>
+
+      <method name="loadApplet">
+        <body>
+        <![CDATA[
+          this.showMessage(this.mStringBundle.getString("applets.googleApplet.loading"));
+          this.mRequest = Components
+                .classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                .createInstance(Components.interfaces.nsIXMLHttpRequest);
+          this.mRequest.applet = this;
+          // must be set before calling .open
+          this.mRequest.onprogress = this.onDownloadProgress;
+          this.mRequest.open("GET", this.mURL, true);
+
+          var lastModified = this.mLastModified;
+          if (lastModified)
+            this.mRequest.setRequestHeader("If-Modified-Since", lastModified);
+
+          this.mRequest.overrideMimeType("text/xml");
+          this.mRequest.onload = this.onAppletDownloaded;
+          this.mRequest.onerror = this.onDownloadError;
+          this.mRequest.send(null);
+        ]]>
+        </body>
+      </method>
+
+      <method name="onAppletDownloaded">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+            /* 'this' in this method refers to xmlreq object */
+            aEvent.target.applet.parseApplet(aEvent.target.responseXML);
+        ]]>
+        </body>
+      </method>
+
+      <method name="onDownloadError">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+            /* 'this' in this method refers to xmlreq object */
+            var self = aEvent.target.applet;
+            self.showMessage(self.mStringBundle.getString("applets.googleApplet.downloadError"));
+        ]]>
+        </body>
+      </method>
+
+      <method name="onDownloadProgress">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          // aEvent.target.applet.showMessage("Getting applet source...");
+        ]]>
+        </body>
+      </method>
+
+      <method name="preProcess">
+        <parameter name="content"/>
+        <body>
+        <![CDATA[
+            if (!content) return null;
+            var self = this;
+            content = content.replace(/__UP_([a-zA-Z0-9_]+?)__/g,
+                                      function (str, pref, offset, s)
+                                      {
+                                        if (pref in self.mAppletPrefs)
+                                          return self.mAppletPrefs[pref];
+                                        return "";
+                                      });
+            content = content.replace(/__MSG_([a-zA-Z0-9_]+?)__/g,
+                                      function (str, string, offset, s)
+                                      {
+                                        if (string in self.mAppletStrings)
+                                          return self.mAppletStrings[string];
+                                        return "";
+                                      });
+            content = content.replace(/__([a-zA-Z0-9][a-zA-Z0-9_]*?)__/g,
+                                      function (str, global, offset, s)
+                                      {
+                                        if (global in self.mAppletGlobals)
+                                          return self.mAppletGlobals[global];
+                                        return str;
+                                      });
+            return content;
+        ]]>
+        </body>
+      </method>
+
+      <method name="constructConfigPane">
+        <body>
+        <![CDATA[
+          var rows = document.getAnonymousElementByAttribute(this,"anonid", "googleapplet-pref-rows");
+          // clear existing prefs
+          while(rows.lastChild)
+            rows.removeChild(rows.lastChild);
+
+          var hasPrefs = false;
+          for (var prefName in this.mAppletPrefMeta)
+          {
+            var prefMeta = this.mAppletPrefMeta[prefName];
+            if (prefMeta["dataType"] == "hidden")
+              continue;
+
+            var row = document.createElement("row");
+            row.setAttribute("align", "center");
+            var descText = prefMeta["displayName"];
+            if (prefMeta["required"])
+              descText += " *";
+            var description = document.createElement("description");
+            description.appendChild(document.createTextNode(descText));
+            description.setAttribute("flex", "1");
+
+            if (prefMeta["required"] && !prefMeta["defaultValue"])
+            {
+              this.showMessage(this.mStringBundle.getString("applets.googleApplet.requireInput"));
+              this.doConfigOpen();
+            }
+
+            var input;
+            var prefVal = this.mAppletPrefs[prefName];
+            switch (prefMeta["dataType"])
+            {
+              case "string":
+                input = document.createElement("textbox");
+                input.setAttribute("type", "timed");
+                input.setAttribute("timeout", "1500");
+                if (prefVal)
+                  input.setAttribute("value", prefVal);
+                break;
+
+              case "bool":
+                input = document.createElement("checkbox");
+                if ( "true" == prefVal)
+                  input.setAttribute("checked", "true");
+                break;
+
+              case "enum":
+                input = document.createElement("menulist");
+                var popup = document.createElement("menupopup");
+                var selItem = null;
+                for each (var option in prefMeta["enumValues"])
+                {
+                  var menuItem = document.createElement("menuitem");
+                  menuItem.setAttribute("value",option.value);
+                  menuItem.setAttribute("label",option.displayValue);
+                  popup.appendChild(menuItem);
+                }
+                input.appendChild(popup);
+                input.value = prefVal;
+                break;
+
+              case "list":
+                input = document.createElement("textbox");
+                input.setAttribute("value", prefVal);
+                input.setAttribute("type", "timed");
+                input.setAttribute("timeout", "1500");
+                break;
+
+              case "location":
+                input = document.createElement("textbox");
+                input.setAttribute("type", "timed");
+                input.setAttribute("timeout", "1500");
+                break;
+            }
+            // set up a callback when input changes
+            var self = this;
+            input.addEventListener("command", function(e) { self.onPreferenceChange(e) }, false );
+            input.setAttribute("prefname", prefMeta["name"]);
+            input.setAttribute("flex", "1");
+
+            row.appendChild(description);
+            row.appendChild(input);
+            rows.appendChild(row);
+            hasPrefs = true;
+          }
+          var prefGroup = document.getAnonymousElementByAttribute(this,"anonid", "googleapplet-pref-group");
+          if (hasPrefs)
+            prefGroup.removeAttribute("collapsed");
+          else
+            prefGroup.setAttribute("collapsed", "true");
+          
+        ]]>
+        </body>
+      </method>
+
+      <method name="onPreferenceChange">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          var widget = aEvent.currentTarget
+          var prefName = widget.getAttribute("prefname");
+          var type = this.mAppletPrefMeta[prefName]["dataType"];
+
+          var prefValue = ""
+          if (type == "bool")
+            prefValue = widget.checked.toString();
+          else if (type == "enum")
+            prefValue = widget.selectedItem.value;
+          else 
+            prefValue = widget.value;
+          
+          this.mAppletPrefs[prefName] = prefValue;
+          this.mPrefBranch.setCharPref("userprefs." + prefName, prefValue);
+          this.loadContent();
+        ]]>
+        </body>
+      </method>
+
+      <method name="parseApplet">
+        <parameter name="aXML"/>
+        <body>
+        <![CDATA[
+          if (!aXML)
+          {
+            this.showMessage(this.mStringBundle("applets.googleApplet.invalidResponse"));
+            if(this.mDebug)
+              dump("Google Applet: parseApplet: Response not an xml:" + this.mURL + "\n");
+            return;
+          }
+
+          var module = aXML.getElementsByTagName("Module").item(0);
+          if (!module )
+          {
+            var rss = aXML.getElementsByTagName("rss").item(0);
+            if (rss) 
+            {
+              // Remove this applet and create an rss applet
+              // XXX: Remove this hack and add support in parent to morph
+              // applets
+              this.mPrefBranch.setCharPref("type", "mailnews-rssfeed-applet");
+              this.doConfigClose();
+              var parent = this.parentNode;
+              var rssApplet = document.createElement("mailnews-rssfeed-applet");
+              var rssURL = this.mURL;
+              parent.removeChild(this);
+              parent.appendChild(rssApplet);
+              parent.widget = rssApplet;
+              rssApplet.mURL = rssURL;
+              rssApplet.download();
+            }
+            else 
+              this.showMessage(this.mStringBundle.getString("applets.googleApplet.parseError"));
+            return;
+          }
+
+          /* Locales */
+          var localeURL = null;
+          var localeDirection = null;
+          var browserLocale = navigator.language.match(/[a-zA-Z]{2,3}(?:[_-][a-zA-Z]{2,3})?/)[0].toLowerCase();
+          browserLocale = browserLocale.replace("_", "-");
+          var browserShortLocale = browserLocale.split("-")[0];
+          var browserCountry = browserLocale.split("-")[1];
+
+          var locales = module.getElementsByTagName("Locale");
+          var matchLevel = -1;
+          var pick = -1;
+          for (var i = 0; i < locales.length; i++)
+          {
+            var locale = locales[i].getAttribute("lang");
+            var country = locales[i].getAttribute("country");
+            if (matchLevel < 0 && !locale && !country)
+            {
+              pick = i;
+              matchLevel = 0;
+            }
+            if (matchLevel < 1 && country && country == browserCountry && !locale)
+            {
+              pick = i;
+              matchLevel = 1;
+            }
+            if (matchLevel < 2 && locale && (locale == browserShortLocale || locale == browserLocale) && !country)
+            {
+              pick = i;
+              matchLevel = 2;
+            }
+            if (matchLevel < 3 && locale && country
+                && (locale == browserShortLocale || locale == browserLocale)
+                && country == browserCountry)
+            {
+              pick = i;
+              matchLevel = 3;
+            }
+          }
+
+          if (pick >= 0) 
+          {
+            localeURL = locales[pick].getAttribute("messages");
+            localeDirection = locales[pick].getAttribute("language_direction");
+          }
+
+          if (!localeDirection)
+            localeDirection = "ltr";
+          
+          this.mAppletGlobals = [];
+          this.mAppletGlobals["MODULE_ID"] = 1234;
+          this.mAppletGlobals["BIDI_START_EDGE"] = (localeDirection == "ltr") ? "left" : "right";
+          this.mAppletGlobals["BIDI_END_EDGE"] = (localeDirection == "ltr") ? "right" : "left";
+          this.mAppletGlobals["BIDI_DIR"] = localeDirection;
+          this.mAppletGlobals["BIDI_REVERSE_DIR"] = (localeDirection == "ltr") ? "rtl" : "ltr";
+
+          if (localeURL)
+          {
+            var request = new XMLHttpRequest();
+            // TODO: relative url conversion.
+            if (localeURL.indexOf('http') != 0)
+            {
+              if (localeURL.indexOf('/') == 0)
+                localeURL = "http://www.google.com/" + localeURL;
+              else
+                localeURL = "http://www.google.com/ig/modules/" + localeURL;
+            }
+            if(this.mDebug)
+              dump("Google Applet: parseApplet: Locale URL = " + localeURL + "\n");
+            request.open("GET", localeURL, false);
+            request.overrideMimeType('text/xml');
+            request.send(null);
+            if (request.status == 200)
+            {
+              this.parseLocale (request.responseXML);
+            }
+          }
+
+          this.mAppletArgs = [];
+          this.mAppletArgs["lang"] = navigator.language.replace(/[_-].*/,"");
+          this.mAppletArgs[".lang"] = this.mAppletArgs["lang"];
+          this.mAppletArgs["country"] = navigator.language.replace(/.*[_-]([a-zA-Z]{2})*/, "$1");
+          this.mAppletArgs[".country"] = this.mAppletArgs["country"];
+          this.mAppletPrefs = [];
+          this.mAppletPrefMeta = [];
+          this.mAppletPrefs["lang"] = this.mAppletArgs["lang"];
+          this.mAppletPrefs[".lang"] = this.mAppletArgs[".lang"];
+          this.mAppletPrefs["country"] = this.mAppletArgs["country"];
+          this.mAppletPrefs[".country"] = this.mAppletArgs[".country"];
+
+          /* User preferences */
+          var userPrefs = module.getElementsByTagName("UserPref");
+          for (var i = 0; i < userPrefs.length; i++)
+          {
+            var pref = userPrefs[i];
+            var name = pref.getAttribute("name");
+
+            var defaultValue = this.preProcess(pref.getAttribute("default_value"));
+            if (!defaultValue) defaultValue = "";
+
+            var displayName = this.preProcess(pref.getAttribute("display_name"));
+            if (!displayName) displayName = name;
+
+            var urlParam = this.preProcess(pref.getAttribute("urlparam"));
+            if (!urlParam) urlParam = name;
+
+            var dataType = this.preProcess(pref.getAttribute("datatype"));
+            if (!dataType) dataType = "string";
+
+            var required = this.preProcess(pref.getAttribute("required"));
+            if (!required || required == "false")
+              required = false;
+            else
+              required = true;
+
+            if (name)
+            {
+              var prefMeta = {};
+              prefMeta["name"] = name;
+              prefMeta["displayName"] = displayName;
+              prefMeta["urlParam"] = urlParam;
+              prefMeta["required"] = required;
+              prefMeta["defaultValue"] = defaultValue;
+              prefMeta["dataType"] = dataType;
+              this.mAppletPrefMeta[name] = prefMeta;
+              if (dataType == "enum")
+              {
+                prefMeta["enumValues"] = [];
+                var enumValues = pref.getElementsByTagName("EnumValue");
+                for (var j = 0; j < enumValues.length; j++)
+                {
+                  var value = this.preProcess(enumValues[j].getAttribute("value"));
+                  var displayValue = this.preProcess(enumValues[j].getAttribute("display_value"));
+
+                  if (!displayValue) displayValue = value;
+                  
+                  if (value)
+                    prefMeta["enumValues"].push({value: value,
+                                                 displayValue: displayValue});
+                }
+              }
+
+              var prefValue = null;
+              try {
+                prefValue = this.mPrefBranch.getCharPref("userprefs." + name);
+              } catch(e) {}
+              this.mAppletPrefs[name] = prefValue ? prefValue : defaultValue;
+              this.mAppletArgs["up_" + name] = this.mAppletPrefs[name];
+            }
+          }
+
+          this.constructConfigPane();
+
+          /* Module preferences */
+          var modulePrefs = module.getElementsByTagName("ModulePrefs").item(0);
+          var title = this.preProcess(modulePrefs.getAttribute("title"));
+          title = title ? title : "-Applet-";
+          this.setTitle(title);
+
+          var heightStr = modulePrefs.getAttribute("height")
+          heightStr = heightStr ? heightStr : '100';
+          var height = parseInt(heightStr);
+          this.setHeight(height);
+
+
+          /* Module requirements */
+          var moduleRequirements = modulePrefs.getElementsByTagName("Require");
+          for (var i = 0; i < moduleRequirements.length; i++) {
+            var feature = moduleRequirements[i].getAttribute("feature");
+            if(this.mDebug)
+              dump("Google Applet: parseApplet: This Module requires feature : " + feature + "\n");
+            if ( feature.indexOf("opensocial") >= 0 ) {
+              this.showMessage(this.mStringBundle.getString("applets.googleApplet.notSuppOS"));
+              return;
+            }
+          }
+          /* Load the content */
+          var content = module.getElementsByTagName("Content").item(0);
+          var contentType = content.getAttribute("type");
+          var appletSrc = "";
+          if (!contentType || contentType == "html" || contentType == "html-inline")
+            appletSrc = this.preProcess(content.textContent);
+          else if (contentType == "url")
+            appletSrc = "<iframe id='content-iframe' src='" + content.getAttribute("href") + "' height='" + heightStr + "' scrolling='no'></iframe>";
+          this.mContentSrc = appletSrc;
+          this.loadContent();
+        ]]>
+        </body>
+      </method>
+
+      <method name="getInjectSource">
+        <body>
+        <![CDATA[
+          // Genereated the source to be injected.
+          var injectSrc = "<script type='text/javascript'> ";
+
+          injectSrc += '\n _globals = {};\n';
+          for (var item in this.mAppletGlobals) 
+            injectSrc += ("_globals['" + item + "'] = '" + this.mAppletGlobals[item] + "';\n"); 
+
+          injectSrc += '\n _prefs = {};\n';
+          for (var pref in this.mAppletPrefs) 
+            injectSrc += ("_prefs['" + pref + "'] = '" + escape(this.mAppletPrefs[pref]) + "';\n"); 
+
+          injectSrc += '\n _arguments = {};\n';
+          for (var arg in this.mAppletArgs) 
+            injectSrc += ("_arguments['" + arg + "'] = '" + escape(this.mAppletArgs[arg]) + "';\n"); 
+
+          injectSrc += '\n _strings = {};\n';
+          for (var str in this.mAppletStrings) 
+            injectSrc += ("_strings['" + str + "'] = '" + escape(this.mAppletStrings[str]) + "';\n"); 
+          injectSrc += "\n</script>\n"
+
+          injectSrc += this.mContentSrc;
+
+          return injectSrc;
+        ]]>
+        </body>
+      </method>
+
+      <method name="loadContent">
+        <body>
+        <![CDATA[
+          var ioService=Components.classes["@mozilla.org/network/io-service;1"]
+            .getService(Components.interfaces.nsIIOService);
+          var scriptableStream=Components
+            .classes["@mozilla.org/scriptableinputstream;1"]
+            .getService(Components.interfaces.nsIScriptableInputStream);
+
+          var uri = "chrome://google-applets/content/csGoogleAppletAPI.html";
+
+          var channel=ioService.newChannel(uri,null,null);
+          var input=channel.open();
+          scriptableStream.init(input);
+          var data=scriptableStream.read(input.available());
+          scriptableStream.close();
+          input.close();
+
+          var parts = data.split("__INJECTSCRIPT__");
+          var injectSrc = this.getInjectSource();
+          var src = parts[0] + injectSrc + parts[1];
+         
+          this.mSrc = window.btoa(src); // base64 encoded src
+
+          // Before loading new applet, clear the ListenerAdded flag so that
+          // they can be added when the new applet is done loading.
+          this.mDocListenersAdded = false; 
+
+          // remove old iframe and create a new one. Hack to make webProgress call back work.
+          var iframe = document.getAnonymousElementByAttribute(this,"anonid","appletFrame");
+          var frameParent = iframe.parentNode;
+          frameParent.removeChild(iframe);
+          var newIFrame = document.createElement("iframe");
+          newIFrame.setAttribute("type", "content");
+          newIFrame.setAttribute("anonid", "appletFrame");
+          newIFrame.setAttribute("flex", "1");
+          frameParent.appendChild(newIFrame);
+          this.mAppletFrame = document.getAnonymousElementByAttribute
+                                (this, "anonid", "appletFrame");
+          this.setUpDocumentListener();
+
+          this.mIter++;
+          var srcUrl = "x-applet://www.spicebird.com/&_CS_UrlType=applet&iter=" + this.mIter 
+                        + "&_CS_appletId=" + this.mKey ;
+          newIFrame.setAttribute("src", srcUrl );
+        ]]>
+        </body>
+      </method>
+      <field name="mIter">0</field>
+
+      <method name="parseLocale">
+        <parameter name="aXML"/>
+        <body>
+        <![CDATA[
+          var messageBundle = aXML.getElementsByTagName("messagebundle").item(0);
+          var messages = messageBundle.getElementsByTagName("msg");
+          function _trim(str) {
+             str = str.replace(/^\s*/m, "");
+             str = str.replace(/\s*$/m, "");
+             return str;
+          }
+
+          for (var i = 0; i < messages.length; i++)
+          {
+            var name = messages[i].getAttribute("name");
+            if (name)
+              this.mAppletStrings[name] = _trim(messages[i].textContent);
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="onTitleChange">
+        <body>
+        <![CDATA[
+          var newTitle = this.mAppletFrame.contentDocument.getElementById("_CS_title")
+                              .getAttribute("value");
+          if (this.mParent && newTitle)
+            this.mParent.title = newTitle;
+        ]]>
+        </body>
+      </method>
+
+      <method name="setTitle">
+        <parameter name="aTitle"/>
+        <body>
+        <![CDATA[
+          if (this.mParent)
+            this.mParent.title = aTitle;
+        ]]>
+        </body>
+      </method>
+
+      <method name="adjustHeight">
+        <parameter name="aHeight"/>
+        <body>
+        <![CDATA[
+          var bodyHeight = 200;
+          try {
+              var doc = this.mAppletFrame.contentDocument;
+              var heightVal = doc.defaultView.getComputedStyle(doc.body, "").getPropertyValue("height");
+              var heightStr = heightVal.split('px')[0];
+              bodyHeight = parseInt(heightStr) + 10;
+              if (isNaN(bodyHeight))
+                bodyHeight = 10;
+          } catch(e) { dump(e); }
+          var frameHeight = aHeight ? aHeight : bodyHeight;
+          var linkDesc = document.getAnonymousElementByAttribute(this, "anonid", "googleapplet-link-desc");
+          var totalHeight = frameHeight + this.mConfigContainer.boxObject.height + 
+                            linkDesc.boxObject.height + this.mStatusLabel.boxObject.height + 20;
+          this.setAttribute("height", "" +totalHeight);
+        ]]>
+        </body>
+      </method>
+      
+      <method name="setHeight">
+        <parameter name="aHeight"/>
+        <body>
+        <![CDATA[
+            aHeight += 20;
+            this.setAttribute("height", ""+aHeight);
+        ]]>
+        </body>
+      </method>
+      
+      <method name="showConfigPane">
+        <body>
+          <![CDATA[
+          this.mURLBox.value = this.mURL;
+          this.mConfigContainer.collapsed = false;
+          this.adjustHeight();
+          ]]>
+        </body>
+      </method>
+
+      <method name="hideConfigPane">
+        <body>
+          <![CDATA[
+          this.mConfigContainer.collapsed = true;
+          this.adjustHeight();
+          ]]>
+        </body>
+      </method>
+
+      <method name="onPrefUpdate">
+        <parameter name="aParam"/>
+        <body>
+        <![CDATA[
+        var value = null;
+
+        switch (aParam)
+        {
+          case "url":
+            if (this.mURL != this.mURLBox.value)
+            {
+              this.url = this.mURLBox.value;
+              this.mPrefBranch.setCharPref("url", this.mURL);
+            }
+            break;
+        }
+        ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+</bindings>

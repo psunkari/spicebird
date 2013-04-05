@@ -1,0 +1,146 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Code in this file is generated using a computer program.
+ * Please refer to the corresponding telepathy spec for any help in using the
+ * code here.  You may also feel free to contact the original developer for
+ * any related help.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+
+
+%{C++
+#include "glib/gtypes.h"
+%}
+native gpointer(gpointer);
+
+
+
+[scriptable, uuid(59f61b15-6371-44e5-a465-02a1f445d8c9)]
+interface csITpChannelRequestAccountCB : nsISupports
+{
+  void getPropertyAccountError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyAccountDone(in ACString aAccount);
+};
+
+[scriptable, uuid(f726ce98-233b-41fb-8e2a-5524b4e6cc9a)]
+interface csITpChannelRequestUserActionTimeCB : nsISupports
+{
+  void getPropertyUserActionTimeError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyUserActionTimeDone(in PRInt64 aUserActionTime);
+};
+
+[scriptable, uuid(7f31d0f4-1f49-4ddd-97ef-bfc29f01d1b6)]
+interface csITpChannelRequestPreferredHandlerCB : nsISupports
+{
+  void getPropertyPreferredHandlerError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyPreferredHandlerDone(in AUTF8String aPreferredHandler);
+};
+
+[scriptable, uuid(62586a2d-14c3-48cd-a7df-4ae141949d4f)]
+interface csITpChannelRequestRequestsCB : nsISupports
+{
+  void getPropertyRequestsError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyRequestsDone(in nsIArray aRequests);
+};
+
+[scriptable, uuid(0748606a-ed92-4658-b12f-8b7018115ede)]
+interface csITpChannelRequestInterfacesCB : nsISupports
+{
+  void getPropertyInterfacesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyInterfacesDone(in PRUint32 aInterfacesCount, [array, size_is(aInterfacesCount)] in string aInterfaces);
+};
+
+[scriptable, uuid(e9cd6488-5e44-4770-84fa-23ede25b66cc)]
+interface csITpChannelRequestProceedCB : nsISupports
+{
+  void onProceedError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onProceedDone();
+};
+
+[scriptable, uuid(266977fb-32e9-4434-8f81-e242e95280dc)]
+interface csITpChannelRequestCancelCB : nsISupports
+{
+  void onCancelError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onCancelDone();
+};
+
+[scriptable, uuid(a6380a6b-3574-4f82-96d7-6f3d52eb0030)]
+interface csITpChannelRequestFailedObserver : nsISupports
+{
+  void onFailed(in AUTF8String aError, in AUTF8String aMessage);
+};
+
+[scriptable, uuid(50bdfa87-a7cf-4141-a137-12d5f649a4e2)]
+interface csITpChannelRequestSucceededObserver : nsISupports
+{
+  void onSucceeded();
+};
+
+
+
+[scriptable, uuid(399138b6-747c-4c07-9a76-dfe622670097)]
+interface csITpChannelRequest : nsISupports
+{
+  /* The */
+  void getPropertyAccount(in csITpChannelRequestAccountCB cb);
+
+  void getPropertyUserActionTime(in csITpChannelRequestUserActionTimeCB cb);
+
+  void getPropertyPreferredHandler(in csITpChannelRequestPreferredHandlerCB cb);
+
+  void getPropertyRequests(in csITpChannelRequestRequestsCB cb);
+
+  /* A list of the extra interfaces provided by this channel request.
+        This property cannot change. */
+  void getPropertyInterfaces(in csITpChannelRequestInterfacesCB cb);
+
+  void callProceed(in csITpChannelRequestProceedCB cb);
+
+  void callCancel(in csITpChannelRequestCancelCB cb);
+
+  void connectToFailed(in csITpChannelRequestFailedObserver observer);
+  void disconnectFromFailed(in csITpChannelRequestFailedObserver observer);
+
+  void connectToSucceeded(in csITpChannelRequestSucceededObserver observer);
+  void disconnectFromSucceeded(in csITpChannelRequestSucceededObserver observer);
+
+};

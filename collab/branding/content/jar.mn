@@ -1,0 +1,10 @@
+#filter substition
+
+collab.jar:
+% content branding %content/branding/ xpcnativewrappers=yes
++ content/branding/about-credits.png                (about-credits.png)
++ content/branding/about.png                        (about-spicebird.png)
+  content/branding/splash.png                       (about-spicebird.png)
+  content/branding/spicebird-wizard-badge.png       (spicebird-wizard-badge.png)
+  content/branding/spicebird-watermark.png          (spicebird-watermark.png)
++ content/branding/icon64.png                       (icon64.png)

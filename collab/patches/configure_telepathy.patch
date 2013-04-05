@@ -1,0 +1,194 @@
+diff --git a/config/autoconf.mk.in b/config/autoconf.mk.in
+--- a/config/autoconf.mk.in
++++ b/config/autoconf.mk.in
+@@ -606,8 +606,28 @@ UNIVERSAL_BINARY= @UNIVERSAL_BINARY@
+ HAVE_DTRACE= @HAVE_DTRACE@
+ 
+ VISIBILITY_FLAGS = @VISIBILITY_FLAGS@
+ WRAP_SYSTEM_INCLUDES = @WRAP_SYSTEM_INCLUDES@
+ 
+ MOZ_EMBEDDING_LEVEL_DEFAULT = @MOZ_EMBEDDING_LEVEL_DEFAULT@
+ MOZ_EMBEDDING_LEVEL_BASIC = @MOZ_EMBEDDING_LEVEL_BASIC@
+ MOZ_EMBEDDING_LEVEL_MINIMAL = @MOZ_EMBEDDING_LEVEL_MINIMAL@
++
++# For Spicebird
++CS_GLIB_CFLAGS	= @CS_GLIB_CFLAGS@
++CS_GLIB_LIBS	= @CS_GLIB_LIBS@
++CS_GLIB_DLLS	= @CS_GLIB_DLLS@
++CS_GTHREAD_CFLAGS = @CS_GTHREAD_CFLAGS@
++CS_GTHREAD_LIBS	= @CS_GTHREAD_LIBS@
++CS_GTHREAD_DLLS	= @CS_GTHREAD_DLLS@
++CS_GMODULE_CFLAGS = @CS_GMODULE_CFLAGS@
++CS_GMODULE_LIBS	= @CS_GMODULE_LIBS@
++CS_GMODULE_DLLS	= @CS_GMODULE_DLLS@
++CS_LIBXML_CFLAGS = @CS_LIBXML_CFLAGS@
++CS_LIBXML_LIBS	= @CS_LIBXML_LIBS@
++CS_LIBXML_DLLS	= @CS_LIBXML_DLLS@
++CS_RESOLV_LIBS	= @CS_RESOLV_LIBS@
++CS_SYSTEM_TELEPATHY_STACK = @CS_SYSTEM_TELEPATHY_STACK@
++CS_DBUS_GLIB_CFLAGS = @CS_DBUS_GLIB_CFLAGS@
++CS_DBUS_GLIB_LIBS = @CS_DBUS_GLIB_LIBS@
++CS_TELEPATHY_GLIB_CFLAGS = @CS_TELEPATHY_GLIB_CFLAGS@
++CS_TELEPATHY_GLIB_LIBS = @CS_TELEPATHY_GLIB_LIBS@
+diff --git a/configure.in b/configure.in
+--- a/configure.in
++++ b/configure.in
+@@ -5635,16 +5635,158 @@ fi
+ fi
+ AC_SUBST(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
+ 
+ dnl MOZILLA_1_9_1_BRANCH.
+ fi
+ AC_SUBST(MOZ_DISABLE_PARENTAL_CONTROLS)
+ 
+ dnl ========================================================
++dnl Telepathy based IM
++dnl ========================================================
++case "$target" in
++*-msvc*|*-mks*|*-cygwin*|*-mingw*)
++    if test -n "$TPDEPS_PREFIX"; then
++        _TPDEPS_PREFIX_DIR=`cd $TPDEPS_PREFIX && pwd`
++        if test "$?" = "0"; then
++            _TPDEPS_PREFIX_DIR=`$CYGPATH_W $_TPDEPS_PREFIX_DIR | $CYGPATH_S`
++        else
++            AC_MSG_ERROR([TPDEPS_PREFIX is set but "${TPDEPS_PREFIX}" is not a directory.])
++        fi
++    else
++        _TPDEPS_PREFIX_DIR=$MOZ_TOOLS_DIR/tpdeps
++    fi
++
++    dnl Check for glib and gobject
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/include/glib-2.0/glib.h"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/include/glib-2.0/glib.h .])
++    fi
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/lib/glib-2.0/include/glibconfig.h"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/lib/glib-2.0/include/glibconfig.h .])
++    fi
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/include/glib-2.0/glib-object.h"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/include/glib-2.0/glib-object.h .])
++    fi
++    CS_GLIB_CFLAGS="-I${_TPDEPS_PREFIX_DIR}/include/glib-2.0 -I${_TPDEPS_PREFIX_DIR}/lib/glib-2.0/include"
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/lib/glib-2.0.lib"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/lib/glib-2.0.lib])
++    fi
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/lib/gobject-2.0.lib"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/lib/gobject-2.0.lib])
++    fi
++    CS_GLIB_LIBS="${_TPDEPS_PREFIX_DIR}/lib/glib-2.0.lib ${_TPDEPS_PREFIX_DIR}/lib/gobject-2.0.lib"
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/bin/libglib-2.0-0.dll"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/bin/libglib-2.0-0.dll])
++    fi
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/bin/libgobject-2.0-0.dll"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/bin/libgobject-2.0-0.dll])
++    fi
++    CS_GLIB_DLLS="${_TPDEPS_PREFIX_DIR}/bin/libglib-2.0-0.dll ${_TPDEPS_PREFIX_DIR}/bin/libgobject-2.0-0.dll"
++
++    dnl Check for gmodule
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/include/glib-2.0/gmodule.h"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/include/glib-2.0/gmodule.h])
++    fi
++    CS_GMODULE_CFLAGS="-I${_TPDEPS_PREFIX_DIR}/include/glib-2.0"
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/lib/gmodule-2.0.lib"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/lib/gmodule-2.0.lib])
++    fi
++    CS_GMODULE_LIBS="${_TPDEPS_PREFIX_DIR}/lib/gmodule-2.0.lib"
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/bin/libgmodule-2.0-0.dll"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/bin/libgmodule-2.0-0.dll])
++    fi
++    CS_GMODULE_DLLS="${_TPDEPS_PREFIX_DIR}/bin/libgmodule-2.0-0.dll"
++
++    dnl Check for gthread
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/include/glib-2.0/glib/gthread.h"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/include/glib-2.0/glib/gthread.h])
++    fi
++    CS_GTHREAD_CFLAGS="-I${_TPDEPS_PREFIX_DIR}/include/glib-2.0"
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/lib/gthread-2.0.lib"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/lib/gthread-2.0.lib])
++    fi
++    CS_GTHREAD_LIBS="${_TPDEPS_PREFIX_DIR}/lib/gthread-2.0.lib"
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/bin/libgthread-2.0-0.dll"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/bin/libgthread-2.0-0.dll])
++    fi
++    CS_GTHREAD_DLLS="${_TPDEPS_PREFIX_DIR}/bin/libgthread-2.0-0.dll"
++
++    dnl Check for libxml2 
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/include/libxml/parser.h"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/include/libxml/parser.h])
++    fi
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/include/iconv.h"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/include/iconv.h])
++    fi
++    CS_LIBXML_CFLAGS="-I${_TPDEPS_PREFIX_DIR}/include"
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/lib/libxml2.lib"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/lib/libxml2.lib])
++    fi
++    CS_LIBXML_LIBS="${_TPDEPS_PREFIX_DIR}/lib/libxml2.lib"
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/bin/libxml2.dll"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/bin/libxml2.dll])
++    fi
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/bin/iconv.dll"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/bin/iconv.dll])
++    fi
++    if test ! -f "${_TPDEPS_PREFIX_DIR}/bin/zlib1.dll"; then
++        AC_MSG_ERROR([Cannot find $_TPDEPS_PREFIX_DIR/bin/zlib1.dll])
++    fi
++    CS_LIBXML_DLLS="${_TPDEPS_PREFIX_DIR}/bin/libxml2.dll ${_TPDEPS_PREFIX_DIR}/bin/iconv.dll ${_TPDEPS_PREFIX_DIR}/bin/zlib1.dll"
++    ;;
++*)
++    PKG_CHECK_MODULES(CS_GLIB, glib-2.0 gobject-2.0)
++    PKG_CHECK_MODULES(CS_GTHREAD, gthread-2.0)
++    PKG_CHECK_MODULES(CS_GMODULE, gmodule-2.0)
++    PKG_CHECK_MODULES(CS_LIBXML, libxml-2.0)
++    AC_CHECK_LIB(resolv, __res_query,
++        CS_RESOLV_LIBS=-lresolv)
++    ;;
++esac
++
++AC_SUBST(CS_GLIB_CFLAGS)
++AC_SUBST(CS_GLIB_LIBS)
++AC_SUBST(CS_GLIB_DLLS)
++AC_SUBST(CS_GTHREAD_CFLAGS)
++AC_SUBST(CS_GTHREAD_LIBS)
++AC_SUBST(CS_GTHREAD_DLLS)
++AC_SUBST(CS_GMODULE_CFLAGS)
++AC_SUBST(CS_GMODULE_LIBS)
++AC_SUBST(CS_GMODULE_DLLS)
++AC_SUBST(CS_LIBXML_CFLAGS)
++AC_SUBST(CS_LIBXML_LIBS)
++AC_SUBST(CS_LIBXML_DLLS)
++AC_SUBST(CS_RESOLV_LIBS)
++
++dnl ========================================================
++dnl If telepathy IM should use system dbus and telepathy
++dnl connection managers instead of default ones
++dnl ========================================================
++MOZ_ARG_WITH_BOOL(system-telepathy-stack,
++[  --with-system-telepathy-stack
++                          Use system dbus, dbus-glib and telepathy-glib
++                          libraries and only system telepathy connection
++                          managers [dbus, dbus-glib and telepathy-glib
++                          are detected using pkg-config]],
++    CS_SYSTEM_TELEPATHY_STACK=1,
++    CS_SYSTEM_TELEPATHY_STACK=)
++
++if test "$CS_SYSTEM_TELEPATHY_STACK"
++then
++    PKG_CHECK_MODULES(CS_DBUS_GLIB, dbus-glib-1)
++    PKG_CHECK_MODULES(CS_TELEPATHY_GLIB, telepathy-glib >= 0.7.9)
++fi
++
++AC_SUBST(CS_SYSTEM_TELEPATHY_STACK)
++AC_SUBST(CS_DBUS_GLIB_CFLAGS)
++AC_SUBST(CS_DBUS_GLIB_LIBS)
++AC_SUBST(CS_TELEPATHY_GLIB_CFLAGS)
++AC_SUBST(CS_TELEPATHY_GLIB_LIBS)
++
++dnl ========================================================
+ dnl =
+ dnl = Module specific options
+ dnl =
+ dnl ========================================================
+ MOZ_ARG_HEADER(Individual module options)
+ 
+ dnl ========================================================
+ dnl = Enable Lea malloc in xpcom. OFF by default.

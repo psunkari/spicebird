@@ -1,0 +1,207 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Code in this file is generated using a computer program.
+ * Please refer to the corresponding telepathy spec for any help in using the
+ * code here.  You may also feel free to contact the original developer for
+ * any related help.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+
+
+%{C++
+#include "glib/gtypes.h"
+%}
+native gpointer(gpointer);
+
+
+
+[scriptable, uuid(4f186877-05f1-4f8a-b32b-017aa695c637)]
+interface csITpMediaStreamInfo : nsISupports
+{
+  readonly attribute PRUint32 identifier;
+  readonly attribute PRUint32 contact;
+  readonly attribute PRUint32 type;
+  readonly attribute PRUint32 state;
+  readonly attribute PRUint32 direction;
+  readonly attribute PRUint32 pendingSendFlags;
+
+  [noscript] gpointer toGLib();
+};
+
+[scriptable, uuid(9bac867b-6a00-4d3a-a739-8b7fc6d3e240)]
+interface csITpChannelTypeStreamedMediaListStreamsCB : nsISupports
+{
+  void onListStreamsError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onListStreamsDone(in nsIArray aStreams);
+};
+
+[scriptable, uuid(3d9abbf0-bf45-408c-8e96-5b95467b952c)]
+interface csITpChannelTypeStreamedMediaRemoveStreamsCB : nsISupports
+{
+  void onRemoveStreamsError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onRemoveStreamsDone();
+};
+
+[scriptable, uuid(d40e3a7f-c135-4208-8749-aa0a2888c510)]
+interface csITpChannelTypeStreamedMediaRequestStreamDirectionCB : nsISupports
+{
+  void onRequestStreamDirectionError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onRequestStreamDirectionDone();
+};
+
+[scriptable, uuid(a4d5c58a-67b6-4f4b-930d-03cb94d8abea)]
+interface csITpChannelTypeStreamedMediaRequestStreamsCB : nsISupports
+{
+  void onRequestStreamsError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onRequestStreamsDone(in nsIArray aStreams);
+};
+
+[scriptable, uuid(9fedd6b4-26e9-4caf-a5e9-78da990496e5)]
+interface csITpChannelTypeStreamedMediaStreamAddedObserver : nsISupports
+{
+  void onStreamAdded(in PRUint32 aStreamID, in PRUint32 aContactHandle, in PRUint32 aStreamType);
+};
+
+[scriptable, uuid(28edcb8d-b39e-4185-ac51-bfdc4632ea33)]
+interface csITpChannelTypeStreamedMediaStreamDirectionChangedObserver : nsISupports
+{
+  void onStreamDirectionChanged(in PRUint32 aStreamID, in PRUint32 aStreamDirection, in PRUint32 aPendingFlags);
+};
+
+[scriptable, uuid(82736273-f024-44ea-8f68-634d4a0c3f5a)]
+interface csITpChannelTypeStreamedMediaStreamErrorObserver : nsISupports
+{
+  void onStreamError(in PRUint32 aStreamID, in PRUint32 aErrorCode, in AUTF8String aMessage);
+};
+
+[scriptable, uuid(11e72177-11cb-4a54-8766-f8bc9ce6e758)]
+interface csITpChannelTypeStreamedMediaStreamRemovedObserver : nsISupports
+{
+  void onStreamRemoved(in PRUint32 aStreamID);
+};
+
+[scriptable, uuid(6ee4654e-b867-494f-b271-fe71d2da83ee)]
+interface csITpChannelTypeStreamedMediaStreamStateChangedObserver : nsISupports
+{
+  void onStreamStateChanged(in PRUint32 aStreamID, in PRUint32 aStreamState);
+};
+
+[scriptable, uuid(bf35ae8b-41b1-48f4-9431-e5293d289349)]
+interface csITpChannelTypeStreamedMediaInitialAudioCB : nsISupports
+{
+  void getPropertyInitialAudioError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyInitialAudioDone(in PRBool aInitialAudio);
+};
+
+[scriptable, uuid(9966f8c0-2f72-4efb-9970-823a474f9a38)]
+interface csITpChannelTypeStreamedMediaInitialVideoCB : nsISupports
+{
+  void getPropertyInitialVideoError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyInitialVideoDone(in PRBool aInitialVideo);
+};
+
+[scriptable, uuid(0c909680-e8dd-4d21-8900-3dbd4c55f7f6)]
+interface csITpChannelTypeStreamedMediaImmutableStreamsCB : nsISupports
+{
+  void getPropertyImmutableStreamsError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyImmutableStreamsDone(in PRBool aImmutableStreams);
+};
+
+
+
+[scriptable, uuid(5128cb80-6703-4d74-9b8f-9ca3574939ae)]
+interface csITpChannelTypeStreamedMedia : nsISupports
+{
+  const short Media_Stream_Type_Audio = 0;
+  const short Media_Stream_Type_Video = 1;
+
+  const short Media_Stream_State_Disconnected = 0;
+  const short Media_Stream_State_Connecting = 1;
+  const short Media_Stream_State_Connected = 2;
+
+  const short Media_Stream_Direction_None = 0;
+  const short Media_Stream_Direction_Send = 1;
+  const short Media_Stream_Direction_Receive = 2;
+  const short Media_Stream_Direction_Bidirectional = 3;
+
+  const short Media_Stream_Pending_Send_Local_Send = 1;
+  const short Media_Stream_Pending_Send_Remote_Send = 2;
+
+  void callListStreams(in csITpChannelTypeStreamedMediaListStreamsCB cb);
+
+  void callRemoveStreams(in PRUint32 aStreamsCount, [array, size_is(aStreamsCount)] in PRUint32 aStreams, in csITpChannelTypeStreamedMediaRemoveStreamsCB cb);
+
+  void callRequestStreamDirection(in PRUint32 aStreamID, in PRUint32 aStreamDirection, in csITpChannelTypeStreamedMediaRequestStreamDirectionCB cb);
+
+  void callRequestStreams(in PRUint32 aContactHandle, in PRUint32 aTypesCount, [array, size_is(aTypesCount)] in PRUint32 aTypes, in csITpChannelTypeStreamedMediaRequestStreamsCB cb);
+
+  void connectToStreamAdded(in csITpChannelTypeStreamedMediaStreamAddedObserver observer);
+  void disconnectFromStreamAdded(in csITpChannelTypeStreamedMediaStreamAddedObserver observer);
+
+  void connectToStreamDirectionChanged(in csITpChannelTypeStreamedMediaStreamDirectionChangedObserver observer);
+  void disconnectFromStreamDirectionChanged(in csITpChannelTypeStreamedMediaStreamDirectionChangedObserver observer);
+
+  void connectToStreamError(in csITpChannelTypeStreamedMediaStreamErrorObserver observer);
+  void disconnectFromStreamError(in csITpChannelTypeStreamedMediaStreamErrorObserver observer);
+
+  void connectToStreamRemoved(in csITpChannelTypeStreamedMediaStreamRemovedObserver observer);
+  void disconnectFromStreamRemoved(in csITpChannelTypeStreamedMediaStreamRemovedObserver observer);
+
+  void connectToStreamStateChanged(in csITpChannelTypeStreamedMediaStreamStateChangedObserver observer);
+  void disconnectFromStreamStateChanged(in csITpChannelTypeStreamedMediaStreamStateChangedObserver observer);
+
+  void getPropertyInitialAudio(in csITpChannelTypeStreamedMediaInitialAudioCB cb);
+
+  void getPropertyInitialVideo(in csITpChannelTypeStreamedMediaInitialVideoCB cb);
+
+  void getPropertyImmutableStreams(in csITpChannelTypeStreamedMediaImmutableStreamsCB cb);
+
+  /* The channel-type-specific capability flags used for
+        Channel.Type.StreamedMedia in the */
+  const short Channel_Media_Capabilities_Audio = 1;
+  const short Channel_Media_Capabilities_Video = 2;
+  const short Channel_Media_Capabilities_NAT_Traversal_STUN = 4;
+  const short Channel_Media_Capabilities_NAT_Traversal_GTalk_P2P = 8;
+  const short Channel_Media_Capabilities_NAT_Traversal_ICE_UDP = 16;
+  const short Channel_Media_Capabilities_Immutable_Streams = 32;
+
+};

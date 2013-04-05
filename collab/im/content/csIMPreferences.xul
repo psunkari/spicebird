@@ -1,0 +1,156 @@
+<?xml version="1.0"?>
+<!--
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+# Synovel Software Technologies
+# Portions created by the Initial Developer are Copyright (C) 2009
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Prasad Sunkari <prasad@synovel.com> (Original Author)
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+-->
+
+<!DOCTYPE overlay [
+  <!ENTITY % imDTD SYSTEM "chrome://im/locale/csIMOverlay.dtd"> %imDTD;
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd"> %brandDTD;
+  <!ENTITY % imPrefsDTD SYSTEM "chrome://im/locale/csIMPreferences.dtd"> %imPrefsDTD;
+]>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://im/skin/csIMOverlay.css" type="text/css"?>
+
+<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <prefwindow id="MailPreferences">
+
+    <script type="application/javascript"
+            src="chrome://im/content/csIMPreferences.js"/>
+
+    <prefpane id="csIMChatPane" 
+              label="&im.title;" onpaneload="gCollabChatPrefs.init();">
+
+      <preferences>
+        <preference id="im-sound"
+                    name="collab.im.alerts.sound" type="bool"/>
+        <preference id="im-sound-type"
+                    name="collab.im.alerts.sound.type" type="int"/>
+        <preference id="im-sound-url"
+                    name="collab.im.alerts.sound.url" type="string"/>
+        <preference id="im-sound-newconv" type="bool"
+                    name="collab.im.alerts.sound.conversationsonly"/>
+
+        <preference id="im-start-docked"
+                    name="collab.im.startdocked" type="bool"/>
+        <preference id="im-show-timestamps"
+                    name="collab.im.showtimestamps" type="bool"/>
+
+        <preference id="im-autologin"
+                    name="collab.im.autologin" type="bool"/>
+        <preference id="im-autologin-status"
+                    name="collab.im.autologin.status" type="string"/>
+      </preferences>
+
+      <groupbox>
+        <caption label="&im.general.title;"/>
+        <checkbox id="im-docked-checkbox" label="&im.dock.label;"
+                  preference="im-start-docked" accesskey="&im.dock.key;"/>
+        <checkbox id="im-timestamps-checkbox" label="&im.timestamps.label;"
+                  preference="im-show-timestamps" accesskey="&im.timestamps.key;"/>
+      </groupbox>
+
+      <groupbox>
+        <caption label="&im.autologin.title;"/>
+        <checkbox id="im-autologin-checkbox" label="&im.autologin.label;"
+                  preference="im-autologin" accesskey="&im.autologin.key;"
+                  oncommand="gCollabChatPrefs.updateChatStatus();"/>
+        <hbox id="im-autologin-box" class="indent" align="center">
+          <label value="&im.autologin.status;" id="im-autologin-label"
+                 control="im-autologin-status-menulist"
+                 accesskey="&im.autologin.status.key;"/>
+          <menulist id="im-autologin-status-menulist"
+                    preference="im-autologin-status">
+            <menupopup>
+              <menuitem label="&collab.im.status.available.label;"
+                        value="available" im-status="available"/>
+              <menuitem label="&collab.im.status.away.label;"
+                        value="away" im-status="available"/>
+              <menuitem label="&collab.im.status.busy.label;"
+                        value="busy" im-status="available"/>
+              <menuitem label="&collab.im.status.invisible.label;"
+                        value="invisible" im-status="available"/>
+            </menupopup>
+          </menulist>
+        </hbox>
+      </groupbox>
+
+      <groupbox>
+        <caption label="&im.alerts.title;"/>
+        <checkbox id="im-sound-checkbox" label="&im.alerts.sound.label;"
+                  preference="im-sound" accesskey="&im.alerts.sound.key;"
+                  oncommand="gCollabChatPrefs.updatePlaySound()"/>
+        <radiogroup id="im-sound-type-group" preference="im-sound-type"
+                    class="indent" orient="vertical"
+                    oncommand="gCollabChatPrefs.updatePlaySound();">
+          <radio value="0" 
+#ifdef XP_MACOSX
+                 label="&im.alerts.macsound;"
+                 accesskey="&im.alerts.macsound.key;"
+#else
+                 label="&im.alerts.systemsound;"
+                 accesskey="&im.alerts.systemsound.key;"
+#endif
+                 id="im-sound-system"/>
+          <radio value="1" label="&im.alerts.usefile;"
+                 accesskey="&im.alerts.usefile.key;" id="im-sound-custom"/>
+          <hbox class="indent">
+            <filefield id="im-sound-url-location" flex="1"
+                       preference="im-sound-url" preference-editable="true"
+                       pickerTitle="&im.alerts.sound.browse.desc;"/>
+            <button id="im-sound-browse" label="&im.alerts.sound.browse;"
+                    accesskey="&im.alerts.sound.browse.key;"
+                    oncommand="gCollabChatPrefs.browseForSoundFile();">
+              <observes element="im-sound-url-location" attribute="disabled"/>
+            </button>
+            <button id="im-sound-preview" label="&im.alerts.sound.preview;"
+                    accesskey="&im.alerts.sound.preview.key;"
+                    oncommand="gCollabChatPrefs.previewSound();"/>
+          </hbox>          
+          <checkbox id="im-sound-newconv-checkbox"
+                    label="&im.alerts.sound.newconv;"
+                    preference="im-sound-newconv"
+                    accesskey="&im.alerts.sound.newconv.key;"/>
+        </radiogroup>
+      </groupbox>
+    </prefpane>
+
+  </prefwindow>
+
+</overlay>

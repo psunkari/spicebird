@@ -1,0 +1,262 @@
+/* ===== messenger.css ==================================================
+  == Styles shared throughout the Messenger application.
+  ======================================================================= */
+
+@import url("chrome://global/skin/");
+@import url("chrome://messenger/content/messenger.css");
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+description.error {
+  color: #FF0000;
+}
+
+.toolbar-primary {
+  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar");
+}
+
+toolbar[printpreview="true"] {
+  -moz-binding: url("chrome://global/content/printPreviewBindings.xml#printpreviewtoolbar");
+}
+
+/*
+ * Override the menulist icon forbidding in menu.css so that we can show
+ * check-marks. bug 443516
+ */
+.menulist-menupopup > menuitem > .menu-iconic-left,
+menulist > menupopup > menuitem > .menu-iconic-left,
+.menulist-menupopup > menu > .menu-iconic-left,
+menulist > menupopup > menu > .menu-iconic-left {
+  display: -moz-box;
+}
+
+
+/* ::::: throbber ::::: */
+
+#throbber-box {
+  width: 16px;
+  min-height: 16px;
+  margin: 0 3px;
+  list-style-image: url("chrome://global/skin/icons/notloading_16.png");
+}
+
+#throbber-box[busy="true"] {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+}
+
+/* ::::: online/offline icons ::::: */
+
+#offline-status {
+  padding: 0 2px;
+}
+
+#offline-status[offline="true"] {
+  list-style-image: url("chrome://messenger/skin/icons/offline.png");
+}
+
+#offline-status {
+  list-style-image: url("chrome://messenger/skin/icons/online.png");
+}
+
+/* ::::: toolbarbutton ::::: */
+
+.toolbarbutton-1,
+.toolbarbutton-menubutton-button {
+  padding-top: 5px;
+  padding-bottom: 6px;
+  -moz-padding-start: 4px;
+  -moz-padding-end: 5px;
+}
+
+.toolbarbutton-1:hover:active:not([disabled]),
+.toolbarbutton-1[open="true"],
+.toolbarbutton-menubutton-button:hover:active:not([disabled]),
+.toolbarbutton-menubutton-button[open="true"] {
+  padding-top: 6px;
+  padding-bottom: 5px;
+  -moz-padding-start: 5px;
+  -moz-padding-end: 4px;
+}
+
+.toolbarbutton-1[checked="true"] {
+  padding-top: 6px !important;
+  padding-bottom: 5px !important;
+  -moz-padding-start: 5px !important;
+  -moz-padding-end: 4px !important;
+}
+
+.toolbarbutton-1 .toolbarbutton-icon,
+#FormatToolbar .toolbarbutton-icon {
+  -moz-margin-end: 0px;
+}
+
+.toolbarbutton-menu-dropmarker {
+  -moz-padding-start: 3px;
+}
+
+toolbar[mode="full"] .toolbarbutton-1 {
+  min-width: 55px;
+}
+
+sidebarheader .toolbarbutton-text:not([value]) {
+  display: none;
+}
+
+/*
+ * TODO.
+ */
+
+#searchInput {
+  padding: 2px;
+}
+
+/* Stock icons for the menu bar items */
+
+#menu_New {
+  -moz-binding: url("chrome://global/content/bindings/menu.xml#menu-iconic");
+  list-style-image: url("chrome://collab/skin/16x16/document-new.png");
+}
+
+/* Message -> New, File -> New -> Message */
+#newMsgCmd,
+#new-mail-item, #new-mail-item2 {
+  list-style-image: url("chrome://messenger/skin/16x16/mail-message-new.png");
+}
+
+#menu_newFolder, #menu_newFolder2 {
+  list-style-image: url("chrome://messenger/skin/16x16/folder-pane.png");
+  -moz-image-region: rect(0 112px 16px 96px);
+}
+
+#menu_newVirtualFolder, #menu_newVirtualFolder2 {
+  list-style-image: url("chrome://messenger/skin/16x16/folder-pane.png");
+  -moz-image-region: rect(0 272px 16px 256px);
+}
+
+#menu_newCard {
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/addressbook-toolbar.png");
+  -moz-image-region: rect(44px 22px 66px 0px); /* contact-add.png */
+}
+
+#openMessageFileMenuitem {
+  list-style-image: url("chrome://collab/skin/16x16/document-open.png");
+}
+
+#menu_saveAs {
+  -moz-binding: url("chrome://global/content/bindings/menu.xml#menu-iconic");
+  list-style-image: url("chrome://collab/skin/16x16/document-save-as.png");
+}
+
+#mailContext-saveAs,
+#mailContext-savelink,
+#mailContext-saveimage {
+  list-style-image: url("chrome://collab/skin/16x16/document-save-as.png");
+}
+
+#mailContext-print {
+  list-style-image: url("chrome://collab/skin/16x16/document-print.png");
+}
+
+#mailContext-printpreview {
+  list-style-image: url("chrome://collab/skin/16x16/document-print-preview.png");
+}
+
+#mailContext-copy,
+#mailContext-copyimage,
+#mailContext-copylink,
+#mailContext-copyemail {
+  list-style-image: url("chrome://collab/skin/16x16/edit-copy.png");
+}
+
+#mailContext-copy[disabled] {
+  list-style-image: url("chrome://collab/skin/16x16/edit-copy-disabled.png");
+}
+
+#mailContext-delete,
+#folderPaneContext-remove {
+  list-style-image: url("chrome://collab/skin/16x16/edit-delete.png");
+}
+
+#mailContext-delete[disabled] {
+  list-style-image: url("chrome://collab/skin/16x16/edit-delete-disabled.png");
+}
+
+#folderPaneContext-searchMessages {
+  list-style-image: url("chrome://collab/skin/16x16/edit-find.png");
+}
+
+#folderPaneContext-searchMessages[disabled] {
+  list-style-image: url("chrome://collab/skin/16x16/edit-find-disabled.png");
+}
+
+%ifdef XP_UNIX
+#folderPaneContext-properties {
+  list-style-image: url("moz-icon://stock/gtk-properties?size=menu");
+}
+
+menuitem[command="cmd_fullZoomEnlarge"] {
+  list-style-image: url("moz-icon://stock/gtk-zoom-in?size=menu");
+}
+
+menuitem[command="cmd_fullZoomReduce"] {
+  list-style-image: url("moz-icon://stock/gtk-zoom-out?size=menu");
+}
+
+menuitem[command="cmd_fullZoomReset"] {
+  list-style-image: url("moz-icon://stock/gtk-zoom-100?size=menu");
+}
+
+menuitem[command="cmd_goBack"] {
+  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu");
+}
+
+menuitem[key="cmd_goBack"][disabled] {
+  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu&state=disabled");
+}
+
+menuitem[command="cmd_goBack"][chromedir="rtl"] {
+  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu");
+}
+
+menuitem[command="cmd_goBack"][disabled][chromedir="rtl"] {
+  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu&state=disabled");
+}
+
+menuitem[command="cmd_goForward"] {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu");
+}
+
+menuitem[command="cmd_goForward"][disabled] {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu&state=disabled");
+}
+
+menuitem[command="cmd_goForward"][chromedir="rtl"] {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu");
+}
+
+menuitem[command="cmd_goForward"][disabled][chromedir="rtl"] {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu&state=disabled");
+}
+%endif
+
+#goStartPage {
+  list-style-image: url("chrome://collab/skin/16x16/go-home.png");
+}
+
+#menu_openHelp {
+  list-style-image: url("chrome://collab/skin/16x16/help-browser.png");
+}
+
+#aboutName {
+  list-style-image: url("chrome://collab/skin/16x16/help-about.png");
+}
+
+#addressBook {
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/addrbook.png");
+}
+
+statusbarpanel {
+  -moz-appearance: none !important;
+  border: 0px !important;
+  padding: 0 4px;
+}

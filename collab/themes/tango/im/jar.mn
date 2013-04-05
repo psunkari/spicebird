@@ -1,0 +1,48 @@
+
+classic.jar:
+% skin im classic/1.0 %skin/classic/im/
+* skin/classic/im/csIMOverlay.css
+* skin/classic/im/chatWindow.css
+* skin/classic/im/chatBrowser.css
+* skin/classic/im/imContacts.css
+* skin/classic/im/imContactDialog.css
+* skin/classic/im/eventFilterOverlay.css
+* skin/classic/im/csAddressbookOverlay.css
+* skin/classic/im/csMsgHdrViewOverlay.css
+* skin/classic/im/csTPProtocolParams.css
+* skin/classic/im/imQuickStatus.css
+* skin/classic/im/csChatHistory.css
+  skin/classic/im/emoticons/face-devilish.png             (emoticons/face-devilish.png)
+  skin/classic/im/emoticons/face-monkey.png               (emoticons/face-monkey.png)
+  skin/classic/im/emoticons/face-smile.png                (emoticons/face-smile.png)
+  skin/classic/im/emoticons/face-glasses.png              (emoticons/face-glasses.png)
+  skin/classic/im/emoticons/face-plain.png                (emoticons/face-plain.png)
+  skin/classic/im/emoticons/face-surprise.png             (emoticons/face-surprise.png)
+  skin/classic/im/emoticons/face-angel.png                (emoticons/face-angel.png)
+  skin/classic/im/emoticons/face-grin.png                 (emoticons/face-grin.png)
+  skin/classic/im/emoticons/face-sad.png                  (emoticons/face-sad.png)
+  skin/classic/im/emoticons/face-wink.png                 (emoticons/face-wink.png)
+  skin/classic/im/emoticons/face-crying.png               (emoticons/face-crying.png)
+  skin/classic/im/emoticons/face-kiss.png                 (emoticons/face-kiss.png)
+  skin/classic/im/emoticons/face-smile-big.png            (emoticons/face-smile-big.png)
+  skin/classic/im/actions/format-text-bold.png            (actions/format-text-bold.png)
+  skin/classic/im/actions/format-text-italic.png          (actions/format-text-italic.png)
+  skin/classic/im/actions/format-text-underline.png       (actions/format-text-underline.png)
+  skin/classic/im/actions/format-text-bold-plain.png      (actions/format-text-bold-plain.png)
+  skin/classic/im/actions/format-text-italic-plain.png    (actions/format-text-italic-plain.png)
+  skin/classic/im/actions/format-text-underline-plain.png (actions/format-text-underline-plain.png)
+  skin/classic/im/animations/paused.png                   (animations/composing.png)
+  skin/classic/im/animations/composing1.png               (animations/composing.png)
+  skin/classic/im/animations/composing2.png               (animations/composing.png)
+  skin/classic/im/animations/composing3.png               (animations/composing.png)
+  skin/classic/im/animations/composing4.png               (animations/composing.png)
+  skin/classic/im/animations/composing5.png               (animations/composing.png)
+  skin/classic/im/16x16/statuses.png                      (16x16/statuses.png)
+  skin/classic/im/16x16/instant-messaging.png             (16x16/instant-messaging.png)
+  skin/classic/im/16x16/instant-messaging-anim.gif        (16x16/instant-messaging-anim.gif)
+  skin/classic/im/16x16/dock-icons.png                    (16x16/dock-icons.png)
+  skin/classic/im/16x16/status-not-authorized.png         (16x16/status-not-authorized.png)
+  skin/classic/im/22x22/instant-messaging.png             (22x22/instant-messaging.png)
+  skin/classic/im/22x22/im-contacts-toolbar.png           (22x22/im-contacts-toolbar.png)
+  skin/classic/im/22x22/statuses.png                      (22x22/statuses.png)
+  skin/classic/im/32x32/instant-messaging.png             (32x32/instant-messaging.png)

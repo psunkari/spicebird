@@ -1,0 +1,16 @@
+overlay chrome://collab/content/collab.xul chrome://messenger/content/csMailnewsOverlay.xul
+overlay chrome://collab/content/collab.xul chrome://messenger/content/addressbook/csContactsOverlay.xul
+overlay chrome://collab/content/collab.xul chrome://calendar/content/csCalendarOverlay.xul
+overlay chrome://messenger/content/preferences/preferences.xul chrome://lightning/content/messenger-overlay-preferences.xul
+overlay chrome://messenger/content/preferences/preferences.xul chrome://calendar/content/preferences/alarms.xul
+overlay chrome://messenger/content/preferences/preferences.xul chrome://calendar/content/preferences/categories.xul
+overlay chrome://messenger/content/preferences/preferences.xul chrome://calendar/content/preferences/general.xul
+overlay chrome://messenger/content/preferences/preferences.xul chrome://calendar/content/preferences/timezones.xul
+overlay chrome://messenger/content/preferences/preferences.xul chrome://calendar/content/preferences/views.xul
+overlay chrome://messenger/content/messageWindow.xul chrome://lightning/content/imip-bar-overlay.xul
+overlay chrome://messenger/content/csMailnewsOverlay.xul chrome://lightning/content/imip-bar-overlay.xul
+overlay chrome://messenger/content/messageWindow.xul chrome://calendar/content/csEventFilterOverlay.xul
+overlay chrome://messenger/content/csMailnewsOverlay.xul chrome://calendar/content/csEventFilterOverlay.xul
+overlay chrome://collab/content/collab.xul chrome://chat/content/csChatOverlay.xul
+overlay chrome://messenger/content/addressbook/csContactsOverlay.xul chrome://chat/content/csAddressbookOverlay.xul
+overlay chrome://messenger/content/preferences/preferences.xul chrome://chat/content/csChatPreferences.xul

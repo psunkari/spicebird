@@ -1,0 +1,132 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Code in this file is generated using a computer program.
+ * Please refer to the corresponding telepathy spec for any help in using the
+ * code here.  You may also feel free to contact the original developer for
+ * any related help.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+
+
+%{C++
+#include "glib/gtypes.h"
+%}
+native gpointer(gpointer);
+
+
+
+/*
+ * A dictionary whose keys are contact handles and whose
+        values are aliases.
+ */
+[scriptable, uuid(c1d72fa2-497b-473b-827d-d0c22d657a98)]
+interface csITpAliasMap : nsISupports
+{
+  readonly attribute PRUint32 handle;
+  readonly attribute AUTF8String alias;
+};
+
+/*
+ * A pair (contact handle, alias) as seen in the
+ */
+[scriptable, uuid(4e4bf3e8-6d46-4f18-a44e-5abc3ba24db4)]
+interface csITpAliasPair : nsISupports
+{
+  readonly attribute PRUint32 handle;
+  readonly attribute AUTF8String alias;
+
+  [noscript] gpointer toGLib();
+};
+
+[scriptable, uuid(5c0a3b03-b138-40ab-a7e3-ed79835f1e6b)]
+interface csITpConnectionInterfaceAliasingAliasesChangedObserver : nsISupports
+{
+  void onAliasesChanged(in nsIArray aAliases);
+};
+
+[scriptable, uuid(53f1ce3f-914c-48ef-b134-ee3d9c870e01)]
+interface csITpConnectionInterfaceAliasingGetAliasFlagsCB : nsISupports
+{
+  void onGetAliasFlagsError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetAliasFlagsDone(in PRUint32 aAliasFlags);
+};
+
+[scriptable, uuid(1fc75e20-d10d-4c9d-a96c-0914d0573e82)]
+interface csITpConnectionInterfaceAliasingRequestAliasesCB : nsISupports
+{
+  void onRequestAliasesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onRequestAliasesDone(in PRUint32 aAliasesCount, [array, size_is(aAliasesCount)] in string aAliases);
+};
+
+[scriptable, uuid(8500770c-54e2-459e-abc3-7edcfc69f9e0)]
+interface csITpConnectionInterfaceAliasingGetAliasesCB : nsISupports
+{
+  void onGetAliasesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetAliasesDone(in nsIArray aAliases);
+};
+
+[scriptable, uuid(1c68b201-3957-46fe-b211-67acca30c1f5)]
+interface csITpConnectionInterfaceAliasingSetAliasesCB : nsISupports
+{
+  void onSetAliasesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onSetAliasesDone();
+};
+
+
+
+[scriptable, uuid(ed02ee4e-bfec-4784-8255-7ec19935d073)]
+interface csITpConnectionInterfaceAliasing : nsISupports
+{
+  void connectToAliasesChanged(in csITpConnectionInterfaceAliasingAliasesChangedObserver observer);
+  void disconnectFromAliasesChanged(in csITpConnectionInterfaceAliasingAliasesChangedObserver observer);
+
+  const short Connection_Alias_Flags_User_Set = 1;
+
+  void callGetAliasFlags(in csITpConnectionInterfaceAliasingGetAliasFlagsCB cb);
+
+  void callRequestAliases(in PRUint32 aContactsCount, [array, size_is(aContactsCount)] in PRUint32 aContacts, in csITpConnectionInterfaceAliasingRequestAliasesCB cb);
+
+  void callGetAliases(in PRUint32 aContactsCount, [array, size_is(aContactsCount)] in PRUint32 aContacts, in csITpConnectionInterfaceAliasingGetAliasesCB cb);
+
+  void callSetAliases(in nsIArray aAliases, in csITpConnectionInterfaceAliasingSetAliasesCB cb);
+
+};

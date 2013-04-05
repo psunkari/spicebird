@@ -1,0 +1,443 @@
+<?xml version="1.0"?>
+<!--
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+# Synovel Software Technologies
+# Portions created by the Initial Developer are Copyright (C) 2007-2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Prasad Sunkari <prasad@synovel.com> (Original Author)
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** 
+-->
+
+<!DOCTYPE window [
+  <!ENTITY % homepageDTD SYSTEM "chrome://collab/locale/homebox.dtd">     %homepageDTD;
+]>
+
+<!-- Requires that the loader should also load homebox.js -->
+<bindings id="homebox-bindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:html="http://www.w3.org/1999/xhtml"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+
+    <binding id="homebox">
+    
+        <resources>
+            <stylesheet src="chrome://collab/skin/homebox.css"/>
+            <stylesheet src="chrome://global/skin/"/>
+        </resources>
+        <content> 
+            <xul:vbox anonid="homebox-vbox" flex="1" ondragexit="doDragExit(event);"
+                      style="overflow-y: auto; overflow-x: auto; padding: 3px !important" 
+                      class="homeapplet-box">
+                <xul:hbox anonid="homebox-hbox" flex="1" class="homeapplet-box" >
+                    <xul:vbox anonid="homebox-column-1" class="homebox-dock" column="1"
+                              ondraggesture="nsDragAndDrop.startDrag(event, homeDNDObserver);"
+                              ondragover="nsDragAndDrop.dragOver(event, homeDNDObserver);"
+                              ondragdrop="nsDragAndDrop.drop(event, homeDNDObserver);" />
+                    <xul:vbox anonid="homebox-column-2" class="homebox-dock" column="2"
+                              ondraggesture="nsDragAndDrop.startDrag(event, homeDNDObserver);"
+                              ondragover="nsDragAndDrop.dragOver(event, homeDNDObserver);"
+                              ondragdrop="nsDragAndDrop.drop(event, homeDNDObserver);" />
+                    <xul:vbox anonid="homebox-column-3" class="homebox-dock" column="3"
+                              ondraggesture="nsDragAndDrop.startDrag(event, homeDNDObserver);"
+                              ondragover="nsDragAndDrop.dragOver(event, homeDNDObserver);"
+                              ondragdrop="nsDragAndDrop.drop(event, homeDNDObserver);" />
+                </xul:hbox>
+            </xul:vbox>
+        </content>
+        <implementation>
+            <field name="mResizeHandler">null</field>
+            <field name="mOverflowHandler">null</field>
+            <constructor>
+                <![CDATA[
+                    var service = Components.classes["@mozilla.org/moz/jssubscript-loader;1"].
+                                         getService(Components.interfaces.mozIJSSubScriptLoader);
+                    service.loadSubScript("chrome://global/content/nsDragAndDrop.js"); 
+
+                    var self = this;
+                    this.mResizeHandler = function(event) { 
+                      if (event.target.parent == event.target)
+                        self.onResize(); 
+                    };
+                    window.addEventListener("resize", this.mResizeHandler, true);
+
+                    this.mOverflowHandler = function(event) {
+                      if (event.target == self)
+                        self.onResize();
+                    };
+                    this.addEventListener("overflow", this.mOverflowHandler, true);
+                    this.addEventListener("underflow", this.mOverflowHandler, true);
+                ]]>
+            </constructor>
+            <method name="getShortestColumn">
+                <body>
+                    <![CDATA[
+                      var hbox = document.getAnonymousElementByAttribute(this, "anonid", "homebox-hbox");
+                      var minHeight = hbox.boxObject.height;
+                      var smallest = Number(1);
+                      var curColumn = Number(1);
+
+                      var column = hbox.firstChild;
+                      while (column) {
+                        var height = 0;
+                        var applet = column.lastChild;
+                        if (applet) 
+                          height = applet.boxObject.y + applet.boxObject.height;
+
+                        if (height < minHeight) {
+                            minHeight = height;
+                            smallest = curColumn;
+                        }
+                        column = column.nextSibling;
+                        curColumn++;
+                      }
+
+                      return smallest || Number(1);
+                    ]]>
+                </body>
+            </method>
+            <method name="onResize">
+                <parameter name="aRealSelf" />
+                <body>
+                    <![CDATA[
+                        var self = this;
+                        if (aRealSelf)
+                            self = aRealSelf;
+
+                        var dockbox = document.getAnonymousElementByAttribute(self, "anonid", "homebox-hbox");
+                        var elements = dockbox.childNodes;
+
+                        var width = ( parseInt(dockbox.parentNode.boxObject.firstChild.boxObject.width) - 
+                                      parseInt(dockbox.parentNode.style.padding) * 2) / 3;
+                        var widthstr = Math.floor(width) + "px";
+
+                        // Note: currently hard-coded to 3 columns
+                        for (var i = 0; i < 3; i++) {
+                            var column = elements[i];
+                            column.style.setProperty("width", widthstr, "important");
+
+                            var applets = column.childNodes;
+                            for (var j = 0; j < applets.length; j++) {
+                                if (applets[j].widget && typeof applets[j].widget.resize == "function") {
+                                    applets[j].widget.resize();
+                                }
+                            }
+                        }
+                    ]]>
+                </body>
+            </method>
+            <method name="insertNode">
+                <parameter name="newNode"/>
+                <body>
+                    <![CDATA[
+                        var column = Number(1);
+                        var weight = Number(0);
+                        if (newNode.hasAttribute("weight")) 
+                            weight = parseInt(newNode.getAttribute("weight"), 10);
+                        if (newNode.hasAttribute("column")) 
+                            column = newNode.getAttribute("column");
+
+                        var box = document.getAnonymousElementByAttribute(this, "anonid", "homebox-column-" + column);
+                        var node = box.firstChild;
+
+                        if (node && weight == 0){
+                          box.insertBefore(newNode, node);
+                        } else {
+                          while (node && parseInt(node.getAttribute("weight")) < weight)
+                            node = node.nextSibling;
+
+                          if (!node)
+                            box.appendChild(newNode);
+                          else
+                            box.insertBefore(newNode, node);
+                        }
+
+                        var nodes = box.childNodes;
+                        for (var i = 0; i < nodes.length; i++) {
+                          var node = nodes[i];
+                          var key = node.getAttribute("homekey");
+                          node.setAttribute("weight", i);
+                          if (key)
+                            gHomeApplets.setWeight(key, i);
+                        }
+                    ]]>
+                </body>
+            </method>
+        </implementation>
+    </binding>
+    <binding id="homeapplet">
+        <resources>
+            <stylesheet src="chrome://collab/skin/homebox.css" />
+        </resources>
+        <content> 
+            <xul:vbox anonid="homeapplet-vbox" flex="1">
+                <xul:hbox class="applet-titlebar" anonid="applet-titlebar-hbox">
+                    <xul:label anonid="applet-title-label" flex="1" 
+                               class="homeapplet-title" 
+                               style="overflow: hidden" crop="end"
+                               ondblclick="doToggleCollapse()" 
+                               xbl:inherits="value=title" />
+                    <xul:toolbarbutton anonid="applet-menu-button" type="menu"
+                                       class="applet-menu-button"/>
+                    <xul:toolbarbutton anonid="applet-config-button"
+                                       collapsed="true" class="applet-config-button"
+                                       oncommand="doToggleConfig(this)" />
+                    <xul:toolbarbutton class="applet-remove-button" 
+                                       oncommand="doRemoveApplet(false)" />
+                </xul:hbox>
+                <xul:menupopup anonid="applet-base-menu">
+                  <xul:menuitem label="&collab.applets.menu.show;" class="menuitem-iconic homeapplet-menu"
+                                anonid="applet-menu-show" oncommand="doShowApplet(true)" collapsed="true"/>
+                  <xul:menuitem label="&collab.applets.menu.collapse;" class="menuitem-iconic homeapplet-menu"
+                                anonid="applet-menu-collapse" oncommand="doCollapseApplet(true)"/>
+                </xul:menupopup>
+                <xul:hbox align="center" collapsed="true" anonid="applet-delete-ensure">
+                  <xul:label value="&collab.applets.delete.label;" flex="1" crop="end" />
+#ifdef XP_UNIX
+                  <xul:button label="&collab.applets.delete.cancel;" oncommand="this.parentNode.setAttribute('collapsed', 'true')" />
+                  <xul:button label="&collab.applets.delete.confirm;" oncommand="doRemoveApplet(true)" />
+#else
+                  <xul:button label="&collab.applets.delete.confirm;" oncommand="doRemoveApplet(true)" />
+                  <xul:button label="&collab.applets.delete.cancel;" oncommand="this.parentNode.setAttribute('collapsed', 'true')" />
+#endif
+                </xul:hbox>
+                <xul:vbox anonid="applet-container">
+                  <children />
+                </xul:vbox>
+            </xul:vbox>
+        </content>
+        <implementation>
+          <field name="mOnLoadHandler">null</field>
+          <field name="mPrefBranch">null</field>
+          <field name="widget">null</field>
+          <constructor>
+            <![CDATA[
+              var key = this.getAttribute("homekey");
+
+              this.widget = this.firstChild;
+              this.checkConfigurable();
+              this.checkMenuPopup();
+              this.mPrefBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                                           .getService(Components.interfaces.nsIPrefService)
+                                           .getBranch("collab.home.applets." + key + ".")
+
+              try {
+                var collapsed = this.mPrefBranch.getBoolPref("collapsed");
+                if (collapsed)
+                  this.doCollapseApplet(false);
+              } catch (ex) { }
+            ]]>
+          </constructor>
+          <method name="doRemoveApplet">
+            <parameter name="aConfirm" />
+            <body>
+              <![CDATA[
+                var key = this.getAttribute("homekey");
+                if (!key)
+                  return;
+                
+                if (!aConfirm) {
+                  document.getAnonymousElementByAttribute (this, "anonid", "applet-delete-ensure")
+                          .removeAttribute("collapsed");
+                } else {
+                  document.getAnonymousElementByAttribute (this, "anonid", "applet-delete-ensure")
+                          .setAttribute("collapsed", "true");
+                  if (this.mPrefBranch) {
+                    this.mPrefBranch.deleteBranch("");
+                    this.destroy();
+                    this.parentNode.removeChild(this);
+                  }
+                }
+              ]]>
+            </body>
+          </method>
+          <method name="doCollapseApplet">
+            <parameter name="aUpdatePrefs" />
+            <body>
+              <![CDATA[
+                // If the applet supports collapsing internally
+                // let it handle the entire functionality.  The applet
+                // is free to decide if the containing frame should be collapsed.
+                // It might even want to show a small label instead of fully
+                // collapsing the applet
+                var container = document.getAnonymousElementByAttribute(this, "anonid",
+                                                                        "applet-container");
+                if (typeof this.widget.collapse == "function" &&
+                    typeof this.widget.show == "function") {
+                  this.widget.collapse(container);
+                } else {
+                  container.setAttribute("collapsed", "true");
+                }
+
+                if (this.mPrefBranch && aUpdatePrefs)
+                  this.mPrefBranch.setBoolPref("collapsed", true);
+              ]]>
+            </body>
+          </method>
+          <method name="doShowApplet">
+            <parameter name="aUpdatePrefs" />
+            <body>
+              <![CDATA[
+                var container = document.getAnonymousElementByAttribute(this, "anonid",
+                                                                        "applet-container");
+                if (typeof this.widget.show == "function" &&
+                    typeof this.widget.collapse == "function") {
+                  this.widget.show(container);
+                } else {
+                  container.removeAttribute("collapsed");
+                }
+
+                if (this.mPrefBranch && aUpdatePrefs)
+                  this.mPrefBranch.setBoolPref("collapsed", '');
+                
+              ]]>
+            </body>
+          </method>
+          <method name="doToggleCollapse">
+            <body>
+              <![CDATA[
+                var key = this.getAttribute("homekey");
+                if (!key)
+                  return;
+
+                var collapsed = document.getAnonymousElementByAttribute(this, "anonid", "applet-container")
+                                        .getAttribute("collapsed");
+                if (collapsed == "true")
+                  this.doShowApplet(true);
+                else
+                  this.doCollapseApplet(true);
+                
+              ]]>
+            </body>
+          </method>
+          <method name="destroy">
+            <body>
+              <![CDATA[
+                if (this.widget && typeof this.widget.destroy == "function") 
+                  this.widget.destroy();
+              ]]>
+            </body>
+          </method>
+          <method name="doToggleConfig">
+            <parameter name="aButton" />
+            <body>
+              <![CDATA[
+                var visible = aButton.hasAttribute("checked");
+
+                if (visible && typeof this.widget.hideConfigPane == "function") {
+                  this.widget.hideConfigPane();
+                  aButton.removeAttribute("checked");
+                }
+
+                if (!visible && typeof this.widget.showConfigPane == "function") {
+                  this.widget.showConfigPane();
+                  aButton.setAttribute("checked", "true");
+                }
+              ]]>
+            </body>
+          </method>
+
+           <method name="checkMenuPopup">
+            <body>
+              <![CDATA[
+                var menu = null;
+                if (typeof(this.firstChild.getMenu) == 'function') 
+                  menu = this.firstChild.getMenu();
+
+                if (!menu)
+                  menu = document.createElement("menupopup");
+
+                // Add a 'collapse' option to the menu.
+                menu.appendChild(document.createElement("menuseparator"));
+                var baseMenu = document.getAnonymousElementByAttribute(this, "anonid", "applet-base-menu");
+                var item = baseMenu.firstChild;
+                while (item) {
+                  menu.appendChild(item); // this item is now removed from baseMenu
+                  item = baseMenu.firstChild;
+                }
+                var button = document.getAnonymousElementByAttribute(this, "anonid", "applet-menu-button");
+                button.removeAttribute("collapsed");
+                button.appendChild(menu);
+
+                // Add listener to update the menu
+                var self = this;
+                menu.addEventListener("popupshowing", function () {
+                  var collapsed = document.getAnonymousElementByAttribute(self, "anonid", "applet-container")
+                                          .getAttribute("collapsed");
+
+                  var collapseItem = document.getAnonymousElementByAttribute(self, "anonid", "applet-menu-collapse");
+                  var showItem = document.getAnonymousElementByAttribute(self, "anonid", "applet-menu-show");
+
+                  if (collapsed == "true") {
+                    showItem.removeAttribute("collapsed");
+                    collapseItem.setAttribute("collapsed", "true");
+                  } else {
+                    collapseItem.removeAttribute("collapsed");
+                    showItem.setAttribute("collapsed", "true");
+                  }
+                }, false);
+
+              ]]>
+            </body>
+          </method>
+ 
+          <method name="checkConfigurable">
+            <body>
+              <![CDATA[
+                var button = document.getAnonymousElementByAttribute(this, "anonid", "applet-config-button");
+                if (this.firstChild && "showConfigPane" in this.firstChild && "hideConfigPane" in this.firstChild) 
+                  button.removeAttribute("collapsed");
+                
+              ]]>
+            </body>
+          </method>
+          <property name="title">
+            <getter>
+              <![CDATA[
+                var label = document.getAnonymousElementByAttribute(this, "anonid", "applet-title-label");
+                return label.getAttribute("value");
+              ]]>
+            </getter>
+            <setter>
+              <![CDATA[
+                var label = document.getAnonymousElementByAttribute(this, "anonid", "applet-title-label");
+                var title = val || label.getAttribute("value");
+
+                label.setAttribute("value", title);
+              ]]>
+            </setter>
+          </property>
+        </implementation>
+    </binding>
+</bindings>
+

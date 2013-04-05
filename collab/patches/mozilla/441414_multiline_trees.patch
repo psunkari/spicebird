@@ -1,0 +1,776 @@
+diff --git a/content/base/src/nsGkAtomList.h b/content/base/src/nsGkAtomList.h
+--- a/content/base/src/nsGkAtomList.h
++++ b/content/base/src/nsGkAtomList.h
+@@ -552,16 +552,17 @@ GK_ATOM(mousemove, "mousemove")
+ GK_ATOM(mousemove, "mousemove")
+ GK_ATOM(mouseout, "mouseout")
+ GK_ATOM(mouseover, "mouseover")
+ GK_ATOM(mousethrough, "mousethrough")
+ GK_ATOM(mouseup, "mouseup")
+ GK_ATOM(moz_opaque, "moz-opaque")
+ GK_ATOM(msthemecompatible, "msthemecompatible")
+ GK_ATOM(multicol, "multicol")
++GK_ATOM(multiline, "multiline")
+ GK_ATOM(multiple, "multiple")
+ GK_ATOM(name, "name")
+ GK_ATOM(_namespace, "namespace")
+ GK_ATOM(namespaceAlias, "namespace-alias")
+ GK_ATOM(namespaceUri, "namespace-uri")
+ GK_ATOM(NaN, "NaN")
+ GK_ATOM(negate, "negate")
+ GK_ATOM(never, "never")
+diff --git a/layout/style/nsCSSAnonBoxList.h b/layout/style/nsCSSAnonBoxList.h
+--- a/layout/style/nsCSSAnonBoxList.h
++++ b/layout/style/nsCSSAnonBoxList.h
+@@ -88,23 +88,26 @@ CSS_ANON_BOX(scrolledPageSequence, ":-mo
+ CSS_ANON_BOX(scrolledPageSequence, ":-moz-scrolled-page-sequence")
+ CSS_ANON_BOX(columnContent, ":-moz-column-content")
+ CSS_ANON_BOX(viewport, ":-moz-viewport")
+ CSS_ANON_BOX(viewportScroll, ":-moz-viewport-scroll")
+ 
+ #ifdef MOZ_XUL
+ CSS_ANON_BOX(moztreecolumn, ":-moz-tree-column")
+ CSS_ANON_BOX(moztreerow, ":-moz-tree-row")
++CSS_ANON_BOX(moztreedescription, ":-moz-tree-description")
++CSS_ANON_BOX(moztreedescriptiontextpart, ":-moz-tree-description-text-part")
+ CSS_ANON_BOX(moztreeseparator, ":-moz-tree-separator")
+ CSS_ANON_BOX(moztreecell, ":-moz-tree-cell")
+ CSS_ANON_BOX(moztreeindentation, ":-moz-tree-indentation")
+ CSS_ANON_BOX(moztreeline, ":-moz-tree-line")
+ CSS_ANON_BOX(moztreetwisty, ":-moz-tree-twisty")
+ CSS_ANON_BOX(moztreeimage, ":-moz-tree-image")
+ CSS_ANON_BOX(moztreecelltext, ":-moz-tree-cell-text")
++CSS_ANON_BOX(moztreecelltextpart, ":-moz-tree-cell-text-part")
+ CSS_ANON_BOX(moztreecheckbox, ":-moz-tree-checkbox")
+ CSS_ANON_BOX(moztreeprogressmeter, ":-moz-tree-progressmeter")
+ CSS_ANON_BOX(moztreedropfeedback, ":-moz-tree-drop-feedback")
+ #endif
+ 
+ #ifdef MOZ_MATHML
+ CSS_ANON_BOX(mozMathStretchy, ":-moz-math-stretchy")
+ CSS_ANON_BOX(mozMathAnonymous, ":-moz-math-anonymous")
+diff --git a/layout/xul/base/src/tree/public/nsITreeView.idl b/layout/xul/base/src/tree/public/nsITreeView.idl
+--- a/layout/xul/base/src/tree/public/nsITreeView.idl
++++ b/layout/xul/base/src/tree/public/nsITreeView.idl
+@@ -228,16 +228,31 @@ interface nsITreeView : nsISupports
+   void performActionOnRow(in wstring action, in long row);
+ 
+   /**
+    * A command API that can be used to invoke commands on a specific cell.
+    */
+   void performActionOnCell(in wstring action, in long row, in nsITreeColumn col);
+ };
+ 
++[scriptable, uuid(3c2a2d26-08d6-415b-a635-24f15983bde6)]
++interface nsIMultilineTreeView: nsITreeView
++{
++  long getCellTextPartCount(in long row, in nsITreeColumn col);
++  AString getCellTextPart(in long row, in nsITreeColumn col, in long partIdx);
++  void getCellTextPartProperties(in long row, in nsITreeColumn col, in long partIdx, in nsISupportsArray properties);
++
++  long getDescriptionTextPartCount(in long row);
++  AString getDescriptionTextPart(in long row, in long partIdx);
++  void getDescriptionTextPartProperties(in long row, in long partIdx, in nsISupportsArray properties);
++
++  boolean isMultiline();
++};
++
++
+ /**
+  * The following interface is not scriptable and MUST NEVER BE MADE scriptable.
+  * Native treeviews implement it, and we use this to check whether a treeview
+  * is native (and therefore suitable for use by untrusted content).
+  */
+ [uuid(38e0b44d-fa08-458c-83fb-3e10b12aeb45)]
+ interface nsINativeTreeView : nsITreeView
+ {
+diff --git a/layout/xul/base/src/tree/src/nsTreeBodyFrame.cpp b/layout/xul/base/src/tree/src/nsTreeBodyFrame.cpp
+--- a/layout/xul/base/src/tree/src/nsTreeBodyFrame.cpp
++++ b/layout/xul/base/src/tree/src/nsTreeBodyFrame.cpp
+@@ -223,16 +223,17 @@ nsTreeBodyFrame::Init(nsIContent*     aC
+ 
+   nsIView* view = nsLeafBoxFrame::GetView();
+   if (!view->HasWidget()) {
+     view->CreateWidget(kWidgetCID);
+   }
+ 
+   mIndentation = GetIndentation();
+   mRowHeight = GetRowHeight();
++  mIsMultiline = PR_FALSE;
+ 
+   NS_ENSURE_TRUE(mImageCache.Init(16), NS_ERROR_OUT_OF_MEMORY);
+   EnsureBoxObject();
+   return rv;
+ }
+ 
+ nsSize
+ nsTreeBodyFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
+@@ -521,16 +522,23 @@ nsTreeBodyFrame::SetView(nsITreeView * a
+ 
+     // Only reset the top row index and delete the columns if we had an old non-null view.
+     mTopRowIndex = 0;
+   }
+ 
+   // Tree, meet the view.
+   mView = aView;
+  
++  nsCOMPtr<nsIMultilineTreeView> multilineView = do_QueryInterface(mView);
++  if (multilineView)
++    multilineView->IsMultiline(&mIsMultiline);
++
++  // Update row height
++  mRowHeight = GetRowHeight();
++ 
+   // Changing the view causes us to refetch our data.  This will
+   // necessarily entail a full invalidation of the tree.
+   Invalidate();
+  
+   nsIContent *treeContent = GetBaseElement();
+   if (treeContent) {
+     FireDOMEvent(NS_LITERAL_STRING("TreeViewChanged"), treeContent);
+   }
+@@ -1178,18 +1186,19 @@ nsTreeBodyFrame::GetCoordsForCellItem(PR
+     // The Rect for the current cell.
+     nscoord colWidth;
+ #ifdef DEBUG
+     nsresult rv =
+ #endif
+       currCol->GetWidthInTwips(this, &colWidth);
+     NS_ASSERTION(NS_SUCCEEDED(rv), "invalid column");
+ 
++    PRInt32 cellHeight = GetCellHeight(aRow, aCol);
+     nsRect cellRect(currX, mInnerBox.y + mRowHeight * (aRow - mTopRowIndex),
+-                    colWidth, mRowHeight);
++                    colWidth, cellHeight);
+ 
+     // Check the ID of the current column to see if it matches. If it doesn't 
+     // increment the current X value and continue to the next column.
+     if (currCol != aCol) {
+       currX += cellRect.width;
+       continue;
+     }
+     // Now obtain the properties for our cell.
+@@ -1198,19 +1207,19 @@ nsTreeBodyFrame::GetCoordsForCellItem(PR
+ 
+     nsStyleContext* rowContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreerow);
+ 
+     // We don't want to consider any of the decorations that may be present
+     // on the current row, so we have to deflate the rect by the border and 
+     // padding and offset its left and top coordinates appropriately. 
+     AdjustForBorderPadding(rowContext, cellRect);
+ 
++    NS_NAMED_LITERAL_CSTRING(cell, "cell");
++
+     nsStyleContext* cellContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreecell);
+-
+-    NS_NAMED_LITERAL_CSTRING(cell, "cell");
+     if (currCol->IsCycler() || cell.Equals(aElement)) {
+       // If the current Column is a Cycler, then the Rect is just the cell - the margins. 
+       // Similarly, if we're just being asked for the cell rect, provide it. 
+ 
+       theRect = cellRect;
+       nsMargin cellMargin;
+       cellContext->GetStyleMargin()->GetMargin(cellMargin);
+       theRect.Deflate(cellMargin);
+@@ -2002,16 +2011,21 @@ nsTreeBodyFrame::PrefillPropertyArray(PR
+   if (mFocused)
+     mScratchArray->AppendElement(nsGkAtoms::focus);
+ 
+   // sort
+   PRBool sorted = PR_FALSE;
+   mView->IsSorted(&sorted);
+   if (sorted)
+     mScratchArray->AppendElement(nsGkAtoms::sorted);
++
++  // multiline
++  if (mIsMultiline)
++    mScratchArray->AppendElement(nsGkAtoms::multiline);
++
+ 
+   // drag session
+   if (mSlots && mSlots->mDragSession)
+     mScratchArray->AppendElement(nsGkAtoms::dragSession);
+ 
+   if (aRowIndex != -1) {
+     if (aRowIndex == mMouseOverRow)
+       mScratchArray->AppendElement(nsGkAtoms::hover);
+@@ -2476,21 +2490,42 @@ nsTreeBodyFrame::GetImageSourceRect(nsSt
+     r.width = nsPresContext::CSSPixelsToAppUnits(coord);
+     image->GetHeight(&coord);
+     r.height = nsPresContext::CSSPixelsToAppUnits(coord);
+   }
+ 
+   return r;
+ }
+ 
++PRInt32 nsTreeBodyFrame::GetCellHeight(PRInt32 aRow, nsITreeColumn* aColumn) {
++  nsStyleContext* cellContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreecell);
++  const nsStylePosition* cellPosition = cellContext->GetStylePosition();
++
++  nscoord cellMinHeight = 0;
++  if (cellPosition->mMinHeight.GetUnit() == eStyleUnit_Coord)
++    cellMinHeight = cellPosition->mMinHeight.GetCoordValue();
++
++  nscoord cellHeight = 0;
++  if (cellPosition->mHeight.GetUnit() == eStyleUnit_Coord)
++    cellHeight = cellPosition->mHeight.GetCoordValue();
++
++  if (cellHeight < cellMinHeight)
++    cellHeight = cellMinHeight;
++  if (cellHeight == 0 || cellHeight > mRowHeight)
++      cellHeight = mRowHeight;
++  return cellHeight;
++}
++
+ PRInt32 nsTreeBodyFrame::GetRowHeight()
+ {
+   // Look up the correct height.  It is equal to the specified height
+   // + the specified margins.
+   mScratchArray->Clear();
++  if (mIsMultiline)
++    mScratchArray->AppendElement(nsGkAtoms::multiline);
+   nsStyleContext* rowContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreerow);
+   if (rowContext) {
+     const nsStylePosition* myPosition = rowContext->GetStylePosition();
+ 
+     nscoord minHeight = 0;
+     if (myPosition->mMinHeight.GetUnit() == eStyleUnit_Coord)
+       minHeight = myPosition->mMinHeight.GetCoordValue();
+ 
+@@ -2512,18 +2547,26 @@ PRInt32 nsTreeBodyFrame::GetRowHeight()
+       nsMargin rowMargin;
+       rowContext->GetStyleMargin()->GetMargin(rowMargin);
+       rowRect.Inflate(rowMargin);
+       height = rowRect.height;
+       return height;
+     }
+   }
+ 
+-  return nsPresContext::CSSPixelsToAppUnits(18); // As good a default as any.
+-}
++  nscoord height;
++  // As good a default as any.
++  if (mIsMultiline) {
++    height = 36;
++  } else {
++    height = 18;
++  }
++  return nsPresContext::CSSPixelsToAppUnits(height);
++}
++
+ 
+ PRInt32 nsTreeBodyFrame::GetIndentation()
+ {
+   // Look up the correct indentation.  It is equal to the specified indentation width.
+   mScratchArray->Clear();
+   nsStyleContext* indentContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreeindentation);
+   if (indentContext) {
+     const nsStylePosition* myPosition = indentContext->GetStylePosition();
+@@ -3066,16 +3109,47 @@ nsTreeBodyFrame::PaintRow(PRInt32       
+     nsRect separatorRect(rowRect);
+     if (primaryX > rowRect.x) {
+       separatorRect.width -= primaryX - rowRect.x;
+       separatorRect.x += primaryX - rowRect.x;
+     }
+     PaintSeparator(aRowIndex, separatorRect, aPresContext, aRenderingContext, aDirtyRect);
+   }
+   else {
++    // If view is a multiline view, paint the description box
++    if (mIsMultiline) {
++      PRBool displayDescription = PR_TRUE;
++      PrefillPropertyArray(aRowIndex, nsnull);
++      mView->GetRowProperties(aRowIndex, mScratchArray);
++      nsStyleContext* descContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreedescription);
++      PRBool textRTL = descContext->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
++      if (descContext) {
++        const nsStyleDisplay* display = descContext->GetStyleDisplay();
++        if (display->mDisplay == NS_STYLE_DISPLAY_NONE) {
++          displayDescription = PR_FALSE;
++        }
++      }
++
++      if (displayDescription) {
++        PRInt32 xOffSet = 0;
++        nsTreeColumn* primaryCol = mColumns->GetPrimaryColumn();
++        if (primaryCol) {
++          PRInt32 cellX, cellY, cellWidth, cellHeight;
++          GetCoordsForCellItem(aRowIndex, primaryCol, NS_LITERAL_CSTRING("image"),
++              &cellX, &cellY, &cellWidth, &cellHeight);
++          xOffSet = nsPresContext::CSSPixelsToAppUnits(cellX); 
++        }
++
++        nsRect descRect(rowRect.x + xOffSet, rowRect.y, rowRect.width - xOffSet, rowRect.height);
++        nsRect dirtyRect;
++        if (dirtyRect.IntersectRect(aDirtyRect, descRect)) {
++          PaintDescription(aRowIndex, descRect, aPresContext, aRenderingContext, aDirtyRect, aPt, textRTL);
++        }
++      }
++    }
+     // Now loop over our cells. Only paint a cell if it intersects with our dirty rect.
+     for (nsTreeColumn* currCol = mColumns->GetFirstColumn(); currCol;
+          currCol = currCol->GetNext()) {
+       nsRect cellRect;
+       rv = currCol->GetRect(this, rowRect.y, rowRect.height, &cellRect);
+       // Don't paint cells in hidden columns.
+       if (NS_FAILED(rv) || cellRect.width == 0)
+         continue;
+@@ -3175,16 +3249,17 @@ nsTreeBodyFrame::PaintCell(PRInt32      
+   PRBool isRTL = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+ 
+   // Obtain the margins for the cell and then deflate our rect by that 
+   // amount.  The cell is assumed to be contained within the deflated rect.
+   nsRect cellRect(aCellRect);
+   nsMargin cellMargin;
+   cellContext->GetStyleMargin()->GetMargin(cellMargin);
+   cellRect.Deflate(cellMargin);
++  cellRect.height = GetCellHeight(aRowIndex, aColumn);
+ 
+   // Paint our borders and background for our row rect.
+   PaintBackgroundLayer(cellContext, aPresContext, aRenderingContext, cellRect, aDirtyRect);
+ 
+   // Adjust the rect for its border and padding.
+   AdjustForBorderPadding(cellContext, cellRect);
+ 
+   nscoord currX = cellRect.x;
+@@ -3297,18 +3372,34 @@ nsTreeBodyFrame::PaintCell(PRInt32      
+   // insert text into cycler columns...
+   if (!aColumn->IsCycler()) {
+     nsRect elementRect(currX, cellRect.y, remainingWidth, cellRect.height);
+     nsRect dirtyRect;
+     if (dirtyRect.IntersectRect(aDirtyRect, elementRect)) {
+       PRBool textRTL = cellContext->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+       switch (aColumn->GetType()) {
+         case nsITreeColumn::TYPE_TEXT:
+-          PaintText(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect, currX,
+-                    textRTL);
++          if (mIsMultiline) {
++            nscoord xOffSet = 0, yOffSet = 0;
++            PRInt32 partCount, partIdx;
++            nsCOMPtr<nsIMultilineTreeView> multilineView = do_QueryInterface(mView);
++            multilineView->GetCellTextPartCount(aRowIndex, aColumn, &partCount);
++            for (partIdx = 0; partIdx < partCount; partIdx++) {
++              nsAutoString text;
++              PrefillPropertyArray(aRowIndex, aColumn);
++              multilineView->GetCellProperties(aRowIndex, aColumn, mScratchArray);
++              multilineView->GetCellTextPartProperties(aRowIndex, aColumn, partIdx, mScratchArray);
++              nsStyleContext* textContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreecelltextpart);
++              multilineView->GetCellTextPart(aRowIndex, aColumn, partIdx, text);
++              PaintMultilineText(text, elementRect, aPresContext, aRenderingContext, aDirtyRect, textContext, xOffSet, yOffSet, textRTL);
++            }
++          } else {
++            PaintText(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect, currX,
++                      textRTL);
++          }
+           break;
+         case nsITreeColumn::TYPE_CHECKBOX:
+           PaintCheckbox(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect);
+           break;
+         case nsITreeColumn::TYPE_PROGRESSMETER:
+           PRInt32 state;
+           mView->GetProgressMode(aRowIndex, aColumn, &state);
+           switch (state) {
+@@ -3324,16 +3415,215 @@ nsTreeBodyFrame::PaintCell(PRInt32      
+           }
+           break;
+       }
+     }
+   }
+ 
+   aCurrX = currX;
+ }
++
++ 
++void
++nsTreeBodyFrame::PaintDescription(PRInt32              aRowIndex,
++                                  const nsRect&        aDescRect,
++                                  nsPresContext*       aPresContext,
++                                  nsIRenderingContext& aRenderingContext,
++                                  const nsRect&        aDirtyRect,
++                                  nsPoint              aPt,
++                                  PRBool               aTextRTL)
++{
++  PrefillPropertyArray(aRowIndex, nsnull);
++  mView->GetRowProperties(aRowIndex, mScratchArray);
++
++  nsStyleContext* descContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreedescription);
++
++  nsRect descRect(aDescRect);
++  nsMargin descMargin;
++  descContext->GetStyleMargin()->GetMargin(descMargin);
++  descRect.Deflate(descMargin);
++
++  // Paint our borders and background for our row rect.
++  PaintBackgroundLayer(descContext, aPresContext, aRenderingContext, descRect, aDirtyRect);
++
++  // Adjust the rect for its border and padding.
++  nsMargin borderPadding(0, 0, 0, 0);
++  GetBorderPadding(descContext, borderPadding);
++
++  AdjustForBorderPadding(descContext, descRect);
++  nscoord currX = descRect.x;
++  nscoord remainingWidth = descRect.width;
++
++  nsRect elementRect(currX, descRect.y, remainingWidth, descRect.height);
++  nsRect dirtyRect;
++  if (dirtyRect.IntersectRect(aDirtyRect, elementRect)) {
++    nscoord xOffSet = 0, yOffSet = 0;
++    PRInt32 partCount, partIdx;
++    nsCOMPtr<nsIMultilineTreeView> multilineView = do_QueryInterface(mView);
++    multilineView->GetDescriptionTextPartCount(aRowIndex, &partCount);
++    for (partIdx = 0; partIdx < partCount; partIdx++) {
++      nsAutoString text;
++      PrefillPropertyArray(aRowIndex, nsnull);
++      multilineView->GetDescriptionTextPartProperties(aRowIndex, partIdx, mScratchArray);
++      nsStyleContext* textContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreedescriptiontextpart);
++      multilineView->GetDescriptionTextPart(aRowIndex, partIdx, text);
++      PaintMultilineText(text, elementRect, aPresContext, aRenderingContext, aDirtyRect, textContext, xOffSet, yOffSet, aTextRTL);
++    }
++  }
++}
++
++ 
++void
++nsTreeBodyFrame::PaintMultilineText(nsAutoString&        aText,
++                                    const nsRect&        aTextRect,
++                                    nsPresContext*       aPresContext,
++                                    nsIRenderingContext& aRenderingContext,
++                                    const nsRect&        aDirtyRect,
++                                    nsStyleContext*      aStyleContext,
++                                    nscoord&             aCurrX,
++                                    nscoord&             aCurrY,
++                                    PRBool               aTextRTL)
++{
++  nsAutoString text = aText;
++  // We're going to paint this text so we need to ensure bidi is enabled if
++  // necessary
++  CheckTextForBidi(text);
++
++  if (text.Length() == 0)
++    return; // Don't paint an empty string. XXX What about background/borders? Still paint?
++
++  nsStyleContext* textContext = aStyleContext;
++
++  // Obtain the margins for the text and then deflate our rect by that 
++  // amount.  The text is assumed to be contained within the deflated rect.
++  nsRect textRect(aTextRect);
++
++  // Set our color.
++  aRenderingContext.SetColor(textContext->GetStyleColor()->mColor);
++
++  // Compute our text size.
++  nsCOMPtr<nsIFontMetrics> fontMet;
++  nsLayoutUtils::GetFontMetricsForStyleContext(textContext,
++                                               getter_AddRefs(fontMet));
++
++  nscoord height, baseline;
++  fontMet->GetHeight(height);
++  fontMet->GetMaxAscent(baseline);
++
++  PRUint32 maxLines = (aTextRect.height - aCurrY) / height;
++  if (aCurrY == 0 && maxLines == 0) {
++      maxLines = 1;
++  }
++
++  // Set our font.
++  aRenderingContext.SetFont(fontMet);
++
++  // ------
++  nsAutoString tmpText(text);
++
++  for (PRUint32 lineIdx = 0; lineIdx < maxLines; lineIdx++) {
++    PRBool lineComplete  = PR_TRUE;
++    nsAutoString textToDraw(tmpText);
++
++    nscoord width = nsLayoutUtils::GetStringWidth(this, &aRenderingContext, tmpText.get(), tmpText.Length());
++    nscoord maxWidth = textRect.width - aCurrX;
++
++    if (tmpText.Length() == 0)
++      break;
++    if (width > maxWidth) {
++      width = maxWidth;
++      aRenderingContext.SetTextRunRTL(PR_FALSE);
++
++      const nsDependentString& kEllipsis = nsContentUtils::GetLocalizedEllipsis();
++      if (lineIdx == maxLines - 1) {
++        nscoord ellipsisWidth;
++        aRenderingContext.GetWidth(kEllipsis, ellipsisWidth);
++
++        if (ellipsisWidth > width) {
++          textToDraw.SetLength(0);
++          tmpText.SetLength(0);
++        } else if (ellipsisWidth == width) {
++          textToDraw.Assign(kEllipsis);
++          tmpText.SetLength(0);
++        } else {
++          width -= ellipsisWidth;
++          nscoord cwidth;
++          nscoord twidth = 0;
++          int length = tmpText.Length();
++          int i;
++          for (i = 0; i < length; ++i) {
++            PRUnichar ch = tmpText[i];
++            // XXX this is horrible and doesn't handle clusters
++            aRenderingContext.GetWidth(ch,cwidth);
++            if (twidth + cwidth > width)
++              break;
++            twidth += cwidth;
++          }
++          tmpText.Left(textToDraw, i);
++          textToDraw.Append(kEllipsis);
++          tmpText.Right(tmpText, tmpText.Length() - i);
++        }
++      } else {
++        nscoord cwidth;
++        nscoord twidth = 0;
++        int length = tmpText.Length();
++        int i;
++        for (i = 0; i < length; ++i) {
++          PRUnichar ch = tmpText[i];
++          // XXX this is horrible and doesn't handle clusters
++          aRenderingContext.GetWidth(ch,cwidth);
++          if (twidth + cwidth > width)
++            break;
++          twidth += cwidth;
++        }
++        tmpText.Left(textToDraw, i);
++        tmpText.Right(tmpText, tmpText.Length() - i);
++      }
++    } else {
++      tmpText.SetLength(0);
++      lineComplete = PR_FALSE;
++    }
++    // Draw decorations.
++    PRUint8 decorations = textContext->GetStyleTextReset()->mTextDecoration;
++
++    nscoord offset;
++    nscoord size;
++    if (decorations & (NS_FONT_DECORATION_OVERLINE | NS_FONT_DECORATION_UNDERLINE)) {
++      fontMet->GetUnderline(offset, size);
++      if (decorations & NS_FONT_DECORATION_OVERLINE)
++        aRenderingContext.FillRect(textRect.x + aCurrX, textRect.y + aCurrY, textRect.width - aCurrX, size);
++      if (decorations & NS_FONT_DECORATION_UNDERLINE)
++        aRenderingContext.FillRect(textRect.x + aCurrX, textRect.y + baseline - offset + aCurrY, textRect.width - aCurrX, size);
++    }
++    if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
++      fontMet->GetStrikeout(offset, size);
++      aRenderingContext.FillRect(textRect.x + aCurrX, textRect.y + baseline - offset + aCurrY, textRect.width - aCurrX, size);
++    }
++#ifdef MOZ_TIMELINE
++    NS_TIMELINE_START_TIMER("Render Outline Text");
++#endif
++    PRUint8 direction = aTextRTL ? NS_STYLE_DIRECTION_RTL :
++                                   NS_STYLE_DIRECTION_LTR;
++
++    nsLayoutUtils::DrawString(this, &aRenderingContext, textToDraw.get(), textToDraw.Length(),
++        textRect.TopLeft() + nsPoint(aCurrX, baseline + aCurrY), direction);
++#ifdef MOZ_TIMELINE
++    NS_TIMELINE_STOP_TIMER("Render Outline Text");
++    NS_TIMELINE_MARK_TIMER("Render Outline Text");
++#endif
++    if (lineComplete) {
++      aCurrY += height;
++      aCurrX = 0;
++    } else {
++      aCurrX += width;
++    }
++  }
++}
++
++
+ 
+ void
+ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
+                              nsTreeColumn*        aColumn,
+                              const nsRect&        aTwistyRect,
+                              nsPresContext*      aPresContext,
+                              nsIRenderingContext& aRenderingContext,
+                              const nsRect&        aDirtyRect,
+diff --git a/layout/xul/base/src/tree/src/nsTreeBodyFrame.h b/layout/xul/base/src/tree/src/nsTreeBodyFrame.h
+--- a/layout/xul/base/src/tree/src/nsTreeBodyFrame.h
++++ b/layout/xul/base/src/tree/src/nsTreeBodyFrame.h
+@@ -195,16 +195,27 @@ protected:
+ 
+   // This method paints a specific column background of the tree.
+   void PaintColumn(nsTreeColumn*        aColumn,
+                    const nsRect&        aColumnRect,
+                    nsPresContext*      aPresContext,
+                    nsIRenderingContext& aRenderingContext,
+                    const nsRect&        aDirtyRect);
+ 
++  // This method paints the description text strings inside a particular row of
++  // a multiline tree.
++  void
++  PaintDescription(PRInt32              aRowIndex,
++                   const nsRect&        aDescRect,
++                   nsPresContext*       aPresContext,
++                   nsIRenderingContext& aRenderingContext,
++                   const nsRect&        aDirtyRect,
++                   nsPoint              aPt,
++                   PRBool               aTextRTL);
++
+   // This method paints a single row in the tree.
+   void PaintRow(PRInt32              aRowIndex,
+                 const nsRect&        aRowRect,
+                 nsPresContext*       aPresContext,
+                 nsIRenderingContext& aRenderingContext,
+                 const nsRect&        aDirtyRect,
+                 nsPoint              aPt);
+ 
+@@ -250,16 +261,28 @@ protected:
+                  nsTreeColumn*        aColumn,
+                  const nsRect&        aTextRect,
+                  nsPresContext*      aPresContext,
+                  nsIRenderingContext& aRenderingContext,
+                  const nsRect&        aDirtyRect,
+                  nscoord&             aCurrX,
+                  PRBool               aTextRTL);
+ 
++  // This method paints the multiple text strings inside a particular cell of
++  // a multiline tree.
++  void PaintMultilineText(nsAutoString&        aText,
++                          const nsRect&        aTextRect,
++                          nsPresContext*       aPresContext,
++                          nsIRenderingContext& aRenderingContext,
++                          const nsRect&        aDirtyRect,
++                          nsStyleContext*      aStyleContext,
++                          nscoord&             aCurrX,
++                          nscoord&             aCurrY,
++                          PRBool               aTextRTL);
++
+   // This method paints the checkbox inside a particular cell of the tree.
+   void PaintCheckbox(PRInt32              aRowIndex, 
+                      nsTreeColumn*        aColumn,
+                      const nsRect&        aCheckboxRect,
+                      nsPresContext*      aPresContext,
+                      nsIRenderingContext& aRenderingContext,
+                      const nsRect&        aDirtyRect);
+ 
+@@ -333,16 +356,19 @@ protected:
+   // Returns the destination size of the image, not including borders and padding.
+   nsSize GetImageDestSize(nsStyleContext* aStyleContext, PRBool useImageRegion, imgIContainer* image);
+ 
+   // Returns the source rectangle of the image to be displayed.
+   nsRect GetImageSourceRect(nsStyleContext* aStyleContext, PRBool useImageRegion, imgIContainer* image);
+ 
+   // Returns the height of rows in the tree.
+   PRInt32 GetRowHeight();
++
++  // Returns the height of a cell
++  PRInt32 GetCellHeight(PRInt32 aRowIndex, nsITreeColumn* aCol);
+ 
+   // Returns our indentation width.
+   PRInt32 GetIndentation();
+ 
+   // Calculates our width/height once border and padding have been removed.
+   void CalcInnerBox();
+ 
+   // Calculate the total width of our scrollable portion
+@@ -502,16 +528,18 @@ protected: // Data Members
+ 
+   // Cached column information.
+   nsRefPtr<nsTreeColumns> mColumns;
+ 
+   // The current view for this tree widget.  We get all of our row and cell data
+   // from the view.
+   nsCOMPtr<nsITreeView> mView;    
+ 
++  PRBool mIsMultiline;
++
+   // A cache of all the style contexts we have seen for rows and cells of the tree.  This is a mapping from
+   // a list of atoms to a corresponding style context.  This cache stores every combination that
+   // occurs in the tree, so for n distinct properties, this cache could have 2 to the n entries
+   // (the power set of all row properties).
+   nsTreeStyleCache mStyleCache;
+ 
+   // A hashtable that maps from URLs to image request/listener pairs.  The URL
+   // is provided by the view or by the style context. The style context
+diff --git a/toolkit/themes/gnomestripe/global/tree.css b/toolkit/themes/gnomestripe/global/tree.css
+--- a/toolkit/themes/gnomestripe/global/tree.css
++++ b/toolkit/themes/gnomestripe/global/tree.css
+@@ -378,8 +378,26 @@ treechildren::-moz-tree-cell-text(select
+   -moz-border-top-colors: Highlight;
+   -moz-border-bottom-colors: Highlight;
+   -moz-border-left-colors: Highlight;
+   -moz-border-right-colors: Highlight;
+   margin: 0;
+   -moz-margin-start: -4px;
+   padding: 1px;
+ }
++
++/* ::::: multiline tree ::::: */
++
++treechildren::-moz-tree-row(multiline) {
++  min-height: 36px;
++  height: 2.6em;
++}
++
++treechildren::-moz-tree-cell(multiline) {
++  min-height: 18px;
++  height: 1.3em;
++}
++
++treechildren::-moz-tree-description {
++  margin-top: 18px;
++}
++
++
+diff --git a/toolkit/themes/pinstripe/global/tree.css b/toolkit/themes/pinstripe/global/tree.css
+--- a/toolkit/themes/pinstripe/global/tree.css
++++ b/toolkit/themes/pinstripe/global/tree.css
+@@ -378,8 +378,26 @@ treechildren::-moz-tree-cell-text(select
+   -moz-border-top-colors: Highlight;
+   -moz-border-bottom-colors: Highlight;
+   -moz-border-left-colors: Highlight;
+   -moz-border-right-colors: Highlight;
+   margin: 0;
+   -moz-margin-start: -3px;
+   padding: 1px;
+ }
++
++/* ::::: multiline tree ::::: */
++
++treechildren::-moz-tree-row(multiline) {
++  min-height: 36px;
++  height: 2.6em;
++}
++
++treechildren::-moz-tree-cell(multiline) {
++  min-height: 18px;
++  height: 1.3em;
++}
++
++treechildren::-moz-tree-description {
++  margin-top: 18px;
++}
++
++
+diff --git a/toolkit/themes/winstripe/global/tree.css b/toolkit/themes/winstripe/global/tree.css
+--- a/toolkit/themes/winstripe/global/tree.css
++++ b/toolkit/themes/winstripe/global/tree.css
+@@ -386,8 +386,26 @@ treechildren::-moz-tree-cell-text(select
+   -moz-border-top-colors: Highlight;
+   -moz-border-bottom-colors: Highlight;
+   -moz-border-left-colors: Highlight;
+   -moz-border-right-colors: Highlight;
+   margin: 0;
+   -moz-margin-start: -4px;
+   padding: 1px;
+ }
++
++/* ::::: multiline tree ::::: */
++
++treechildren::-moz-tree-row(multiline) {
++  min-height: 36px;
++  height: 2.6em;
++}
++
++treechildren::-moz-tree-cell(multiline) {
++  min-height: 18px;
++  height: 1.3em;
++}
++
++treechildren::-moz-tree-description {
++  margin-top: 18px;
++}
++
++

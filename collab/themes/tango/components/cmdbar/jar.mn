@@ -1,0 +1,4 @@
+#filter substitution
+
+classic.jar:
+*   skin/classic/collab/csCmdBar.css

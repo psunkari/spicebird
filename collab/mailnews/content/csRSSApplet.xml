@@ -1,0 +1,640 @@
+<?xml version="1.0"?>
+<!--
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+#   Sivakrishna Edpuganti <sivakrishna@synovel.com>
+# Portions created by the Initial Developer are Copyright (C) 2007-2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Prasad Sunkari <prasad@synovel.com> 
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** 
+-->
+<!DOCTYPE rssApplet SYSTEM "chrome://messenger/locale/csRSSApplet.dtd">
+
+<bindings id="csMailnewsAppletsBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="rssfeed">
+    <content> 
+      <xul:stringbundleset>
+        <xul:stringbundle anonid="rssfeed-stringbundle"
+               src="chrome://messenger/locale/csRSSApplet.properties"/>
+      </xul:stringbundleset>
+      <xul:hbox flex="1" ondraggesture="">
+        <xul:vbox flex="1">
+          <xul:menupopup anonid="rssfeed-menu">
+            <xul:menuitem class="menuitem-iconic rssfeed-menuitem-refresh"
+                          label="&collab.rssApplet.menu.refresh;"
+                          value="1" oncommand="download()"/>
+          </xul:menupopup>
+          <xul:groupbox anonid="rssfeed-config-container" 
+                        class="applet-config-pane" collapsed="true">
+            <xul:hbox align="center" flex="1">
+              <!-- TODO: Set control attribute -->
+              <xul:label value="&collab.rssApplet.source.label;"
+                         accesskey="&collab.rssApplet.source.accesskey;"
+                         crop="end"/>
+              <xul:textbox type="timed" timeout="2000"
+                           oncommand="doPrefUpdate('url')"
+                           anonid="rssfeed-config-url" flex="1"/>
+            </xul:hbox>
+            <xul:grid flex="1">
+              <xul:columns>
+                <xul:column flex="1"/>
+                <xul:column flex="1"/>
+                <xul:column flex="10"/>
+              </xul:columns>
+              <xul:rows>
+                <xul:row align="center">
+                  <xul:label value="&collab.rssApplet.noOfItems.label;"
+                             accesskey="&collab.rssApplet.noOfItems.accesskey;"
+                             flex="1" crop="end"/>
+                  <xul:textbox type="number"
+                               onchange="doPrefUpdate('numitems')" 
+                               anonid="rssfeed-config-numitems"
+                               min="1" max="25" size="2"/>
+                  <xul:spacer flex="10"/>
+                </xul:row>
+                <xul:row align="center">
+                  <xul:label value="&collab.rssApplet.refreshTime.label;"
+                             accesskey="&collab.rssApplet.refreshTime.accesskey;"
+                             flex="1" crop="end"/>
+                  <xul:textbox type="number"
+                               onchange="doPrefUpdate('refreshtime')"
+                               anonid="rssfeed-config-refreshtime"
+                               min="1" size="2"/>
+                  <xul:spacer flex="10"/>
+                </xul:row>
+              </xul:rows>
+            </xul:grid>
+          </xul:groupbox>
+          <xul:label anonid="rssfeed-label" class="applet-status-label" collapsed="true" crop="end" />
+          <xul:richlistbox anonid="rssfeed-listbox" flex="1"
+                           class="homebox-list"/>
+        </xul:vbox>
+      </xul:hbox>
+    </content>
+    <implementation>
+      <field name="mPrefBranch">null</field>
+      <field name="mKey">null</field>
+
+      <field name="mLabel">null</field>
+      <field name="mConfigContainer">null</field>
+      <field name="mParent">null</field>
+      <field name="mURLBox">null</field>
+      <field name="mNumItemsBox">null</field>
+      <field name="mStringBundle">null</field>
+
+      <field name="mLastModified">null</field>
+      <field name="mURL">null</field>
+      <field name="mNumItems">NaN</field>
+      <field name="mTimeoutID">NaN</field>
+      <field name="mRefreshTime">NaN</field>
+      <field name="mRequest">null</field>
+      <field name="mFeedItems">null</field>
+
+      <field name="parseItems">null</field>
+      <constructor>
+        <![CDATA[
+        this.mParent = this.parentNode;
+        while (this.mParent && this.mParent.tagName != "homeapplet")
+          this.mParent = this.mParent.parentNode;
+        if (!this.mParent)
+          return;
+
+        this.mKey = this.mParent.getAttribute("homekey");
+        if (!this.mKey)
+          return;
+
+        this.mPrefBranch = Components
+                .classes["@mozilla.org/preferences-service;1"]
+                .getService(Components.interfaces.nsIPrefService)
+                .getBranch("collab.home.applets." + this.mKey + ".")
+        this.mListBox = document.getAnonymousElementByAttribute
+                                (this, "anonid", "rssfeed-listbox");
+        this.mLabel = document.getAnonymousElementByAttribute
+                                (this, "anonid", "rssfeed-label");
+        this.mConfigContainer = document.getAnonymousElementByAttribute
+                                (this, "anonid", "rssfeed-config-container")
+        this.mURLBox = document.getAnonymousElementByAttribute
+                                (this, "anonid", "rssfeed-config-url")
+        this.mNumItemsBox = document.getAnonymousElementByAttribute
+                                (this, "anonid", "rssfeed-config-numitems")
+        this.mRefreshTimeBox = document.getAnonymousElementByAttribute
+                                (this, "anonid", "rssfeed-config-refreshtime")
+
+        this.mListBox.addEventListener ("keypress", this.onKeyPressed, true);
+
+        try {
+          this.mURL = this.mPrefBranch.getCharPref("url");
+        } catch (ex) { 
+          this.mURL = null;
+        }
+
+        try {
+          this.mNumItems = this.mPrefBranch.getIntPref("numitems");
+        } catch (ex) {
+          this.mNumItems = 10;
+        }
+
+        try {
+          this.mRefreshTime = this.mPrefBranch.getIntPref("refreshtime");
+        } catch (ex) {
+          this.mRefreshTime = 60; // 1 hour
+        }
+
+        try {
+          var loader = Components
+                .classes["@mozilla.org/moz/jssubscript-loader;1"]
+                .getService(Components.interfaces.mozIJSSubScriptLoader);
+          loader.loadSubScript
+                ("chrome://messenger-newsblog/content/feed-parser.js", null);
+          loader.loadSubScript
+                ("chrome://messenger-newsblog/content/Feed.js", null);
+          loader.loadSubScript
+                ("chrome://messenger-newsblog/content/FeedItem.js", null);
+          loader.loadSubScript
+                ("chrome://messenger-newsblog/content/utils.js", null);
+        } catch (ex) {}
+
+        this.mStringBundle = document.getAnonymousElementByAttribute (this,
+                                "anonid", "rssfeed-stringbundle");
+
+        // Initial config load should eliminate this
+        this.resetTimer ();
+
+        // Initial config load should eliminate this
+        this.download ();
+        ]]>
+      </constructor>
+      <method name="resetTimer">
+        <body>
+          <![CDATA[
+          if (!isNaN (this.mTimeoutID)) {
+            clearTimeout (this.mTimeoutID);
+            this.mTimeoutID = NaN;
+          }
+
+          this.mTimeoutID = setTimeout (this.timeout,
+                                        this.mRefreshTime * 1000 * 60, this);
+          ]]>
+        </body>
+      </method>
+      <method name="getMenu">
+         <body>
+           <![CDATA[
+             // Method called by the framework applet to get the menupopup for
+             // the applet
+             return document.getAnonymousElementByAttribute(this, "anonid",
+                                                            "rssfeed-menu");
+           ]]>
+         </body>
+      </method>
+      <method name="timeout">
+        <parameter name="feed"/>
+        <body>
+          <![CDATA[
+          feed.download ();
+          feed.resetTimer ();
+          ]]>
+        </body>
+      </method>
+      <method name="download">
+        <body>
+          <![CDATA[
+          if (this.mRequest) {
+            // We are busy, cancel the current request first
+            this.mRequest.abort ();
+            this.mRequest = null;
+          }
+
+          if (!this.mURL) {
+            this.showMessage (this.mStringBundle.getString 
+                                ("collab.rssApplet.configureRSSFeedSource"));
+            return;
+          }
+
+          // this.url is required by the feed-parser to report errors etc.
+          this.url = this.mURL;
+
+          // Before we do anything...make sure the url is an http url.
+          var uri = Components.classes["@mozilla.org/network/standard-url;1"]
+                              .createInstance(Components.interfaces.nsIURI);
+          uri.spec = this.url;
+          if (!(uri.schemeIs("http") || uri.schemeIs("https"))) {
+            this.onError (this.mStringBundle.getString 
+                           ("collab.rssApplet.invalidSourceAddress"));
+            return;
+          }
+
+          this.showMessage (this.mStringBundle.getString 
+                              ("collab.rssApplet.loading"));
+
+          // As long as the mRequest is set on the object, it means we are busy.
+          this.mRequest = Components
+                .classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                .createInstance(Components.interfaces.nsIXMLHttpRequest);
+          this.mRequest.feed = this;
+          // must be set before calling .open
+          this.mRequest.onprogress = this.onDownloadProgress;
+          this.mRequest.open("GET", this.url, true);
+
+          var lastModified = this.mLastModified;
+          if (lastModified)
+            this.mRequest.setRequestHeader("If-Modified-Since", lastModified);
+
+          this.mRequest.overrideMimeType("text/xml");
+          this.mRequest.onload = this.onDownloaded;
+          this.mRequest.onerror = this.onDownloadError;
+          this.mRequest.send(null);
+          ]]>
+        </body>
+      </method>
+      <method name="onDownloadProgress">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+          // Maybe show progress or something?
+          ]]>
+        </body>
+      </method>
+      <method name="onParseError">
+        <parameter name="aErrorText"/>
+        <body>
+          <![CDATA[
+          this.showMessage (aErrorText);
+          ]]>
+        </body>
+      </method>
+      <method name="onError">
+        <parameter name="aErrorText"/>
+        <body>
+          <![CDATA[
+          this.clearList ();
+          this.showMessage (aErrorText);
+          ]]>
+        </body>
+      </method>
+      <method name="showMessage">
+        <parameter name="aErrorText"/>
+        <body>
+          <![CDATA[
+          if (aErrorText) {
+            this.mLabel.collapsed = false;
+            this.mLabel.value = aErrorText;
+          } else {
+            this.mLabel.collapsed = true;
+            this.mLabel.value = "";
+          }
+          ]]>
+        </body>
+      </method>
+      <method name="onDownloadError">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+          var feed = aEvent.target.feed;
+          feed.onError (feed.mStringBundle.getString (
+                          "collab.rssApplet.errorDownloadingURL"));
+          feed.mRequest = null;
+          feed.resetTimer ();
+          ]]>
+        </body>
+      </method>
+      <method name="onDownloaded">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+          var feed = aEvent.target.feed;
+          feed.showMessage (null);
+          feed.parse (aEvent.target);
+          feed.mRequest = null;
+          feed.resetTimer ();
+          ]]>
+        </body>
+      </method>
+      <method name="invalidateItems">
+        <body>
+          <![CDATA[
+          //dump ("Invalidate called\n");
+          ]]>
+        </body>
+      </method>
+      <method name="parse">
+        <parameter name="response"/>
+        <body>
+          <![CDATA[
+          if (response.status == 304) {
+            // No new items
+            // dump ("304, No new RSS items\n");
+            return;
+          }
+
+          this.mLastModified = response.getResponseHeader ("Last-Modified");
+
+          if (response.status < 200 || response.status >= 300) {
+            this.onError (this.mStringBundle.getString 
+                            ("collab.rssApplet.errorResponseFromServer"));
+            return;
+          }
+
+          if (!response.responseText) {
+            this.onError (this.mStringBundle.getString 
+                            ("collab.rssApplet.downloadFailed"));
+            return;
+          }
+
+          // This tells the parser not to ignore the feed items and parse them
+          this.parseItems = true;
+
+          var parser = new FeedParser;
+          this.feedItems = parser.parseFeed (this, response.responseText,
+                                             response.responseXML,
+                                             response.channel.URI);
+
+          // Set the title for the applet, this.title is set by the parser.
+          if (this.mParent && this.title)
+            this.mParent.title = this.title;
+
+          if (!this.feedItems || !this.feedItems.length) {
+            this.onError (this.mStringBundle.getString 
+                            ("collab.rssApplet.noItemsInFeed"));
+            return;
+          }
+
+          this.fillList ();
+          ]]>
+        </body>
+      </method>
+      <method name="fillList">
+        <body>
+          <![CDATA[
+          this.clearList ();
+
+          for (var i = 0; i < this.feedItems.length && i < this.mNumItems; i++)
+            this.addItem (this.feedItems[i]);
+
+          this.resize ();
+          ]]>
+        </body>
+      </method>
+      <method name="clearList">
+        <body>
+          <![CDATA[
+          while (this.mListBox.getRowCount())
+            this.mListBox.removeItemAt(0);
+          this.resize ();
+          ]]>
+        </body>
+      </method>
+      <method name="collapse">
+        <parameter name="aAppletContainer"/>
+        <body>
+          <![CDATA[
+            if (aAppletContainer)
+              aAppletContainer.setAttribute("collapsed", "true");
+          ]]>
+        </body>
+      </method>
+      <method name="show">
+        <parameter name="aAppletContainer"/>
+        <body>
+          <![CDATA[
+            if (aAppletContainer)
+              aAppletContainer.removeAttribute("collapsed");
+
+            this.resize();
+          ]]>
+        </body>
+      </method>
+      <method name="resize">
+        <body>
+          <![CDATA[
+          var totalHeight = 0;
+          for each (var listItem in this.mListBox.children) {
+            totalHeight += listItem.boxObject.height;
+          }
+          this.mListBox.height = totalHeight;
+          ]]>
+        </body>
+      </method>
+      <method name="addItem">
+        <parameter name="aFeedItem"/>
+        <body>
+          <![CDATA[
+          var item = document.createElementNS
+            ("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+             "richlistitem");
+          item.setAttribute ("class", "rssfeed-listitem homebox-listitem");
+          this.mListBox.appendChild (item);
+          item.feedItem = aFeedItem;
+          ]]>
+        </body>
+      </method>
+      <method name="doPrefUpdate">
+        <parameter name="aParam"/>
+        <body>
+          <![CDATA[
+          var value = null;
+
+          switch (aParam) {
+            case "url":
+              if (this.mURL != this.mURLBox.value) {
+                this.mURL = this.mURLBox.value;
+                this.mLastModified = null;
+                this.download();
+                this.mPrefBranch.setCharPref("url", this.mURL);
+              }
+              break;
+            case "numitems":
+              this.mNumItems = parseInt(this.mNumItemsBox.value);
+              this.mPrefBranch.setIntPref("numitems", this.mNumItems);
+              this.fillList ();
+              break;
+            case "refreshtime":
+              this.mRefreshTime = parseInt (this.mRefreshTimeBox.value);
+              this.mPrefBranch.setIntPref("refreshtime", this.mRefreshTime);
+              this.resetTimer ();
+              break;
+          }
+          ]]>
+        </body>
+      </method>
+      <method name="showConfigPane">
+        <body>
+          <![CDATA[
+          this.mURLBox.value = this.mURL;
+          this.mNumItemsBox.value = this.mNumItems;
+          this.mRefreshTimeBox.value = this.mRefreshTime;
+          this.mConfigContainer.collapsed = false;
+          ]]>
+        </body>
+      </method>
+      <method name="hideConfigPane">
+        <body>
+          <![CDATA[
+          this.mConfigContainer.collapsed = true;
+          ]]>
+        </body>
+      </method>
+      <method name="onKeyPressed">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+          if (aEvent.keyCode == 13)
+            if (this.selectedItem != null)
+              this.selectedItem.openItem ();
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+  <binding id="rssfeed-listitem"
+    extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+    <content>
+      <xul:vbox flex="1" tooltip="_child">
+        <xul:tooltip>
+          <xul:vbox flex="1">
+            <xul:description anonid="rssfeed-listitem-tooltip-title"/>
+            <xul:description anonid="rssfeed-listitem-tooltip-author"/>
+            <xul:separator/>
+            <xul:description anonid="rssfeed-listitem-tooltip-content"/>
+          </xul:vbox>
+        </xul:tooltip>
+        <xul:hbox flex="1">
+          <xul:vbox>
+            <xul:image src="chrome://messenger/skin/16x16/x-rss-feeds.png"
+                       width="16" height="16" anonid="rssfeed-listitem-image"/>
+            <xul:spacer flex="1"/>
+          </xul:vbox>
+          <xul:label flex="1" anonid="rssfeed-listitem-label"/>
+        </xul:hbox>
+      </xul:vbox>
+    </content>
+    <implementation>
+      <field name="mTitleLabel">null</field>
+      <field name="mFeedItem">null</field>
+      <field name="mDescriptionLabel">null</field>
+      <field name="mTooltipTitleLabel">null</field>
+      <field name="mTooltipAuthorLabel">null</field>
+      <field name="mTooltipContentLabel">null</field>
+      <constructor>
+        <![CDATA[
+        this.mDescriptionLabel = document.getAnonymousElementByAttribute (this,
+                                   "anonid", "rssfeed-listitem-description");
+        this.mTitleLabel = document.getAnonymousElementByAttribute (this,
+                                   "anonid", "rssfeed-listitem-label");
+        this.mTooltipTitleLabel = document.getAnonymousElementByAttribute (this,
+                                   "anonid", "rssfeed-listitem-tooltip-title");
+        this.mTooltipAuthorLabel = document.getAnonymousElementByAttribute (this,
+                                   "anonid", "rssfeed-listitem-tooltip-author");
+        this.mTooltipContentLabel = document.getAnonymousElementByAttribute (this,
+                                   "anonid", "rssfeed-listitem-tooltip-content");
+        this.addEventListener ("dblclick", this.onListItemDoubleClicked, true);
+        ]]>
+      </constructor>
+      <property name="feedItem">
+        <getter>
+          <![CDATA[
+          return this.mFeedItem;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+          this.mFeedItem = val;
+
+          this.mTitleLabel.appendChild (document.createTextNode 
+                                        (this.mFeedItem.title));
+
+          var descriptionText = this.mFeedItem.description;
+          if (!descriptionText)
+            descriptionText = this.mFeedItem.content;
+
+          while (this.mTooltipTitleLabel.firstChild)
+            this.mTooltipTitleLabel.removeChild (this.mTooltipTitleLabel.firstChild);
+          this.mTooltipTitleLabel.appendChild (document.createTextNode (this.mFeedItem.title));
+          while (this.mTooltipAuthorLabel.firstChild)
+            this.mTooltipAuthorLabel.removeChild (this.mTooltipAuthorLabel.firstChild);
+          this.mTooltipAuthorLabel.appendChild (document.createTextNode (this.mFeedItem.author));
+          while (this.mTooltipContentLabel.firstChild)
+            this.mTooltipContentLabel.removeChild (this.mTooltipContentLabel.firstChild);
+          if (descriptionText)
+            this.mTooltipContentLabel.appendChild (document.createTextNode (this.processDescription (descriptionText)));
+
+          ]]>
+        </setter>
+      </property>
+      <method name="processDescription">
+        <parameter name="aText"/>
+        <body>
+          <![CDATA[
+          /* Forgive me for this */
+          aText = aText.replace (/\n/mg, " ");
+          aText = aText.replace (/\s+/g, " ");
+          aText = aText.replace (/^\s*<p(\s[^>]*)?>/g, "");
+          aText = aText.replace (/<p(\s[^>]*)?>/ig, "\n\n");
+          aText = aText.replace (/<[^>]*>/g, "");
+          aText = aText.replace (/&lt;/g, "<");
+          aText = aText.replace (/&gt;/g, ">");
+          aText = aText.replace (/&amp;/g, "&");
+          aText = aText.replace (/&quot;/g, "\"");
+
+          return aText;
+          ]]>
+        </body>
+      </method>
+      <method name="onListItemDoubleClicked">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+          this.openItem ();
+          ]]>
+        </body>
+      </method>
+      <method name="openItem">
+        <body>
+          <![CDATA[
+          var url = Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService (Components.interfaces.nsIIOService)
+                              .newURI (this.mFeedItem.mURL, null, null);
+          var protocolService = Components
+                .classes["@mozilla.org/uriloader/external-protocol-service;1"]
+                .getService (Components.interfaces.nsIExternalProtocolService);
+          protocolService.loadUrl (url);
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+</bindings>

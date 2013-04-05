@@ -1,0 +1,206 @@
+<?xml version="1.0"?>
+<!--
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+# Synovel Software Technologies
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Siva Edpuganti <sivakrishna@synovel.com> (Original Author)
+#   Prasad Sunkari <prasad@synovel.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+-->
+
+<?xml-stylesheet href="chrome://im/skin/csIMOverlay.css" type="text/css"?>
+<?xml-stylesheet href="chrome://im/content/imWidgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://im/skin/imContacts.css" type="text/css"?>
+
+<!DOCTYPE overlay [
+    <!ENTITY % imDTD SYSTEM "chrome://im/locale/csIMOverlay.dtd"> %imDTD;
+]>
+
+<overlay id="im-overlay" 
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/x-javascript" src="chrome://im/content/csIMOverlay.js"/>
+
+  <!-- For Drag n Drop -->
+  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_im" src="chrome://im/locale/im.properties"/>
+  </stringbundleset>
+
+  <keyset id="framework-keyset">
+    <key id="key_goIM" key="&cmd.go.im.key;" modifiers="alt" command="switch-to-im"/>
+    <key id="key_toggle_showtimestamp" keycode="VK_F2" command="cmd_toggle_showtimestamp"/>
+  </keyset>
+
+  <commandset id="framework-commands">
+    <command id="cmd_im_status" oncommand="setGlobalStatus(event);"/>
+    <command id="cmd_imAddContact" oncommand="addIMContact();"/>
+    <command id="cmd_toggle_showtimestamp" oncommand="toggleShowTimestamp()"/>
+    <commandset id="contactlist_commands"
+                commandupdater="true"
+                events="focus,contactlist_select"
+                oncommandupdate="imController.updateCommands()">
+      <command id="cmd_im_add_contact" oncommand="goDoCommand('cmd_im_add_contact')"/>
+      <command id="cmd_im_edit_contact" oncommand="goDoCommand('cmd_im_edit_contact')"/>
+      <command id="cmd_im_chat" oncommand="goDoCommand('cmd_im_chat')"/>
+      <command id="cmd_im_contact_info" oncommand="goDoCommand('cmd_im_contact_info')"/>
+      <command id="cmd_im_account" oncommand="goDoCommand('cmd_im_account')"/>
+      <command id="cmd_im_history" oncommand="goDoCommand('cmd_im_history')"/>
+    </commandset>
+  </commandset>
+
+  <commandset id="switch-commands">
+    <command id="switch-to-im" oncommand="setCurrentApp(gIMAppName);" hidden="true" disabled="true"/>
+  </commandset>
+
+  <menupopup id="file-new-menupopup">
+    <menuitem id="new-im-account-item" label="&collab.im.account.new;"
+              accesskey="&collab.im.account.new.key;"
+              app="im contacts" command="cmd_im_account"/>
+    <menuseparator/>
+  </menupopup>
+
+  <menupopup id="new-toolbutton-popup">
+    <menuitem id="new-im-account-item-2" label="&collab.im.account.new;"
+              accesskey="&collab.im.account.new.key;"
+              app="im contacts" command="cmd_im_account"/>
+    <menuseparator/>
+  </menupopup>
+
+  <toolbox id="framework-toolbox">
+    <toolbar id="im-primary-toolbar" flex="1"
+             toolbarname="IM Toolbar" context="framework-toolbar-context"
+             mode="full" customizable="true" app="im"
+             defaultset="new-toolbutton,im-contacts-chat-button,separator,im-contacts-add-button,delete-toolbutton,separator,im-contacts-edit-button,spring,im-toolbarbutton" />
+  </toolbox>
+  <toolbarpalette id="framework-toolpalette">
+    <toolbarbutton id="im-contacts-add-button"
+                   class="im-contacts-button" app="im"
+                   command="cmd_im_add_contact" label="&collab.im.action.add;"/>
+    <toolbarbutton id="im-contacts-edit-button" disabled="true"
+                   class="im-contacts-button" app="im"
+                   command="cmd_im_edit_contact" label="&collab.im.action.edit;"/>
+    <toolbarbutton id="im-contacts-chat-button" disabled="true"
+                   class="im-contacts-button" app="im"
+                   command="cmd_im_chat" label="&collab.im.action.chat;"/>
+    <toolbarbutton id="im-contacts-info-button" disabled="true"
+                   class="im-contacts-button" app="im"
+                   command="cmd_im_contact_info" label="&collab.im.action.info;"/>
+  </toolbarpalette>
+
+  <menupopup id="view-menupopup">
+    <menuitem id="im-show-offline" type="checkbox"
+              checked="false" oncommand="doShowOffline();"
+              label="&collab.im.show.offline;"
+              accesskey="&collab.im.show.offline.key;"
+              app="contacts im"/>
+  </menupopup>
+
+  <menupopup id="go-menupopup">
+    <menuitem id="go-switch-to-im" label="&collab.im.title;" 
+              class="menuitem-iconic" key="key_goIM"
+              observes="switch-to-im" insertbefore="go-separator"/>
+  </menupopup>
+
+  <menubar id="framework-menubar">
+    <menu id="im-menu" label="&collab.im.menu.label;" 
+          accesskey="&collab.im.menu.key;" insertafter="go-menu" app="im contacts">
+      <menupopup id="im-popup-accounts" type="im-connections"
+                 onpopupshowing="goUpdateCommand('cmd_im_status')">
+        <menuitem class="menuitem-iconic" im-status="available"
+                  label="&collab.im.status.available.label;"
+                  accesskey="&collab.im.status.available.key;"
+                  command="cmd_im_status"/>
+        <menuitem class="menuitem-iconic" im-status="busy"
+                  label="&collab.im.status.busy.label;"
+                  accesskey="&collab.im.status.busy.key;"
+                  command="cmd_im_status"/>
+        <menuitem class="menuitem-iconic" im-status="away"
+                  label="&collab.im.status.away.label;"
+                  accesskey="&collab.im.status.away.key;"
+                  command="cmd_im_status"/>
+        <menuitem class="menuitem-iconic" im-status="invisible"
+                  label="&collab.im.status.invisible.label;"
+                  accesskey="&collab.im.status.invisible.key;"
+                  command="cmd_im_status"/>
+        <menuitem class="menuitem-iconic" im-status="offline"
+                  label="&collab.im.status.offline.label;"
+                  accesskey="&collab.im.status.offline.key;"
+                  command="cmd_im_status"/>
+        <menuseparator id="im-recent-messages-separator"/>
+        <menu label="&collab.im.quickstatus.recent.label;"
+              command="cmd_im_status">
+          <menupopup type="im-recent-statuses"/>
+        </menu>
+        <menuseparator id="im-chat-history-seperator"/>
+        <menuitem id="im-chat-history" label="&collab.im.history.label;"
+                  accesskey="&collab.im.history.key;"
+                  command="cmd_im_history"/>
+        <menuseparator id="im-new-account-separator"/>
+        <menuitem id="im-account-setup"
+                  label="&collab.im.account.new2;"
+                  accesskey="&collab.im.account.new.key;"
+                  command="cmd_im_account"/>
+      </menupopup>
+    </menu>
+  </menubar>
+
+  <tabpanels id="tabpanelcontainer">
+    <hbox id="tabpanel-im" flex="1">
+      <vbox id="sidebar-im" flex="1" minwidth="100" width="225" persist="width collapsed">
+        <sidebarheader id="sidebar-im-title" align="center">
+          <label value="&collab.im.sidebar.title;" />
+        </sidebarheader>
+
+        <imcontacts id="sidebar-im-box" flex="1" />
+      </vbox>
+
+      <splitter id="im-sidebar-splitter" class="chromeclass-extracontent"
+                collapse="before" persist="state"/>
+
+      <vbox id="applications-im-panel" flex="1" width="741" persist="width">
+      </vbox>
+    </hbox>
+  </tabpanels>
+
+  <statusbar id="status-bar">
+    <statusbarpanel  id="im-quickstatus-container" insertbefore="statusText">
+      <quickstatus id="im-quickstatus" flex="1" persist="size"/>
+    </statusbarpanel>
+  </statusbar>
+
+</overlay>

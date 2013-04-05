@@ -1,0 +1,140 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Prasad Sunkari <prasad@synovel.com>
+ * Portions created by the Initial Developer are Copyright (C) 2007
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+/* -*- Mode: idl; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+
+#include "nsISupports.idl"
+
+interface nsIArray;
+interface nsIDOMWindow;
+
+/**
+ * csICmdBarCommand.idl
+ *
+ * The command interface for the Spicebird Command Console
+ * Each command has zero or more parameters associated with it.
+ *
+ * @status: NOT FROZEN
+ */
+
+[scriptable, uuid(8493d8a3-985b-4386-8c1a-eb56ad6eee63)]
+interface csICmdBarCommand: nsISupports
+{
+  /**
+   * The name of this command
+   */
+  readonly attribute AString name;
+
+  /**
+   * The list of parameters to the top-level command
+   */
+  readonly attribute nsIArray params;
+
+  /**
+   * Do the action associated with the command
+   * aParameterArray[0] will be the full cmdline and the rest of them 
+   * will be key:value pairs or just key when there is no value associated 
+   * with the param
+   */
+  void doCommand(in nsIArray aParameterArray, in nsIDOMWindow aWindow);
+};
+
+/**
+ * csICmdBarParam.idl
+ *
+ * The param interface for the Spicebird Command Console
+ * Each param can have zero or one value associated. In a few cases the 
+ * parameters can take only a limited set of values.
+ *
+ * @status: NOT FROZEN
+ */
+
+[scriptable, uuid(dc5e485a-2188-47f5-a8ae-3f511d4035ee)]
+interface csICmdBarParam: nsISupports
+{
+  /*
+   * Param Types
+   */
+  const long TYPE_REQUIRED = 1;
+  const long TYPE_OPTIONAL = 2;
+  const long TYPE_WARN = 4;
+
+  /*
+   * Returns the name of this param
+   */
+  readonly attribute AString name;
+
+  /*
+   * Does this param have an associated argument
+   */
+  readonly attribute boolean hasArgument;
+
+  /*
+   * Type of the argument.
+   * It is the sub-category where the contract
+   * id of the implementing component can be found.
+   */
+  readonly attribute ACString argumentType;
+};
+
+/**
+ * csICmdBarArgument.idl
+ *
+ * The argument interface for the Spicebird Command Console
+ * Provides a way to plugin various data-types for the values
+ * required by the cmdbar commands.
+ *
+ * @status: NOT FROZEN
+ */
+
+[scriptable, uuid(6b9cfd13-ee45-4e5a-a0f7-3d2a2b273f0a)]
+interface csICmdBarArgument: nsISupports
+{
+  /*
+   * Type of this argument
+   */
+  readonly attribute ACString type;
+
+  /*
+   * Get possible values, given current text
+   */
+  nsIArray getValues(in AString aCmdLine);
+
+  /*
+   * Validate text
+   */
+  boolean validate(in AString aCmdLine);
+};
+

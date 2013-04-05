@@ -1,0 +1,8 @@
+google-applets.jar:
+% content google-applets %content/google-applets/ xpcnativewrappers=yes
+*  content/google-applets/csGoogleApplet.xul                 (csGoogleApplet.xul)
+*  content/google-applets/csGoogleApplet.xml                 (csGoogleApplet.xml)
+*  content/google-applets/csGoogleApplet.css                 (csGoogleApplet.css)
+*  content/google-applets/csGoogleAppletAPI.html             (csGoogleAppletAPI.html)
+% overlay chrome://collab/content/collab.xul chrome://google-applets/content/csGoogleApplet.xul
+

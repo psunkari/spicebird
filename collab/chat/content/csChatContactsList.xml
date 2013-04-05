@@ -1,0 +1,1615 @@
+<?xml version="1.0"?>
+<!--
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+# Synovel Software Technologies
+# Portions created by the Initial Developer are Copyright (C) 2008-2010
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Prasad Sunkari <prasad@synovel.com> (Original Author)
+#   Sunil Mohan Adapa <sunil@synovel.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+-->
+
+<!DOCTYPE chat-contacts-list [
+  <!ENTITY % imOverlayDTD SYSTEM "chrome://im/locale/csIMOverlay.dtd">
+  %imOverlayDTD;
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+]>
+
+<bindings xmlns="http://www.mozilla.org/xbl"
+  xmlns:xbl="http://www.mozilla.org/xbl"
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="contacts-list">
+    <resources>
+      <stylesheet src="chrome://chat/skin/csChatContactsList.css"/>
+    </resources>
+
+    <content>
+      <!-- XXX: i18n -->
+      <xul:menupopup anonid="chat-contacts-list-contextmenu">
+        <xul:menuitem anonid="chat-contacts-list-open-chat-menuitem"
+                      command="cmd_openTextChat" label="Send Message"/>
+        <xul:menuseparator/>
+        <xul:menuitem anonid="chat-contacts-list-edit-contact-menuitem"
+                      command="cmd_editContact" label="Edit"/>
+        <xul:menuitem anonid="chat-contacts-list-show-contact-menuitem"
+                      command="cmd_showContact" label="Show Information"/>
+        <xul:menuitem anonid="chat-contacts-list-delete-contact-menuitem"
+                      command="cmd_deleteContact" label="Remove Contact"/>
+        <xul:menuseparator/>
+        <xul:menuitem anonid="chat-contacts-list-context-showoffline" label="Show Offline"
+                      command="cmd_showOffline" accesskey="O" type="checkbox"/>
+      </xul:menupopup>
+
+      <xul:vbox anonid="chat-contacts-box" flex="1">
+        <!-- XXX: i18n -->
+        <xul:toolbox>
+          <xul:menubar anonid="menubar">
+            <xul:menu anonid="contactsmenu" label="Contacts" accesskey="C">
+              <xul:menupopup anonid="contactspopup">
+                <xul:menuitem anonid="editcontact"
+                              command="cmd_openTextChat" label="Send Message"
+                              disabled="true"/>
+                <xul:menuseparator/>
+                <xul:menuitem anonid="addcontact" label="Add Contact"
+                              command="cmd_addContact" accesskey="A"/>
+                <xul:menuitem anonid="editcontact"
+                              command="cmd_editContact" label="Edit Contact"
+                              disabled="true"/>
+                <xul:menuitem anonid="contactinfo"
+                              command="cmd_showContact" label="Show Contact Details"
+                              disabled="true"/>
+                <xul:menuitem anonid="deletecontact"
+                              command="cmd_deleteContact" label="Remove Contact"
+                              disabled="true"/>
+                <xul:menuseparator/>
+                <xul:menuitem anonid="showoffline" label="Show Offline" type="checkbox"
+                              command="cmd_showOffline" accesskey="O"/>
+              </xul:menupopup>
+            </xul:menu>
+            <xul:menu anonid="accountsmenu" label="Accounts" accesskey="A">
+              <xul:menupopup anonid="accountspopup" type="chat-connections"/>
+            </xul:menu>
+          </xul:menubar>
+          <xul:toolbar mode="icons" anonid="chat-contacts-list-toolbar">
+            <xul:toolbarbutton anonid="chat-contacts-list-add-contact-button"
+                               command="cmd_addContact" label="Add"/>
+            <xul:toolbarbutton anonid="chat-contacts-list-edit-contact-button"
+                               command="cmd_editContact" label="Edit"
+                               disabled="true"/>
+            <xul:toolbarbutton anonid="chat-contacts-list-open-chat-button"
+                               command="cmd_openTextChat" label="Send Message"
+                               disabled="true"/>
+            <xul:toolbarbutton anonid="chat-contacts-list-show-contact-button"
+                               command="cmd_showContact" label="Info"
+                               disabled="true"/>
+            <xul:toolbarbutton anonid="chat-contacts-list-delete-contact-button"
+                               command="cmd_deleteContact" label="Delete"
+                               disabled="true"/>
+            <xul:spacer flex="1"/>
+          </xul:toolbar>
+        </xul:toolbox>
+
+        <xul:tree anonid="chat-contacts-tree" seltype="single"
+                  hidecolumnpicker="true" flex="1">
+          <xul:treecols>
+            <xul:treecol anonid="chat-contacts-tree-status-column" width="36"
+                         fixed="true" hideheader="true" primary="true"/>
+            <xul:treecol anonid="chat-contacts-tree-alias-column"
+                         hideheader="true" flex="1"/>
+            <!--
+            <xul:treecol anonid="chat-contacts-tree-avatar-column" width="32"
+                         fixed="true" hideheader="true"/>
+            -->
+          </xul:treecols>
+          <xul:treechildren/>
+        </xul:tree>
+      </xul:vbox>
+    </content>
+
+    <implementation implements="nsIObserver">
+      <field name="mTree">null</field>
+      <field name="mTreeData">[]</field>
+      <field name="mShowOfflineContacts">false</field>
+      <field name="mContextMenu">null</field>
+      <field name="_offline">Ci.csITpConnectionInterfaceSimplePresence.Connection_Presence_Type_Offline</field>
+      <field name="_contact">Ci.csITpConnection.Handle_Type_Contact</field>
+      <field name="_group">Ci.csITpConnection.Handle_Type_Group</field>
+      <field name="_list">Ci.csITpConnection.Handle_Type_List</field>
+      <field name="_disconnected">Ci.csITpConnection.Connection_Status_Disconnected</field>
+
+      <field name="controller">
+        <![CDATA[
+          ({
+            supportsCommand: function (aCommand)
+            {
+              switch (aCommand)
+              {
+                case "cmd_addContact":
+                case "cmd_editContact":
+                case "cmd_openTextChat":
+                case "cmd_showContact":
+                case "cmd_deleteContact":
+                case "cmd_showOffline":
+                  return true;
+                default:
+                  return false;
+              }
+            },
+
+            isCommandEnabled: function (aCommand)
+            {
+              switch (aCommand)
+              {
+                case "cmd_addContact":
+                case "cmd_showOffline":
+                  return true;
+                case "cmd_editContact":
+                case "cmd_openTextChat":
+                case "cmd_showContact":
+                case "cmd_deleteContact":
+                  return this.list.isContactSelected();
+                default:
+                  return false;
+              }
+            },
+
+            doCommand: function (aCommand)
+            {
+              switch (aCommand)
+              {
+                case "cmd_addContact":
+                  return this.list.addContact();
+                case "cmd_editContact":
+                  return this.list.editContact();
+                case "cmd_openTextChat":
+                  return this.list.openTextChat();
+                case "cmd_showContact":
+                  return this.list.showContact();
+                case "cmd_deleteContact":
+                  return this.list.deleteContact();
+                case "cmd_showOffline":
+                  return this.list.showOffline();
+                default:
+                  return false;
+              }
+            },
+
+            onEvent: function (aEvent)
+            {
+            }
+          })
+        ]]>
+      </field>
+
+      <field name="mTreeView">
+        <![CDATA[
+          ({
+            QueryInterface: function (aIID)
+            {
+              if (!aIID.equals(Ci.nsIMultilineTreeView) &&
+                  !aIID.equals(Ci.nsITreeView) &&
+                  !aIID.equals(Ci.nsISupports))
+                throw Components.results.NS_ERROR_NO_INTERFACE;
+              return this;
+            },
+
+            get rowCount()
+            {
+              return this.list.mTreeData.length;
+            },
+
+            getCellText: function (aRow, aColumn)
+            {
+              return null;
+            },
+
+            setTree: function (aTreeBox)
+            {
+              this.mTreeBox = aTreeBox;
+            },
+
+            isSeparator: function (aRow)
+            {
+              return false;
+            },
+
+            isSorted: function ()
+            {
+              return false;
+            },
+
+            getImageSrc: function (aRow, aColumn)
+            {
+            },
+
+            /*
+             * Properties related
+             */
+            getColumnProperties: function (aColumn, aColumnElement,
+                                           aProperties)
+            {
+            },
+
+            getRowProperties: function (aRow, aProperties)
+            {
+              var atomService = Cc["@mozilla.org/atom-service;1"]
+                                  .getService(Ci.nsIAtomService);
+
+              if (this.list.mTreeData[aRow].isGroup)
+              {
+                aProperties.AppendElement(atomService.getAtom("group"));
+                return;
+              }
+            },
+
+            getCellProperties: function (aRow, aColumn, aProperties)
+            {
+              var atomService = Cc["@mozilla.org/atom-service;1"]
+                                  .getService(Ci.nsIAtomService);
+
+              if (this.list.mTreeData[aRow].isGroup)
+              {
+                aProperties.AppendElement(atomService.getAtom("group"));
+
+                if (aColumn.index == 1)
+                {
+                  aProperties.AppendElement(atomService.getAtom("label"));
+                  return;
+                }
+
+                return;
+              }
+
+              if (aColumn.index == 0)
+              {
+                aProperties.AppendElement(atomService.getAtom("status"));
+                aProperties.AppendElement(atomService.getAtom("status-"
+                              + this.list.mTreeData[aRow].presenceType));
+                return;
+              }
+
+              if (aColumn.index == 1)
+                return;
+
+              if (aColumn.index == 2)
+              {
+                aProperties.AppendElement(atomService.getAtom("avatar"));
+                return;
+              }
+            },
+
+            /*
+             * Tree level related
+             */
+            getLevel: function (aRow)
+            {
+              if (this.list.mTreeData[aRow].groupType == this._list)
+                return 0;
+
+              return this.list.mTreeData[aRow].isGroup ? 0 : 1;
+            },
+
+            hasNextSibling: function (aRow)
+            {
+              // Used only for line drawing which we don't do
+              return false;
+            },
+
+            getParentIndex: function (aRow)
+            {
+              // XXX: do better
+              for (var i = aRow - 1; i >= 0; i--)
+                if (this.list.mTreeData[i].isGroup == true &&
+                    this.list.mTreeData[i].group ==
+                    this.list.mTreeData[aRow].group)
+                {
+                  return i;
+                }
+
+              return -1;
+            },
+
+            isContainer: function (aRow)
+            {
+              return this.list.mTreeData[aRow].isGroup;
+            },
+
+            isContainerEmpty: function (aRow)
+            {
+              return false;
+            },
+
+            isContainerOpen: function (aRow)
+            {
+              return this.list.mTreeData[aRow].isCollapsed == false;
+            },
+
+            toggleOpenState: function (aRow)
+            {
+              /*
+              if (!this.list.mTreeData[aRow].isGroup)
+                return;
+
+              if (this.list.mTreeData[aRow].isCollapsed)
+                this.list.expandGroup(aRow);
+              else
+                this.list.collapseGroup(aRow);
+              */
+            },
+
+            /*
+             * Multiline related
+             */
+            isMultiline: function ()
+            {
+              return true;
+            },
+
+            getCellTextPartCount: function (aRow, aColumn)
+            {
+              return 1;
+            },
+
+            getCellTextPart: function (aRow, aColumn, aPart)
+            {
+              if (aColumn.index == 1)
+                return this.list.mTreeData[aRow]["alias"];
+
+              return null;
+            },
+
+            getCellTextPartProperties: function (aRow, aColumn, aPart,
+                                                 aProperties)
+            {
+              var atomService = Cc["@mozilla.org/atom-service;1"]
+                                  .getService(Ci.nsIAtomService);
+
+              if (this.list.mTreeData[aRow].isGroup)
+              {
+                aProperties.AppendElement(atomService.getAtom("group"));
+                return;
+              }
+
+              aProperties.AppendElement(atomService.getAtom(
+                                          this.list.mTreeData[aRow]["unread"] ?
+                                            "unread" : "read"));
+
+              if (aColumn.index != 0)
+                return;
+
+              aProperties.AppendElement(atomService.getAtom("status-" +
+                            this.list.mTreeData[aRow].presenceType));
+            },
+
+            getDescriptionTextPartCount: function (aRow)
+            {
+              return 1;
+            },
+
+            getDescriptionTextPart: function(aRow, aPart)
+            {
+              if (this.list.mTreeData[aRow].isGroup)
+                return null;
+
+              return this.list.mTreeData[aRow].presenceMessage;
+            },
+
+            getDescriptionTextPartProperties: function (aRow, aPart,
+                                                        aProperties)
+            {
+              if (this.list.mTreeData[aRow].isGroup)
+                return;
+
+              var atomService = Cc["@mozilla.org/atom-service;1"]
+                                  .getService(Ci.nsIAtomService);
+              aProperties.AppendElement(atomService.getAtom("status-message"));
+            }
+          })
+        ]]>
+      </field>
+
+      <constructor>
+        <![CDATA[
+          this.mTree = document.getAnonymousElementByAttribute(this, "anonid",
+                                  "chat-contacts-tree");
+
+          // Setup View
+          this.mTreeView.list = this;
+          this.mTree.view = this.mTreeView;
+
+          // Setup controller
+          this.controller.list = this;
+          // XXX: This should controller should not go to the top, rather it
+          // should stay on this binding. If the user of this binding is
+          // interested, it is its duty to add the controller here as global
+          // controller.
+          // this.mTree.controllers.appendController(this.controller);
+          addCommonController(this.controller);
+
+          // Retrieve attribute values
+          var showOfflineContacts = this.getAttribute('showofflinecontacts');
+          if (showOfflineContacts)
+            this.mShowOfflineContacts = true;
+
+          this.mStringBundle = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                         .getService(Components.interfaces.nsIStringBundleService)
+                                         .createBundle("chrome://chat/locale/csChatStatuses.properties");
+
+          // Telepathy Callabacks
+          var self = this;
+          csChatWrapper.registerContactUpdateListener(
+            function (aContact, aItem)
+            {
+              self.onContactUpdated(this, aContact, aItem);
+            }
+          );
+          csChatWrapper.registerContactGroupUpdateListener(
+            function (aID, aType, aAdd, aRemove, aLocalPendingAdd,
+                      aLocalPendingRemove, aRemotePendingAdd,
+                      aRemotePendingRemove, aDetails)
+            {
+              self.onGroupUpdated(this, aID, aType, aAdd, aRemove,
+                                  aLocalPendingAdd, aLocalPendingRemove,
+                                  aRemotePendingAdd, aRemotePendingRemove,
+                                  aDetails);
+            }
+          );
+          csChatWrapper.registerNewContactGroupListener(
+            function (aID, aType, aMembers, aLocalPending, aRemotePending)
+            {
+              self.onNewGroup(this, aID, aType, aMembers, aLocalPending,
+                              aRemotePending);
+            }
+          );
+          csChatWrapper.registerConnectionStateListener(
+            function (aKey, aState, aReason)
+            {
+              self.onConnectionStateChanged(aKey, aState, aReason);
+            }
+          );
+
+          // Populate initial list
+          this.fillInitialContacts();
+        ]]>
+      </constructor>
+
+      <destructor>
+        <![CDATA[
+          // FIXME: unregister listeners here
+        ]]>
+      </destructor>
+
+      <!--
+        ##
+        ## UI methods: command implmentations and API
+        ##
+        -->
+      <method name="hideToolbar">
+        <body>
+          <![CDATA[
+            var toolbar = document.getAnonymousElementByAttribute(this,
+                                     "anonid", "chat-contacts-list-toolbar");
+            toolbar.setAttribute("collapsed", "true");
+          ]]>
+        </body>
+      </method>
+
+      <method name="addContact">
+        <body>
+          <![CDATA[
+            // Open the add new contact dialog
+            window.openDialog("chrome://chat/content/csChatContactEditDialog.xul",
+                              "", "chrome,resizable=no,modal,titlebar,centerscreen",
+                              csChatWrapper);
+          ]]>
+        </body>
+      </method>
+
+      <method name="editContact">
+        <body>
+          <![CDATA[
+            if (!this.isContactSelected())
+              return;
+
+            var selectedIndex = this.mTree.currentIndex;
+            var connectionKey = this.mTreeData[selectedIndex].connectionKey;
+            var handle = this.mTreeData[selectedIndex].handle;
+
+            // Open the add new contact dialog with
+            // connection and the username set to readonly
+            window.openDialog("chrome://chat/content/csChatContactEditDialog.xul",
+                              "", "chrome,resizable=no,modal,titlebar,centerscreen",
+                              csChatWrapper, connectionKey, handle);
+          ]]>
+        </body>
+      </method>
+
+      <method name="showOffline">
+        <body>
+          <![CDATA[
+            var showOffline = !this.mShowOfflineContacts;
+            if (showOffline)
+              this.setAttribute("showofflinecontacts", "true");
+            else
+              this.removeAttribute("showofflinecontacts");
+          ]]>
+        </body>
+      </method>
+
+      <method name="deleteContact">
+        <body>
+          <![CDATA[
+            if (!this.isContactSelected())
+              return;
+
+            var selectedIndex = this.mTree.currentIndex;
+            var connectionKey = this.mTreeData[selectedIndex].connectionKey;
+            var handle = this.mTreeData[selectedIndex].handle;
+
+            var connection = csChatWrapper.connections[connectionKey];
+            if (connection)
+              connection.removeContact(handle);
+          ]]>
+        </body>
+      </method>
+
+      <method name="openTextChat">
+        <body>
+          <![CDATA[
+            if (!this.isContactSelected())
+              return;
+
+            var selectedIndex = this.mTree.currentIndex;
+
+            var connectionKey = this.mTreeData[selectedIndex].connectionKey;
+            var handle = this.mTreeData[selectedIndex].handle;
+
+            csChatWrapper.requestChannel(connectionKey, "Text", this._contact,
+                                         handle);
+          ]]>
+        </body>
+      </method>
+
+      <method name="showContact">
+        <body>
+          <![CDATA[
+            if (!this.isContactSelected())
+              return;
+
+            var selectedIndex = this.mTree.currentIndex;
+
+            var connectionKey = this.mTreeData[selectedIndex].connectionKey;
+            var handle = this.mTreeData[selectedIndex].handle;
+
+            window.openDialog("chrome://chat/content/csChatContactInfoDialog.xul",
+                              "", "chrome,resizable=no,modal,titlebar,centerscreen",
+                              csChatWrapper, connectionKey, handle);
+          ]]>
+        </body>
+      </method>
+
+      <!--
+        ##
+        ## Disruptors: chat listeners and other major list updators
+        ##
+        -->
+      <method name="fillInitialContacts">
+        <body>
+          <![CDATA[
+            for each (var connection in csChatWrapper.connections)
+            {
+              for each (var channel in connection.contactLists)
+              {
+                this.onNewGroup(connection, channel.identifier, this._list,
+                                channel.getGroupMembers({}),
+                                channel.getGroupLocalPending({}),
+                                channel.getGroupRemotePending({}));
+              }
+              for each (var channel in connection.contactGroups)
+              {
+                this.onNewGroup(connection, channel.identifier, this._group,
+                                channel.getGroupMembers({}),
+                                channel.getGroupLocalPending({}),
+                                channel.getGroupRemotePending({}));
+              }
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="onContactUpdated">
+        <parameter name="aConnection"/>
+        <parameter name="aContact"/>
+        <parameter name="aItem"/>
+        <body>
+          <![CDATA[
+            this.mTreeView.mTreeBox.beginUpdateBatch();
+
+            var updatedRows = [];
+
+            for each (var group in aConnection.contactGroups)
+            {
+              if (group.getGroupMembers({}).indexOf(aContact.handle) != -1 ||
+                  group.getGroupRemotePending({})
+                       .indexOf(aContact.handle) != -1)
+              {
+                var index = this.findContactInGroup(aContact, group.identifier,
+                                                    this._group);
+                if (index != -1)
+                {
+                  updatedRows.push(this.mTreeData[index]);
+                  this.removeContactFromTree(index);
+                } else {
+                  var contact = this.removeContactFromCache(aContact, group.identifier);
+                  if (contact)
+                    updatedRows.push(contact);
+                }
+              }
+            }
+
+            if (updatedRows.length == 0 &&
+                aConnection.contactLists["subscribe"] !== undefined)
+            {
+              if (aConnection.contactLists["subscribe"].getGroupMembers({})
+                             .indexOf(aContact.handle) != -1 ||
+                  aConnection.contactLists["subscribe"]
+                             .getGroupRemotePending({})
+                             .indexOf(aContact.handle) != -1)
+              {
+                var index = this.findContactInGroup(aContact, "subscribe",
+                                                    this._list);
+                if (index != -1)
+                {
+                  updatedRows.push(this.mTreeData[index]);
+                  this.removeContactFromTree(index);
+                } 
+              }
+            }
+
+            if (this.isContactInteresting(aContact) == false)
+            {
+              this.mTreeView.mTreeBox.endUpdateBatch();
+              return;
+            }
+
+            if (updatedRows.length)
+            {
+              // If atleast one instance of the contact was visible in the list
+              // before, it means we just have to update those.
+              for each (oldContact in updatedRows)
+                this.insertContactIntoGroup(aContact, oldContact.group,
+                                            oldContact.groupType);
+
+              this.mTreeView.mTreeBox.endUpdateBatch();
+              return;
+            }
+
+            // FIXME: Improve this by maintaining a separate sturcture. The
+            //        exists but is not complete
+            for each (var channel in aConnection.contactGroups)
+            {
+              var id = channel.identifier;
+
+              if (channel.getGroupMembers({})
+                                 .indexOf(aContact.handle) != -1)
+              {
+                this.insertContactIntoGroup(aContact, id, this._group);
+              }
+
+              if (channel.getGroupRemotePending({})
+                                 .indexOf(aContact.handle) != -1)
+              {
+                this.insertContactIntoGroup(aContact, id, this._group,
+                       { presenceStatus: "remote-pending",
+                         presenceType: 9 });
+              }
+            }
+
+            if (aConnection.contactLists["subscribe"] !== undefined)
+            {
+              var channel = aConnection.contactLists["subscribe"];
+              if (channel.getGroupMembers({}).indexOf(aContact.handle) != -1)
+              {
+                this.insertContactIntoGroup(aContact, "subscribe", this._list);
+              }
+
+              if (channel.getGroupRemotePending({})
+                         .indexOf(aContact.handle) != -1)
+              {
+                this.insertContactIntoGroup(aContact, "subscribe", this._list,
+                       { presenceStatus: "remote-pending",
+                         presenceType: 9 });
+              }
+            }
+
+            this.mTreeView.mTreeBox.endUpdateBatch();
+          ]]>
+        </body>
+      </method>
+
+      <method name="onNewGroup">
+        <parameter name="aConnection"/>
+        <parameter name="aID"/>
+        <parameter name="aType"/>
+        <parameter name="aMembers"/>
+        <parameter name="aLocalPending"/>
+        <parameter name="aRemotePending"/>
+        <body>
+          <![CDATA[
+            if (aType == this._list && aID == "subscribe")
+            {
+              // If the onNewGroup for groups arrives before the onNewGroup for
+              // subscribe, then no contacts will be inserted into the list
+              // After the onNewGroup for subscribe arrives, we fix this
+              // discrepancy for the groups.
+              for each (var channel in aConnection.contactGroups)
+              {
+                this.onNewGroup(aConnection, channel.identifier, this._group,
+                                channel.getGroupMembers({}),
+                                channel.getGroupLocalPending({}),
+                                channel.getGroupRemotePending({}));
+              }
+            }
+            this.onGroupUpdated(aConnection, aID, aType, aMembers, {},
+                                aLocalPending, {}, aRemotePending, {});
+          ]]>
+        </body>
+      </method>
+
+      <method name="onGroupUpdated">
+        <parameter name="aConnection"/>
+        <parameter name="aID"/>
+        <parameter name="aType"/>
+        <parameter name="aAdd"/>
+        <parameter name="aRemove"/>
+        <parameter name="aLocalPendingAdd"/>
+        <parameter name="aLocalPendingRemove"/>
+        <parameter name="aRemotePendingAdd"/>
+        <parameter name="aRemotePendingRemove"/>
+        <parameter name="aDetails"/>
+        <body>
+          <![CDATA[
+            if (aType == this._list && aID == "subscribe")
+            {
+            }
+            else if (aType == this._group)
+            {
+            }
+            else
+              return;
+
+            this.mTreeView.mTreeBox.beginUpdateBatch();
+
+            for each (var member in aRemotePendingRemove)
+              this.removeContactFromGroup(aConnection.contacts[member], aID,
+                                          aType);
+
+            for each (var member in aRemove)
+              this.removeContactFromGroup(aConnection.contacts[member], aID,
+                                          aType);
+
+            for each (var member in aAdd)
+              this.insertContactIntoGroup(aConnection.contacts[member], aID,
+                                          aType);
+
+            for each (var member in aRemotePendingAdd)
+              this.insertContactIntoGroup(aConnection.contacts[member], aID,
+                aType, { presenceStatus: "remote-pending", presenceType: 9});
+
+            this.mTreeView.mTreeBox.endUpdateBatch();
+          ]]>
+        </body>
+      </method>
+
+      <method name="onConnectionStateChanged">
+        <parameter name="aKey"/>
+        <parameter name="aState"/>
+        <parameter name="aReason"/>
+        <body>
+          <![CDATA[
+            this.mTreeView.mTreeBox.beginUpdateBatch();
+
+            if (aState == this._disconnected) {
+              for (var i = 0; i < this.mTreeData.length; i++) {
+                if (this.mTreeData[i].isGroup == false &&
+                    this.mTreeData[i].connectionKey == aKey)
+                  i -= this.removeContactFromTree(i);
+              }
+
+              this.removeContactsFromCache(function(contact) {
+                                             if (contact.connectionKey == aKey)
+                                               return true;
+                                           });
+            }
+
+            this.mTreeView.mTreeBox.endUpdateBatch();
+          ]]>
+        </body>
+      </method>
+
+      <method name="showOfflineContacts">
+        <body>
+          <![CDATA[
+            this.mShowOfflineContacts = true;
+
+            this.mTreeView.mTreeBox.beginUpdateBatch();
+
+            for each (var connection in csChatWrapper.connections)
+            {
+              var contactsInGroups = [];
+
+              for each (var channel in connection.contactGroups)
+              {
+                var subscribeList = channel.getGroupMembers({});
+                var id = channel.identifier;
+
+                contactsInGroups = contactsInGroups.concat(subscribeList);
+
+                for each (var member in subscribeList)
+                  if (connection.contacts[member].presenceType == 1)
+                    this.insertContactIntoGroup(connection.contacts[member],
+                                                id, this._group);
+              }
+
+              // Now insert reset of the items in the subscribe list
+              if (connection.contactLists["subscribe"] !== undefined)
+              {
+                var channel = connection.contactLists["subscribe"];
+                var subscribeList = channel.getGroupMembers({});
+                for each (var member in subscribeList)
+                  if (connection.contacts[member].presenceType == 1 &&
+                      contactsInGroups.indexOf(member) == -1)
+                  {
+                      this.insertContactIntoGroup(connection.contacts[member],
+                                                  "subscribe", this._list);
+                  }
+              }
+            }
+
+            this.mTreeView.mTreeBox.endUpdateBatch();
+          ]]>
+        </body>
+      </method>
+
+      <method name="hideOfflineContacts">
+        <body>
+          <![CDATA[
+            this.mShowOfflineContacts = false;
+
+            this.mTreeView.mTreeBox.beginUpdateBatch();
+
+            for (var i = 0; i < this.mTreeData.length; i++)
+            {
+              if (this.mTreeData[i].isGroup == false &&
+                  this.mTreeData[i].presenceStatus == "offline")
+              {
+                i -= this.removeContactFromTree(i);
+              }
+            }
+
+            this.removeContactsFromCache(function(contact) {
+                                           if (contact.presenceStatus == "offline")
+                                             return true;
+                                         });
+
+            this.mTreeView.mTreeBox.endUpdateBatch();
+          ]]>
+        </body>
+      </method>
+
+      <method name="collapseGroup">
+        <parameter name="aIndex"/>
+        <body>
+          <![CDATA[
+            this.mTreeData[aIndex].isCollapsed = true;
+
+            var group = this.mTreeData[aIndex].group;
+            var groupType = this.mTreeData[aIndex].groupType;
+            for (var i = aIndex + 1; i < this.mTreeData.length &&
+                                     this.mTreeData[i].group == group &&
+                                     this.mTreeData[i].groupType == groupType;
+                 i++)
+            {
+              // Also takes care of moving the contact to the
+              // collapsed groups cache.
+              i -= this.removeContactFromTree(i, true);
+            }
+
+            this.mTreeView.mTreeBox.invalidateRow(aIndex);
+          ]]>
+        </body>
+      </method>
+
+      <method name="expandGroup">
+        <parameter name="aIndex"/>
+        <body>
+          <![CDATA[
+            this.mTreeData[aIndex].isCollapsed = false;
+            this.mTreeView.mTreeBox.invalidateRow(aIndex);
+
+            if (!this.mCollapsedGroupsCache)
+              return;
+
+            var group = this.mTreeData[aIndex].group;
+            if (!this.mCollapsedGroupsCache[group])
+              return;
+
+            var members = this.mCollapsedGroupsCache[group];
+            for (var i = 0; i < members.length; i++)
+              this.insertContactIntoTree(members[i]);
+            
+            delete this.mCollapsedGroupsCache[group];
+          ]]>
+        </body>
+      </method>
+
+      <!--
+        ##
+        ## Workers
+        ##
+        -->
+      <method name="insertContactIntoGroup">
+        <parameter name="aContact"/>
+        <parameter name="aGroup"/>
+        <parameter name="aGroupType"/>
+        <parameter name="aExtraParameters"/>
+        <body>
+          <![CDATA[
+            if (aContact === undefined)
+              return;
+
+            if (!this.isContactInteresting(aContact))
+              return;
+
+            if (aGroupType == this._list)
+            {
+              if (this.getContactGroups(aContact).length != 0)
+                return;
+            }
+            else
+              this.removeContactFromGroup(aContact, "subscribe", this._list);
+
+            var contact = this.makeTreeDataRow(aContact);
+            contact.group = aGroup;
+            contact.groupType = aGroupType;
+            if (aExtraParameters !== undefined)
+              for (var param in aExtraParameters)
+                contact[param] = aExtraParameters[param];
+            this.insertContactIntoTree(contact);
+          ]]>
+        </body>
+      </method>
+
+      <method name="insertContactIntoTree">
+        <parameter name="aContact"/>
+        <body>
+          <![CDATA[
+            aContact.isGroup = false;
+
+            if (typeof(aContact.presenceMessage) == "undefined" ||
+                aContact.presenceMessage == "")
+            {
+              try {
+                aContact.presenceMessage = this.mStringBundle.
+                                GetStringFromName(aContact.presenceStatus);
+              } catch(ex) {
+                aContact.presenceMessage = this.mStringBundle.
+                          GetStringFromName("status" + aContact.presenceType);
+              }
+            }
+
+            var insertBeforeIndex = this.getInsertionIndex(aContact, this.mTreeData);
+
+            // Check and add the group label if we need to
+            if (aContact.groupType == this._group && (insertBeforeIndex < 1 ||
+                this.mTreeData[insertBeforeIndex - 1].group != aContact.group))
+            {
+              var group = { identifier: aContact.group,
+                            alias: aContact.group, group: aContact.group,
+                            groupType: aContact.groupType, isGroup: true,
+                            isCollapsed: false };
+              this.mTreeData.splice(insertBeforeIndex, 0, group);
+              this.mTreeView.mTreeBox.rowCountChanged(insertBeforeIndex, 1);
+              insertBeforeIndex++;
+            }
+
+            // Check if the group is collapsed
+            // Item should be added to the staging cache
+            if (aContact.groupType == this._group && insertBeforeIndex > 0 &&
+                this.mTreeData[insertBeforeIndex - 1].isGroup == true &&
+                this.mTreeData[insertBeforeIndex - 1].isCollapsed == true)
+            {
+              this.addContactToCache(aContact);
+              return;
+            }
+            
+            // Check if the contact going to inserted already exists
+            if (insertBeforeIndex > 0 && aContact.isGroup == false &&
+                this.compareContacts(this.mTreeData[insertBeforeIndex - 1],
+                                     aContact) == 0)
+            {
+              return;
+            }
+            if (insertBeforeIndex < this.mTreeData.length &&
+                aContact.isGroup == false &&
+                this.compareContacts(this.mTreeData[insertBeforeIndex],
+                                     aContact) == 0)
+            {
+              return;
+            }
+            
+            this.mTreeData.splice(insertBeforeIndex, 0, aContact);
+            this.mTreeView.mTreeBox.rowCountChanged(insertBeforeIndex, 1);
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeContactFromGroup">
+        <parameter name="aContact"/>
+        <parameter name="aGroup"/>
+        <parameter name="aGroupType"/>
+        <body>
+          <![CDATA[
+            if (aContact === undefined)
+              return;
+
+            // Write a case that says that if the contact exits in subscribed
+            // list we add it outside the groups
+            var index = this.findContactInGroup(aContact, aGroup, aGroupType);
+            if (index != -1)
+              this.removeContactFromTree(index);
+
+            if (aGroupType == this._group)
+            {
+              // FIXME: Check if contact is in the subscribe group
+              // Contact will only be inserted only if it is in subscribe list
+              this.insertContactIntoGroup(aContact, "subscribe", this._list);
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="addContactToCache">
+        <parameter name="aContact"/>
+        <body>
+          <![CDATA[
+            if (!this.mCollapsedGroupsCache)
+              this.mCollapsedGroupsCache = {};
+
+            if (!this.mCollapsedGroupsCache[aContact.group])
+              this.mCollapsedGroupsCache[aContact.group] = [];
+
+            var list = this.mCollapsedGroupsCache[aContact.group];
+            var insertBeforeIndex = this.getInsertionIndex(aContact, list);
+
+            // Check if the contact already exists
+            if ((insertBeforeIndex > 0 &&
+                 this.compareContacts(list[insertBeforeIndex - 1], aContact) == 0) ||
+                (insertBeforeIndex < list.length &&
+                 this.compareContacts(list[insertBeforeIndex], aContact) == 0)) {
+              return;
+            }
+            
+            this.mCollapsedGroupsCache[aContact.group].splice(insertBeforeIndex,
+                                                              0, aContact);
+            for each (var contact in this.mCollapsedGroupsCache[aContact.group])
+              contact.identifier;
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeContactFromCache">
+        <parameter name="aContact"/>
+        <parameter name="aGroupName"/>
+        <body>
+          <![CDATA[
+            if (!this.mCollapsedGroupsCache)
+              return;
+
+            if (!this.mCollapsedGroupsCache[aGroupName])
+              return;
+
+            var members = this.mCollapsedGroupsCache[aGroupName];
+            for (var i = members.length - 1; i >= 0; i--) {
+              if (members[i].handle == aContact.handle &&
+                  members[i].connectionKey == aContact.connectionKey) {
+                var matched = members[i];
+                members.splice(i, 1);
+
+                if (members.length == 0) {
+                  delete this.mCollapsedGroupsCache[aGroupName];
+                  this.removeGroupFromTree(aGroupName);
+                }
+
+                return matched;
+              }
+            }
+
+            return null;
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeGroupFromTree">
+        <parameter name="aGroupName"/>
+        <body>
+          <![CDATA[
+            if (!aGroupName)
+              return;
+
+            for (var i=0; i<this.mTreeData.length; i++) {
+              if (this.mTreeData[i].isGroup &&
+                  this.mTreeData[i].group == aGroupName) {
+                this.mTreeData.splice(i, 1);
+                this.mTreeView.mTreeBox.rowCountChanged(i, -1);
+                return;
+              }
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeContactsFromCache">
+        <parameter name="aMatchFunc"/>
+        <parameter name="aGroupName"/>
+        <body>
+          <![CDATA[
+            if (!this.mCollapsedGroupsCache)
+              return;
+
+            var self = this;
+            function _removeContactsFromGroup(group) {
+              var members = self.mCollapsedGroupsCache[group];
+
+              for (var i = members.length - 1; i >= 0; i--) 
+                if (aMatchFunc(members[i]))
+                  members.splice(i, 1);
+             
+              if (members.length == 0) {
+                delete self.mCollapsedGroupsCache[group];
+                self.removeGroupFromTree(group);
+              }
+            }
+
+            if (aGroupName === undefined)
+              for (var group in this.mCollapsedGroupsCache)
+                _removeContactsFromGroup(group);
+            else if (this.mCollapsedGroupsCache[aGroupName])
+              _removeContactsFromGroup(aGroupName);
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeContactFromTree">
+        <parameter name="aIndex"/>
+        <parameter name="aCollapsing"/>
+        <body>
+          <![CDATA[
+            if (aCollapsing === undefined)
+              aCollapsing = false;
+
+            var deleteGroup = false;
+            var noOfRows = 1;
+
+            // If collapsing, move the contact to cache.
+            if (aCollapsing) {
+              let contact = this.mTreeData[aIndex];
+              this.addContactToCache(contact);
+            }
+
+            // If not collapsing, remove the group label if we are the only
+            // contact in this group.
+            else {
+              if ((aIndex > 0 && this.mTreeData[aIndex - 1].isGroup == true) &&
+                  ((aIndex == this.mTreeData.length - 1) ||
+                    this.mTreeData[aIndex + 1].isGroup == true)) {
+                deleteGroup = true;
+              }
+
+              if (deleteGroup) {
+                aIndex--;
+                noOfRows++;
+              }
+            }
+
+            this.mTreeData.splice(aIndex, noOfRows);
+            this.mTreeView.mTreeBox.rowCountChanged(aIndex, -noOfRows);
+
+            return noOfRows;
+          ]]>
+        </body>
+      </method>
+
+      <!--
+        ##
+        ## Utility methods
+        ##
+        -->
+      <method name="isContactSelected">
+        <body>
+          <![CDATA[
+            if (!this.mTreeView.selection.count)
+              return false;
+
+            var selectedIndex = this.mTree.currentIndex;
+
+            return !(this.mTreeData[selectedIndex].isGroup);
+          ]]>
+        </body>
+      </method>
+
+      <method name="isContactInteresting">
+        <parameter name="aContact"/>
+        <body>
+          <![CDATA[
+            if (this.mShowOfflineContacts == false &&
+                aContact.presenceType == this._offline)
+            {
+              return false;
+            }
+
+            // Check if this contact is a part of subscribe list
+            var channels = csChatWrapper.connections[aContact.connectionKey]
+                                        .contactLists;
+            if (channels["subscribe"] !== undefined)
+            {
+              var subscribeList = channels["subscribe"].getGroupMembers({});
+              var remotePendingList = channels["subscribe"]
+                                        .getGroupRemotePending({});
+              if (subscribeList.indexOf(aContact.handle) != -1 ||
+                  remotePendingList.indexOf(aContact.handle) != -1)
+              {
+                return true;
+              }
+            }
+
+            return false;
+          ]]>
+        </body>
+      </method>
+
+      <method name="getContactGroups">
+        <parameter name="aContact"/>
+        <body>
+          <![CDATA[
+            var metaInfo = csChatWrapper.connections[aContact.connectionKey]
+                                        .contactsMetaInfo;
+
+            if (metaInfo[aContact.handle] === undefined)
+              return [];
+
+            if (metaInfo[aContact.handle].groups === undefined)
+              return [];
+
+            return metaInfo[aContact.handle].groups;
+          ]]>
+        </body>
+      </method>
+
+      <method name="makeTreeDataRow">
+        <parameter name="aContact"/>
+        <body>
+          <![CDATA[
+            return {
+                     identifier: aContact.identifier,
+                     connectionKey: aContact.connectionKey,
+                     handle: aContact.handle,
+                     alias: aContact.alias,
+                     avatarToken: aContact.avatarToken,
+                     presenceType: aContact.presenceType,
+                     presenceStatus: aContact.presenceStatus,
+                     presenceMessage: aContact.presenceMessage
+                   };
+          ]]>
+        </body>
+      </method>
+
+      <method name="compareContacts">
+        <parameter name="a"/>
+        <parameter name="b"/>
+        <body>
+          <![CDATA[
+            // Group type
+            if (a.groupType != b.groupType)
+            {
+              if (a.groupType == this._list)
+                return -1;
+
+              if (b.groupType == this._list)
+                return 1;
+            }
+
+            // Group name
+            if (a.group.toLowerCase() != b.group.toLowerCase())
+              return a.group.toLowerCase() > b.group.toLowerCase() ? 1 : -1;
+
+            if (a.group != b.group)
+              return a.group > b.group ? 1 : -1;
+
+            // Is group
+            if (a.isGroup != b.isGroup)
+            {
+              if (a.isGroup)
+                return -1;
+
+              if (b.isGroup)
+                return 1;
+            }
+
+            // Presence type
+            if (a.presenceType !== undefined && b.presenceType !== undefined &&
+                a.presenceType != b.presenceType)
+            {
+              var priorityMap = [
+                                  100, /* Unset */
+                                  6,   /* Offline */
+                                  0,   /* Available */
+                                  2,   /* Away */
+                                  3,   /* Extended Away */
+                                  4,   /* Hidden */
+                                  1,   /* Busy */
+                                  98,  /* Unknown */
+                                  99,  /* Error */
+                                  5    /* Custom: Remote Pending */
+                                ];
+              return priorityMap[a.presenceType] - priorityMap[b.presenceType];
+            }
+
+            // Alias
+            if (a.alias.toLowerCase() != b.alias.toLowerCase())
+              return a.alias.toLowerCase() > b.alias.toLowerCase() ? 1 : -1;
+
+            if (a.alias != b.alias)
+              return a.alias > b.alias ? 1 : -1;
+
+            // Connection key
+            if (a.connectionKey != b.connectionKey)
+              return a.connectionKey > b.connectionKey ? 1 : -1;
+
+            // Handle
+            if (a.handle != b.handle)
+              return a.handle - b.handle;
+
+            // Both contacts are the same
+            return 0;
+          ]]>
+        </body>
+      </method>
+
+      <method name="findContactInGroup">
+        <parameter name="aContact"/>
+        <parameter name="aGroup"/>
+        <parameter name="aGroupType"/>
+        <body>
+          <![CDATA[
+            return this.findContactInTree(
+                          {
+                            handle: aContact.handle,
+                            connectionKey: aContact.connectionKey,
+                            group: aGroup,
+                            groupType: aGroupType
+                          }, 0, true);
+          ]]>
+        </body>
+      </method>
+
+      <method name="findContactInTree">
+        <parameter name="aContact"/>
+        <parameter name="aStartIndex"/>
+        <parameter name="aMatchGroup"/>
+        <body>
+          <![CDATA[
+            if (aStartIndex === undefined)
+              aStartIndex = 0;
+
+            if (aMatchGroup === undefined)
+              aMatchGroup = false;
+
+            // XXX: Make this binary search
+            for (var i = aStartIndex; i < this.mTreeData.length; i++)
+            {
+              if (this.mTreeData[i].isGroup == false &&
+                  this.mTreeData[i].handle == aContact.handle &&
+                  this.mTreeData[i].connectionKey == aContact.connectionKey &&
+                  (aMatchGroup == false ||
+                   (this.mTreeData[i].group == aContact.group &&
+                    this.mTreeData[i].groupType == aContact.groupType)))
+              {
+                return i;
+              }
+            }
+
+            return -1;
+          ]]>
+        </body>
+      </method>
+
+      <method name="getInsertionIndex">
+        <parameter name="aContact"/>
+        <parameter name="aContactList"/>
+        <body>
+          <![CDATA[
+            var start = 0;
+            var end = aContactList.length - 1;
+
+            if (start > end)
+              return 0;
+
+            while (1) {
+              var result;
+
+              if (end - start <= 1) {
+                if (0 <= (result = this.compareContacts(aContactList[start], aContact)))
+                  return start;
+
+                if (end != start)
+                  if (0 <= this.compareContacts(aContactList[end], aContact))
+                    return end;
+
+                return end + 1;
+              }
+
+              var middle = Math.floor((start + end) / 2);
+
+              if (0 == (result = this.compareContacts(aContactList[middle],aContact)))
+                return middle;
+
+              if (result < 0)
+                start = middle;
+
+              if (result > 0)
+                end = middle;
+            }
+
+            return end + 1;
+          ]]>
+        </body>
+      </method>
+
+    </implementation>
+
+    <!--
+      ##
+      ## Event handlers
+      ##
+      -->
+    <handlers>
+      <handler event="dblclick" button="0">
+        <![CDATA[
+          if (event.originalTarget.tagName != "xul:treechildren")
+            return;
+
+          this.openTextChat();
+        ]]>
+      </handler>
+
+      <handler event="click" button="0">
+        <![CDATA[
+          if (event.originalTarget.tagName != "xul:treechildren")
+            return;
+
+          var row = this.mTreeView.mTreeBox.getRowAt(event.clientX, event.clientY);
+
+          if (row != -1 && this.mTreeData[row].isGroup)
+          {
+            var self = this;
+            if (this.mTreeData[row].isCollapsed)
+              window.setTimeout(function () { self.expandGroup(row); }, 0);
+            else
+              window.setTimeout(function () { self.collapseGroup(row); }, 0);
+          }
+        ]]>
+      </handler>
+
+      <handler event="select">
+        <![CDATA[
+          document.commandDispatcher.updateCommands("chat-contact-list");
+        ]]>
+      </handler>
+
+      <handler event="popupshowing">
+        <![CDATA[
+          var anonid = event.originalTarget.getAttribute("anonid");
+
+          if (anonid != "contactspopup")
+            return;
+
+          var showoffline = document.getAnonymousElementByAttribute(this,
+                                                  "anonid", "showoffline");
+          if (showoffline) {
+            if (this.mShowOfflineContacts)
+              showoffline.setAttribute("checked", true);
+            else
+              showoffline.removeAttribute("checked");
+          }
+        ]]>
+      </handler>
+
+      <handler event="contextmenu">
+        <![CDATA[
+          if (event.originalTarget.tagName != "xul:treechildren")
+            return;
+
+          if (!this.isContactSelected())
+            return;
+
+          if (!this.mContextMenu)
+            this.mContextMenu = document.getAnonymousElementByAttribute(this,
+                                           "anonid",
+                                           "chat-contacts-list-contextmenu");
+
+          var showoffline = document.getAnonymousElementByAttribute(this,
+                                            "anonid", "context-showoffline");
+          if (showoffline) {
+            if (this.mShowOfflineContacts)
+              showoffline.setAttribute("checked", true);
+            else
+              showoffline.removeAttribute("checked");
+          }
+
+          if (event.screenX && event.screenY)
+            this.mContextMenu.openPopupAtScreen(event.screenX, event.screenY,
+                                                true);
+          else
+            this.mContextMenu.openPopup(this.mTree, null, 0, 0, true);
+        ]]>
+      </handler>
+
+      <handler event="DOMAttrModified">
+        <![CDATA[
+          if (event.originalTarget != this)
+            return;
+
+          if (event.attrName == 'showofflinecontacts')
+          {
+            var newValue = false;
+            if (event.newValue !== undefined)
+              newValue = (event.newValue == "true");
+
+            var self = this;
+            if (newValue != this.mShowOfflineContacts)
+              if (newValue)
+                window.setTimeout(function () { self.showOfflineContacts(); },
+                                  0);
+              else
+                window.setTimeout(function () { self.hideOfflineContacts(); },
+                                  0);
+          }
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+</bindings>

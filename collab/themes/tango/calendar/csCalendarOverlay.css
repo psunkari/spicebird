@@ -1,0 +1,145 @@
+/*
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+# Synovel Software Technologies
+# Portions created by the Initial Developer are Copyright (C) 2007-2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#     Prasad Sunkari <prasad@synovel.com> (Original Author)
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+*/
+
+menuitem[observes="switch-to-calendar"],
+menuitem#calendar-toolbar, #select-app-menulist[value~="calendar"],
+.tabcollab-tab[type="calendar"] {
+  list-style-image: url("chrome://calendar/skin/16x16/office-calendar.png");
+}
+
+menuitem[observes="switch-to-tasks"],
+menuitem#tasks-toolbar, #select-app-menulist[value~="tasks"],
+.tabcollab-tab[type="tasks"] {
+  list-style-image: url("chrome://calendar/skin/16x16/task.png");
+}
+
+#new-event-item, #new-event-item-2, #ltnNewEvent2, #ltnNewEvent,
+#calendar-item-context-menu-newevent-menutitem,
+#calendar-view-context-menu-newevent {
+    list-style-image: url("chrome://calendar/skin/16x16/appointment-new.png");
+}
+
+#new-task-item, #new-task-item-2, #ltnNewTask2, #ltnNewTask
+#calendar-item-context-menu-newtodo-menuitem,
+#calendar-view-context-menu-newtodo,
+#task-context-menu-new {
+    list-style-image: url("chrome://calendar/skin/16x16/task-new.png");
+}
+
+#new-calendar-item, #new-calendar-item-2, #calpopup-new,
+#list-calendars-context-new, #list-task-calendars-context-new {
+    list-style-image: url("chrome://calendar/skin/16x16/office-calendar-new.png");
+}
+
+#open-local-calendar {
+    list-style-image: url("chrome://collab/skin/16x16/document-open.png");
+}
+
+#calPrintPreviewMenuItem {
+    list-style-image: url("chrome://collab/skin/16x16/document-print-preview.png");
+}
+
+#calPrintMenuItem {
+    list-style-image: url("chrome://collab/skin/16x16/document-print.png");
+}
+
+#task-menu-new {
+    list-style-image: url("chrome://calendar/skin/16x16/task-new.png");
+}
+
+#task-menu-delete, #ltnDeleteSelectedCalendar, #list-calendars-context-delete,
+#list-task-calendars-context-delete,
+#calendar-item-context-menu-delete-menuitem, #task-context-menu-delete {
+    list-style-image: url("chrome://collab/skin/16x16/edit-delete.png");
+}
+
+#calendar-item-context-menu-cut-menuitem,
+#calendar-view-context-menu-cut-menuitem {
+    list-style-image: url("chrome://collab/skin/16x16/edit-cut.png");
+}
+
+#calendar-item-context-menu-copy-menuitem,
+#calendar-view-context-menu-copy-menuitem {
+    list-style-image: url("chrome://collab/skin/16x16/edit-copy.png");
+}
+
+#calendar-item-context-menu-paste-menuitem,
+#calendar-view-context-menu-paste-menuitem {
+    list-style-image: url("chrome://collab/skin/16x16/edit-paste.png");
+}
+
+#list-calendars-context-find, #list-task-calendars-context-find {
+    list-style-image: url("chrome://collab/skin/16x16/edit-find.png");
+}
+
+/* No margin on the sides of calendar lists */
+calendar-list-tree tree {
+  margin: 0px;
+}
+
+#sidebar-calendar-wrapper minimonth,
+#sidebar-task-wrapper minimonth {
+%ifdef XP_UNIX
+  -moz-appearance: listbox;
+%endif
+}
+
+#calMinimonthBox {
+  margin: 0px !important;
+}
+
+.task-details-name,
+#calendar-task-details-container .headline {
+  text-align: right;
+  font-weight: normal;
+  opacity: 0.5;
+}
+
+#calendar-task-details-description {
+  -moz-appearance: none;
+  border: none;
+  border-top: 1px solid ThreeDShadow;
+  margin: 0px !important;
+}
+
+/* IMIP bar */
+#imip-bar > image {
+  list-style-image: url(chrome://calendar/skin/16x16/office-calendar.png) !important;
+  -moz-image-region: rect(0, 16px, 16px, 0) !important;
+}

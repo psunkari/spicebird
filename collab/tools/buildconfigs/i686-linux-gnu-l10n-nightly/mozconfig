@@ -1,0 +1,16 @@
+# To build collabsuite
+. ${topsrcdir}/collab/config/mozconfig
+
+# Enable parallel build so we can do distribute compile
+mk_add_options MOZ_MAKE_FLAGS=-j8
+
+# Static build required for building the installer
+ac_add_options --enable-static --disable-shared
+
+# Enabling update packaging create mar files and corresponding description files
+ac_add_options --enable-update-packaging
+
+# Set this to nightly channel so that app.update.channel is set properly
+# Thus setting the update query to AUS properly. Nightly channel is
+# different from the release channel and updates happen differently
+ac_add_options --enable-update-channel=nightly

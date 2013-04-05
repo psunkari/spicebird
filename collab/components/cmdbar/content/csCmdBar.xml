@@ -1,0 +1,506 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+#   Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+#   The contents of this file are subject to the Mozilla Public License Version
+#   1.1 (the "License"); you may not use this file except in compliance with
+#   the License. You may obtain a copy of the License at
+#   http://www.mozilla.org/MPL/
+#
+#   Software distributed under the License is distributed on an "AS IS" basis,
+#   WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+#   for the specific language governing rights and limitations under the
+#   License.
+#
+#   The Original Code is Spicebird CmdBar.
+#
+#   The Initial Developer of the Original Code is
+#       Prasad Sunkari <prasad@synovel.com>
+#   Portions created by the Initial Developer are Copyright (C) 2008
+#   the Initial Developer. All Rights Reserved.
+#
+#   Contributor(s):
+#
+#   Alternatively, the contents of this file may be used under the terms of
+#   either the GNU General Public License Version 2 or later (the "GPL"), or
+#   the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+#   in which case the provisions of the GPL or the LGPL are applicable instead
+#   of those above. If you wish to allow use of your version of this file only
+#   under the terms of either the GPL or the LGPL, and not to allow others to
+#   use your version of this file under the terms of the MPL, indicate your
+#   decision by deleting the provisions above and replace them with the notice
+#   and other provisions required by the GPL or the LGPL. If you do not delete
+#   the provisions above, a recipient may use your version of this file under
+#   the terms of any one of the MPL, the GPL or the LGPL.
+#
+    ***** END LICENSE BLOCK ***** -->
+
+<!DOCTYPE bindings [
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
+]>
+
+<bindings id="csCmdBarBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:html="http://www.w3.org/1999/xhtml"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <!-- Private binding -->
+  <binding id="csCmdBarTextBox"
+           extends="chrome://global/content/bindings/textbox.xml#textbox">
+
+    <content>
+      <children/>
+      <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="context,spellcheck">
+        <html:input class="textbox-input" flex="1" anonid="input"
+                    xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,tabindex,accesskey"/>
+        <xul:label anonid="cmdbar-message-label" hidden="true" 
+                   style="margin: 0px 5px 0px 5px;" />
+      </xul:hbox>
+    </content>
+
+    <implementation>
+
+      <field name="_cmdbar">null</field>
+
+      <property name="cmdbar" readonly="true">
+        <getter>
+          <![CDATA[
+            return this._cmdbar ?
+                   this._cmdbar : this._cmdbar = document.getBindingParent(this);
+          ]]>
+        </getter>
+      </property>
+
+      <!-- Notification/Status Message -->
+      <method name="showMessage">
+        <parameter name="aClass"/>
+        <parameter name="aMessage"/>
+        <body>
+          <![CDATA[
+            if (!this._statusLabel)
+              this._statusLabel = document.getAnonymousElementByAttribute(this, "anonid", "cmdbar-message-label");
+
+            this._statusLabel.setAttribute("class", aClass);
+            this._statusLabel.value = aMessage;
+            this._statusLabel.removeAttribute("hidden");
+          ]]>
+        </body>
+      </method>
+
+      <!-- Do I Have Focus? -->
+      <method name="hideMessage">
+        <body>
+          <![CDATA[
+            if (!this._statusLabel)
+              this._statusLabel = document.getAnonymousElementByAttribute(this, "anonid", "cmdbar-message-label");
+
+            this._statusLabel.value = "";
+            this._statusLabel.setAttribute("hidden", "true");
+          ]]>
+        </body>
+      </method>
+
+      <!-- Do I Have Focus? -->
+      <method name="_hasFocus">
+        <body>
+          <![CDATA[
+            var element = document.commandDispatcher.focusedElement;
+            while (element) {
+              if (element == this)
+                return true;
+
+              element = element.parentNode;
+            };
+
+            return false;
+          ]]>
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="input">
+        <![CDATA[
+          this.hideMessage();
+          this.cmdbar._setCloseTimeout();
+          this.cmdbar._onCmdBarInput();
+        ]]>
+      </handler>
+
+      <handler event="blur">
+        <![CDATA[
+          this.cmdbar._setCloseTimeout();
+        ]]>
+      </handler>
+
+      <handler event="keypress">
+        <![CDATA[
+          switch (event.keyCode) {
+            case KeyEvent.DOM_VK_RETURN:
+              this.cmdbar._handleEnter(event);
+              break;
+            case KeyEvent.DOM_VK_TAB:
+              this.cmdbar._handleTab(event);
+              break;
+            case KeyEvent.DOM_VK_UP:
+            case KeyEvent.DOM_VK_DOWN:
+              this.cmdbar._handleUpDown(event);
+              break;
+          }
+        ]]>
+      </handler>
+
+      <handler event="compositionstart">
+        <![CDATA[
+          var cmdbar = this.cmdbar;
+          cmdbar._isIMEComposing = true;
+          if (cmdbar._cmdTimeout) {
+            clearTimeout(cmdbar._cmdTimeout);
+            cmdbar._cmdTimeout = null;
+          }
+        ]]>
+      </handler>
+
+      <handler event="compositionend">
+        <![CDATA[
+          var cmdbar = this.cmdbar;
+          cmdbar._isIMEComposing = false;
+          if (!cmdbar.hidden)
+            cmdbar._setCloseTimeout();
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="csCmdBar"
+           extends="chrome://global/content/bindings/general.xml#statusbarpanel">
+    <resources>
+      <stylesheet src="chrome://collab/skin/csCmdBar.css"/>
+      <stylesheet src="chrome://collab/content/csCmdBar.css"/>
+    </resources>
+
+    <content hidden="true">
+    <xul:hbox anonid="findbar-container" class="findbar-container" flex="2" align="center">
+      <xul:image class="cmdbar-closebutton" onclick="close();"/>
+      <xul:label anonid="cmdbar-label" control="cmdbar-textbox" value="Command: "/>
+      <xul:textbox class="cmdbar-textbox" anonid="cmdbar-textbox" flex="1" />
+      <xul:label anonid="cmdbar-message-label" />
+    </xul:hbox>
+    </content>
+
+    <implementation>
+      <constructor>
+        <![CDATA[
+          this._cmdBox = document.getAnonymousElementByAttribute(this, "anonid", "cmdbar-textbox");
+       
+          var prefSvc = Components.classes["@mozilla.org/preferences-service;1"]
+                                  .getService(Components.interfaces.nsIPrefBranch2);
+       
+          try {
+            this._cmdTimeoutLength = prefSvc.getIntPref("collab.cmdbar.timeout");
+          } catch (ex) {
+            this._cmdTimeoutLength = 5000;
+            prefSvc.setIntPref("collab.cmdbar.timeout", this._cmdTimeoutLength);
+          }
+
+          this._category = "cmdbar-handlers";
+          this._categoryMgr = Components.classes["@mozilla.org/categorymanager;1"]
+                                        .getService(Components.interfaces.nsICategoryManager);
+          this._observerSvc = Components.classes["@mozilla.org/observer-service;1"]
+                                        .getService(Components.interfaces.nsIObserverService);
+          this._matchingCmds = Components.classes["@mozilla.org/array;1"]
+                                         .createInstance(Components.interfaces.nsIMutableArray);
+          this._matchingArgs = Components.classes["@mozilla.org/array;1"]
+                                         .createInstance(Components.interfaces.nsIMutableArray);
+        ]]>
+      </constructor>
+
+      <method name="_setCloseTimeout">
+        <body>
+          <![CDATA[
+            if (this._cmdTimeout)
+              clearTimeout(this._cmdTimeout);
+         
+            // Don't close the find toolbar while IME is composing.
+            if (this._isIMEComposing || this._cmdBox._hasFocus()) {
+              this._cmdTimeout = null;
+              return;
+            }
+         
+            this._cmdTimeout = setTimeout(function(aSelf) {
+                                            aSelf.close();
+                                          }, this._cmdTimeoutLength, this);
+          ]]>
+        </body>
+      </method>
+      
+      <!-- Execute the Command -->
+      <method name="_handleEnter">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            // Check if we have matching commands
+            // In future there will be catch-all handlers too!
+            if (this._matchingCmds.length == 0) {
+              this._cmdBox.showMessage("error", "No Matching Commands"); /* TODO: i18n */
+              return;
+            }
+
+            // Argument builder uses ':' to populate argument list,
+            // so if we have a key and are populatng a value, then
+            // we append the available key/value as last param
+            if (this._tmpKey != "") {
+              this._storeArgString(this._tmpKey + ":" + this._tmpValue);
+              this._tmpKey = "";
+              this._tmpValue = "";
+            }
+
+            // Get the first matching command
+            var cmd = this._matchingCmds
+                          .queryElementAt(0, Components.interfaces.csICmdBarCommand);
+
+            // TODO: Show error for a few required params (like Recipient)
+            // TODO: Show warning for a few of them (like Subject, Body)
+
+            // Finally, execute the command
+            try {
+              cmd.doCommand(this._matchingArgs, window);
+            } catch(ex) {
+              this._cmdBox.showMessage("error", "Command execution failed!"); /* TODO: i18n */
+            }
+          ]]>
+        </body>
+      </method>
+
+      <!-- 
+        - Force execute command.  This function is currently
+        - called only from the warning message.  Hence would not
+        - require any serious checking.
+        -->
+      <method name="doCommand">
+        <body>
+          <![CDATA[
+            var cmd = this._matchingCmds
+                          .queryElementAt(0, Components.interfaces.csICmdBarCommand);
+            try {
+              cmd.doCommand(this._matchingArgs, window);
+            } catch(ex) {
+              this._cmdBox.showMessage("error", "Command execution failed!"); /* TODO: i18n */
+            }
+          ]]>
+        </body>
+      </method>
+
+      <!-- Auto Complete -->
+      <method name="_handleTab">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            var handle = !aEvent.altKey && !aEvent.ctrlKey && !aEvent.metaKey;
+          ]]>
+        </body>
+      </method>
+
+      <!-- Show Possible Options -->
+      <method name="_handleUpDown">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+          ]]>
+        </body>
+      </method>
+
+      <method name="_storeArgString">
+        <parameter name="aString"/>
+        <body>
+          <![CDATA[
+            var tmpString = Components.classes["@mozilla.org/supports-string;1"]
+                                      .createInstance(Components.interfaces.nsISupportsString);
+            tmpString.data = aString;
+            this._matchingArgs.appendElement(tmpString, false);
+          ]]>
+        </body>
+      </method>
+
+      <!-- Find matching arguments -->
+      <method name="_findMatchingArguments">
+        <parameter name="aString"/>
+        <body>
+          <![CDATA[
+            // We look for arguments only after we know that
+            // that we have a matching command.
+            if (this._matchingCmds.length != 1)
+              return;
+
+            // Clear the existing args list
+            this._matchingArgs.clear();
+            this._storeArgString(aString);
+
+            // Look for key-value pairs
+            var commandLen = aString.length;
+            var pendingQuote = false;
+            this._tmpKey = "";
+            this._tmpValue = "";
+
+            for (var i = 0; i < commandLen; i++) {
+
+              // Search for the 'special' characters
+              if (aString[i] == ':') {
+
+                // In the middle of a string literal?
+                if (pendingQuote)
+                   continue;
+
+                // The previous word is the param name
+                var newKeyStart = aString.lastIndexOf(" ", i)
+                var newKey = aString.substring(newKeyStart + 1, i);
+
+                // Calculate previous value and save it.
+                this._tmpValue = this._tmpValue
+                                     .substr(0, this._tmpValue.length - (i - newKeyStart))
+                if (this._tmpKey != "")
+                  this._storeArgString(this._tmpKey + ":" + this._tmpValue);
+
+                // Init value and store the Key.
+                this._tmpValue = "";
+                this._tmpKey = newKey;
+
+              } else if (aString[i] == '\'' || aString[i] == '\"') {
+
+                // Look for string literal that are bounded by quotes.
+                // Note that both the quotes are treated equal :)
+                pendingQuote = !pendingQuote;
+
+              } else {
+
+                // If we have a key
+                // save current string into value.
+                if (this._tmpKey == "")
+                  continue;
+
+                this._tmpValue += aString[i];
+              }
+            }
+          ]]>
+        </body>
+      </method>
+
+      <!-- Find matching commands. -->
+      <method name="_findMatchingCommands">
+        <parameter name="aString"/>
+        <body>
+          <![CDATA[
+            // This will need optimization (cache previous results?)
+
+            // Get the command!
+            var cmdstr = aString.split(' ')[0];
+
+            // Clear the matchingCmds array
+            this._matchingCmds.clear();
+
+            var catEnum = this._categoryMgr.enumerateCategory(this._category);
+            while (catEnum.hasMoreElements()) {
+              var entry = catEnum.getNext()
+                                 .QueryInterface(Components.interfaces.nsISupportsCString);
+              var cmdCID = this._categoryMgr.getCategoryEntry(this._category, entry);
+              var handler = Components.classes[cmdCID]
+                                      .getService(Components.interfaces.csICmdBarHandler);
+
+              // Get the List of commands
+              var commands = null;
+              if (entry == gCurrentApplication)
+                commands = handler.commands;
+              else
+                commands = handler.globalCommands;
+
+              // Look for matches
+              var numCmds = commands.length;
+              while (numCmds > 0) {
+                var command = commands.queryElementAt(numCmds-1, Components.interfaces.csICmdBarCommand);
+                if (command.name.indexOf(cmdstr) == 0) 
+                  this._matchingCmds.appendElement(command, false);
+
+                numCmds--;
+              }
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="_onCmdBarInput">
+        <parameter name="aEvent" />
+        <body>
+          <![CDATA[
+            var string = this._cmdBox.value;
+            if (string == "") {
+              this._currentCommand = null;
+              return;
+            }
+
+            // Find matching commands
+            // All optimizations are done there!
+            this._findMatchingCommands(string);
+
+            // Find command line arguments
+            // All optimizations are done there!
+            this._findMatchingArguments(string);
+          ]]>
+        </body>
+      </method>
+      
+      <method name="_onKeyPress">
+        <parameter name="aEvent" />
+        <body>
+          <![CDATA[
+            switch (aEvent.keyCode) {
+              case KeyEvent.DOM_VK_ESCAPE:
+                this.close();
+                break;
+            }
+          ]]>
+        </body>
+      </method>
+
+      <!-- Opens the CmdBar. -->
+      <method name="open">
+        <body>
+          <![CDATA[
+            if (this.hidden) {
+              this.hidden = false;
+              this._cmdBox.focus();
+              this._cmdBox.select();
+              this._cmdBox.hideMessage();
+              this._observerSvc.notifyObservers(null, "cmdbar-status", "open");
+              return true;
+            }
+            return false;
+          ]]>
+        </body>
+      </method>
+
+      <!-- Closes the CmdBar. -->
+      <method name="close">
+        <body>
+          <![CDATA[
+            this.hidden = true;
+            this._observerSvc.notifyObservers(null, "cmdbar-status", "close");
+            if (this._cmdTimeout) {
+              clearTimeout(this._cmdTimeout);
+              this._cmdTimeout = null;
+            }
+          ]]>
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="keypress">
+        <![CDATA[
+          this._onKeyPress(event);
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+</bindings>

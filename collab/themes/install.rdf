@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+
+#filter substitution
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>{972ce4c6-7e08-4474-a285-3208198ce6fd}</em:id>
+    <em:version>1.0</em:version>
+    
+    <!-- Target Application this theme can install into, 
+        with minimum and maximum supported versions. --> 
+    <em:targetApplication>
+      <Description>
+        <em:id>{ee53ece0-255c-4cc6-8a7e-81a8b6e5ba2c}</em:id>
+        <em:minVersion>@MOZ_APP_VERSION@</em:minVersion>
+        <em:maxVersion>@MOZ_APP_VERSION@</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+    
+    <!-- Front End MetaData -->
+    <em:name>Spicebird (default)</em:name>
+    <em:description>The default Tango! theme</em:description>
+
+    <!-- EXTENSION AUTHORS!
+         DO NOT COPY THIS PROPERTY INTO YOUR INSTALL RDF FILES
+         It will cause users not to be informed of incompatibilities 
+         with your extension when they are updated with Software Update
+         and your extension will become unavailable to them!
+         -->
+    <em:appManaged>true</em:appManaged>
+
+    <em:locked>true</em:locked>
+
+    <!-- Front End Integration Hooks (used by Theme Manager)-->
+    <em:creator>Prasad Sunkari</em:creator>
+    <em:contributor>Spicebird and Mozilla Contributors</em:contributor>
+
+    <em:internalName>classic/1.0</em:internalName>
+  </Description>      
+
+</RDF>

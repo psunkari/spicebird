@@ -1,0 +1,194 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Code in this file is generated using a computer program.
+ * Please refer to the corresponding telepathy spec for any help in using the
+ * code here.  You may also feel free to contact the original developer for
+ * any related help.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+
+
+%{C++
+#include "glib/gtypes.h"
+%}
+native gpointer(gpointer);
+
+
+
+/*
+ * Mapping used in
+ */
+[scriptable, uuid(c67bee5b-e1c6-4a5b-b9be-ea9db712eb5c)]
+interface csITpMultipleStatusMap : nsISupports
+{
+  readonly attribute AUTF8String status;
+  readonly attribute nsIArray parameters;
+};
+
+/*
+ * Structure representing a contact's presence, containing
+        a last-activity time (deprecated) and a Multiple_Status_Map.
+ */
+[scriptable, uuid(4a15dfdc-8136-49b7-a4eb-a5aa9a74f9a6)]
+interface csITpLastActivityAndStatuses : nsISupports
+{
+  readonly attribute PRUint32 lastActivity;
+  readonly attribute nsIArray statuses;
+
+  [noscript] gpointer toGLib();
+};
+
+/*
+ * Mapping returned by
+ */
+[scriptable, uuid(7ae9499b-d067-4fc6-aaea-4ace78561907)]
+interface csITpContactPresences : nsISupports
+{
+  readonly attribute PRUint32 contact;
+  readonly attribute nsISupports presence;
+};
+
+[scriptable, uuid(fdbd3109-5266-4a9c-ae1a-12a1ad1c42b4)]
+interface csITpStatusSpec : nsISupports
+{
+  readonly attribute PRUint32 type;
+  readonly attribute PRBool maySetOnSelf;
+  readonly attribute PRBool exclusive;
+  readonly attribute nsIArray parameterTypes;
+
+  [noscript] gpointer toGLib();
+};
+
+[scriptable, uuid(81dcb2b2-a150-4670-ac3a-d5b8168f8a26)]
+interface csITpStatusSpecMap : nsISupports
+{
+  readonly attribute AUTF8String identifier;
+  readonly attribute nsISupports spec;
+};
+
+[scriptable, uuid(a3631624-bb12-466a-b302-3cb0ea82fada)]
+interface csITpConnectionInterfacePresenceAddStatusCB : nsISupports
+{
+  void onAddStatusError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onAddStatusDone();
+};
+
+[scriptable, uuid(33d95c14-f329-4c01-8abf-dfed93461f61)]
+interface csITpConnectionInterfacePresenceClearStatusCB : nsISupports
+{
+  void onClearStatusError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onClearStatusDone();
+};
+
+[scriptable, uuid(6ae48dd6-013e-4492-83b8-62ca55a13f1b)]
+interface csITpConnectionInterfacePresenceGetPresenceCB : nsISupports
+{
+  void onGetPresenceError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetPresenceDone(in nsIArray aPresence);
+};
+
+[scriptable, uuid(fdfb3614-9f52-46bc-abb3-f3cb6c1c285c)]
+interface csITpConnectionInterfacePresenceGetStatusesCB : nsISupports
+{
+  void onGetStatusesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetStatusesDone(in nsIArray aAvailableStatuses);
+};
+
+[scriptable, uuid(40a621a3-ffdb-4dc8-bba2-2e40f0c962c5)]
+interface csITpConnectionInterfacePresencePresenceUpdateObserver : nsISupports
+{
+  void onPresenceUpdate(in nsIArray aPresence);
+};
+
+[scriptable, uuid(af65c290-b17b-49d0-8cbd-2cf204d9d6a1)]
+interface csITpConnectionInterfacePresenceRemoveStatusCB : nsISupports
+{
+  void onRemoveStatusError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onRemoveStatusDone();
+};
+
+[scriptable, uuid(e60cb3f8-62a7-40cd-bfaf-24a2f6a347f6)]
+interface csITpConnectionInterfacePresenceRequestPresenceCB : nsISupports
+{
+  void onRequestPresenceError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onRequestPresenceDone();
+};
+
+[scriptable, uuid(1acf7e86-3422-4acb-9fbc-3148aa20f631)]
+interface csITpConnectionInterfacePresenceSetLastActivityTimeCB : nsISupports
+{
+  void onSetLastActivityTimeError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onSetLastActivityTimeDone();
+};
+
+[scriptable, uuid(c803cc17-94c9-4fbb-8ff5-8927d1af460d)]
+interface csITpConnectionInterfacePresenceSetStatusCB : nsISupports
+{
+  void onSetStatusError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onSetStatusDone();
+};
+
+
+
+[scriptable, uuid(7db8ae34-d94c-4d1d-b417-7f695bd0e502)]
+interface csITpConnectionInterfacePresence : nsISupports
+{
+  void callAddStatus(in AUTF8String aStatus, in nsIArray aParameters, in csITpConnectionInterfacePresenceAddStatusCB cb);
+
+  void callClearStatus(in csITpConnectionInterfacePresenceClearStatusCB cb);
+
+  void callGetPresence(in PRUint32 aContactsCount, [array, size_is(aContactsCount)] in PRUint32 aContacts, in csITpConnectionInterfacePresenceGetPresenceCB cb);
+
+  void callGetStatuses(in csITpConnectionInterfacePresenceGetStatusesCB cb);
+
+  void connectToPresenceUpdate(in csITpConnectionInterfacePresencePresenceUpdateObserver observer);
+  void disconnectFromPresenceUpdate(in csITpConnectionInterfacePresencePresenceUpdateObserver observer);
+
+  void callRemoveStatus(in AUTF8String aStatus, in csITpConnectionInterfacePresenceRemoveStatusCB cb);
+
+  void callRequestPresence(in PRUint32 aContactsCount, [array, size_is(aContactsCount)] in PRUint32 aContacts, in csITpConnectionInterfacePresenceRequestPresenceCB cb);
+
+  void callSetLastActivityTime(in PRUint32 aTime, in csITpConnectionInterfacePresenceSetLastActivityTimeCB cb);
+
+  void callSetStatus(in nsIArray aStatuses, in csITpConnectionInterfacePresenceSetStatusCB cb);
+
+};

@@ -1,0 +1,729 @@
+<?xml version="1.0"?>
+<!--
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+# Synovel Software Technologies
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Prasad Sunkari <prasad@synovel.com> (Original Author)
+#   Sunil Mohan Adapa <sunil@synovel.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+-->
+
+<!DOCTYPE im-contacts-list [
+  <!ENTITY % imOverlayDTD SYSTEM "chrome://im/locale/csIMOverlay.dtd"> %imOverlayDTD;
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
+]>
+
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="imContactsList">
+    <resources>
+      <stylesheet src="chrome://im/skin/imContacts.css"/>
+    </resources>
+
+    <content>
+      <xul:vbox anonid="im-contacts-box" flex="1" xbl:inherits="hidewhenoffline">
+
+        <xul:menupopup anonid="im-contacts-context">
+          <xul:menuitem anonid="im-contacts-chat-menuitem"
+                        oncommand="chatWithContact(event)" label="Chat"/>
+          <xul:menuseparator/>
+          <xul:menuitem anonid="im-contacts-edit-menuitem"
+                        oncommand="editContact(event)" label="Edit"/>
+          <xul:menuitem anonid="im-contacts-info-menuitem"
+                        oncommand="showContactInfo(event)" label="Show Information"/>
+          <xul:menuseparator/>
+          <xul:menuitem anonid="im-contacts-del-menuitem"
+                        oncommand="deleteContact(event)" label="Remove Contact"/>
+        </xul:menupopup>
+
+        <xul:toolbox>
+          <xul:toolbar mode="icons" anonid="im-contacts-toolbar">
+            <xul:toolbarbutton anonid="im-contacts-add-button"
+                               class="im-contacts-button"
+                               oncommand="addContact(event)" label="Add"/>
+            <xul:toolbarbutton anonid="im-contacts-edit-button" disabled="true"
+                               class="im-contacts-button"
+                               oncommand="editContact(event)" label="Edit"/>
+            <xul:toolbarbutton anonid="im-contacts-chat-button" disabled="true"
+                               class="im-contacts-button"
+                               oncommand="chatWithContact(event)" label="Chat"/>
+            <xul:toolbarbutton anonid="im-contacts-info-button" disabled="true"
+                               class="im-contacts-button"
+                               oncommand="showContactInfo(event)" label="Info"/>
+            <xul:toolbarbutton anonid="im-contacts-delete-button" disabled="true"
+                               class="im-contacts-button"
+                               oncommand="deleteContact(event)" label="Delete"/>
+            <xul:spacer flex="1"/>
+          </xul:toolbar>
+        </xul:toolbox>
+
+        <xul:tree anonid="im-contacts-tree" seltype="single" hidecolumnpicker="true" flex="1" height="200px">
+          <xul:treecols>
+            <xul:treecol anonid="im-contacts-tree-status-column" width="24" fixed="true" hideheader="true"/>
+            <xul:treecol anonid="im-contacts-tree-alias-column" hideheader="true" flex="1"/>
+            <!--<xul:treecol anonid="im-contacts-tree-avatar-column" width="32" fixed="true" hideheader="true"/>-->
+          </xul:treecols>
+          <xul:treechildren/>
+        </xul:tree>
+
+      </xul:vbox>
+    </content>
+
+    <implementation implements="nsIObserver">
+      <field name="mTree">null</field>
+      <field name="mTreeView">null</field>
+      <field name="mTreeData">[]</field>
+      <field name="mTreeOfflineData">[]</field>
+      <field name="mHideWhenOffline">false</field>
+      <field name="mShowOffline">false</field>
+      <field name="mIMStatusService">null</field>
+      <field name="mObserverService">null</field>
+      <field name="mContextMenu">null</field>
+      <field name="mToolbarItems">new Array()</field>
+
+      <field name="contactStatusUpdateListener">
+        <![CDATA[
+          ({
+            _self: this,
+
+            statusUpdated: function(contact)
+            {
+              // Do not show contacts pending approval from us
+              if (contact.status == 'local-pending')
+                return;
+              this._self.updateContact(contact);
+            }
+          })
+        ]]>
+      </field>
+
+      <constructor>
+        <![CDATA[
+          this.mTree = document.getAnonymousElementByAttribute(this, "anonid", "im-contacts-tree");
+          var this_ = this;
+          this.mTreeView = {
+            QueryInterface: function (aIID)
+            {
+              if (!aIID.equals(Components.interfaces.nsIMultilineTreeView) &&
+                  !aIID.equals(Components.interfaces.nsITreeView) &&
+                  !aIID.equals(Components.interfaces.nsISupports))
+                throw Components.results.NS_ERROR_NO_INTERFACE;
+              return this;
+            },
+
+            get rowCount()
+            {
+              return this_.mTreeData.length;
+            },
+
+            getCellText: function (aRow, aColumn)
+            {
+              /* Unused */
+              return null;
+            },
+
+            setTree: function (aTreeBox)
+            {
+              this.mTreeBox = aTreeBox;
+            },
+
+            isContainer: function (aRow)
+            {
+              return false;
+            },
+
+            isSeparator: function (aRow)
+            {
+              return false;
+            },
+
+            isSorted: function ()
+            {
+              return false;
+            },
+
+            getLevel: function (aRow)
+            {
+              return 0;
+            },
+
+            getImageSrc: function(aRow, aColumn)
+            {
+              /*
+              if (column.index == 2)
+                return "http://rahul.amaram.name/sites/default/misc/valid-xhtml10.png";
+              */
+            },
+
+            getColumnProperties: function (aColumn, aColumnElement,
+                                           aProperties)
+            {
+            },
+
+            getRowProperties: function (aRow, aProperties)
+            {
+            },
+
+            getCellProperties: function (aRow, aColumn, aProperties)
+            {
+              if (aColumn.index == 1)
+                return;
+
+              var atomService = Components.classes["@mozilla.org/atom-service;1"]
+                                          .getService(Components.interfaces.nsIAtomService);
+              if (aColumn.index == 0)
+              {
+                aProperties.AppendElement(atomService.getAtom(this_.mTreeData[aRow]["onlineStatus"]));
+                aProperties.AppendElement(atomService.getAtom("status"));
+              }
+
+              if (aColumn.index == 2)
+              {
+                aProperties.AppendElement(atomService.getAtom("avatar"));
+              }
+            },
+
+            isMultiline: function ()
+            {
+              return true;
+            },
+
+            getCellTextPartCount: function (aRow, aColumn)
+            {
+              return 1;
+            },
+
+            getCellTextPart: function (aRow, aColumn, aPart)
+            {
+              if (aColumn.index == 1)
+                return this_.mTreeData[aRow]["alias"];
+
+              return null;
+            },
+
+            getCellTextPartProperties: function (aRow, aColumn, aPart, aProperties)
+            {
+              var atomService = Components.classes["@mozilla.org/atom-service;1"]
+                                          .getService(Components.interfaces.nsIAtomService);
+              aProperties.AppendElement(atomService.getAtom(this_.mTreeData[aRow]["unread"] ? "unread" : "read"));
+
+              if (aColumn.index != 0)
+                return;
+
+              aProperties.AppendElement(atomService.getAtom(this_.mTreeData[aRow]["onlineStatus"]));
+            },
+
+            getDescriptionTextPartCount: function (aRow)
+            {
+              return 1;
+            },
+
+            getDescriptionTextPart: function(aRow, aPart)
+            {
+              return this_.mTreeData[aRow]["statusMessage"];
+            },
+
+            getDescriptionTextPartProperties: function (aRow, aPart, aProperties)
+            {
+              var atomService = Components.classes["@mozilla.org/atom-service;1"]
+                                          .getService(Components.interfaces.nsIAtomService);
+              aProperties.AppendElement(atomService.getAtom("status-message"));
+            },
+          };
+          this.mTree.view = this.mTreeView;
+
+          // Register to IM Status service
+          this.mIMStatusService = Components.classes["@synovel.com/collab/im/imstatusservice;1"]
+                                            .getService(Components.interfaces.csIIMStatusService);
+          this.mIMStatusService.addListener(this.contactStatusUpdateListener);
+
+          this.mObserverService = Components.classes["@mozilla.org/observer-service;1"]
+                                            .getService(Components.interfaces.nsIObserverService);
+          this.mObserverService.addObserver(this, "csIMContactUnread", false);
+          this.mObserverService.addObserver(this, "im-status-sync", false);
+
+          var hidewhenoffline = this.getAttribute('hidewhenoffline');
+          if (hidewhenoffline && hidewhenoffline == "true")
+          {
+            this.mHideWhenOffline = true;
+            this.setAttribute("collapsed", "true");
+          }
+
+          var showoffline = this.getAttribute('showoffline');
+          if (showoffline)
+            this.mShowOffline = true;
+        ]]>
+      </constructor>
+
+      <destructor>
+        <![CDATA[
+          this._destroy();
+        ]]>
+      </destructor>
+
+      <method name="_destroy">
+        <body>
+        <![CDATA[
+          this.mIMStatusService.removeListener(this.contactStatusUpdateListener);
+          this.mObserverService.removeObserver(this, "csIMContactUnread");
+          this.mObserverService.removeObserver(this, "im-status-sync");
+          this.mIMStatusService = null;
+          this.mObserverService = null;
+        ]]>
+        </body>
+      </method>
+
+      <method name="observe">
+        <parameter name="aSubject"/>
+        <parameter name="aTopic"/>
+        <parameter name="aData"/>
+        <body><![CDATA[
+          // If we are offline, we hide this contact list.
+          if (aTopic == "im-status-sync")
+          {
+            if (aData == 'offline' &&
+                this.mTreeData.length == 0 &&
+                this.mHideWhenOffline)
+              this.setAttribute('collapsed', true);
+            else
+              this.removeAttribute('collapsed');
+          }
+          else
+          {
+            if (aTopic == 'csIMContactUnread')
+            {
+              // aData => account|address|state
+              var data = aData.split('|');
+              this.setContactUnreadState(data[0], data[1], data[2]);
+            }
+          }
+        ]]></body>
+      </method>
+
+      <method name="hideToolbar">
+        <body>
+          <![CDATA[
+            var toolbar = document.getAnonymousElementByAttribute(this, "anonid", "im-contacts-toolbar");
+            toolbar.setAttribute("collapsed", "true");
+          ]]>
+        </body>
+      </method>
+
+      <method name="addContact">
+        <parameter name="event" />
+        <body>
+          <![CDATA[
+            // Open the add new contact dialog
+            window.openDialog("chrome://im/content/imContactEditDialog.xul",
+                              "", "chrome", gTelepathy);
+          ]]>
+        </body>
+      </method>
+
+      <method name="editContact">
+        <parameter name="event" />
+        <body>
+          <![CDATA[
+            if (!this.mTreeView.selection.count)
+              return;
+
+            var selectedIndex = this.mTree.currentIndex;
+
+            var connectionID = this.mTreeData[selectedIndex].connectionID;
+            var remoteAddress = this.mTreeData[selectedIndex].address;
+            var remoteUserAlias = this.mTreeData[selectedIndex].alias;
+
+            // Open the add new contact dialog with
+            // connection and the username set to readonly
+            window.openDialog("chrome://im/content/imContactEditDialog.xul",
+                              "", "chrome", gTelepathy, connectionID,
+                              remoteAddress, remoteUserAlias);
+          ]]>
+        </body>
+      </method>
+
+      <method name="deleteContact">
+        <parameter name="event" />
+        <body>
+          <![CDATA[
+            if (!this.mTreeView.selection.count)
+              return;
+
+            var selectedIndex = this.mTree.currentIndex;
+
+            var connectionID = this.mTreeData[selectedIndex].connectionID;
+            var remoteAddress = this.mTreeData[selectedIndex].address;
+
+            gTelepathy.imRemoveContact(connectionID, remoteAddress);
+          ]]>
+        </body>
+      </method>
+
+      <method name="chatWithContact">
+        <parameter name="event" />
+        <body>
+          <![CDATA[
+            if (!this.mTreeView.selection.count)
+              return;
+
+            var selectedIndex = this.mTree.currentIndex;
+
+            var connectionID = this.mTreeData[selectedIndex].connectionID;
+            var remoteAddress = this.mTreeData[selectedIndex].address;
+
+            gTelepathy.imOpenTextChannel(connectionID, remoteAddress);
+          ]]>
+        </body>
+      </method>
+
+      <method name="showContactInfo">
+        <parameter name="event" />
+        <body>
+          <![CDATA[
+            if (!this.mTreeView.selection.count)
+              return;
+
+            var selectedIndex = this.mTree.currentIndex;
+
+            var account = this.mTreeData[selectedIndex].account;
+            var remoteAddress = this.mTreeData[selectedIndex].address;
+
+            window.openDialog("chrome://im/content/imContactInfoDialog.xul",
+                              "", "chrome", account, remoteAddress);
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateShowOffline">
+        <body>
+          <![CDATA[
+            if (this.mShowOffline)
+            {
+              while (this.mTreeOfflineData.length > 0)
+              {
+                var contact = this.mTreeOfflineData.pop();
+                this.insertContactIntoTree(contact);
+              }
+            }
+            else
+            {
+              for (var i = 0; i < this.mTreeData.length; i++)
+              {
+                if (this.mTreeData[i].onlineStatus == "offline")
+                {
+                  this.mTreeOfflineData.push(this.mTreeData[i]);
+                  this.removeContactFromTree(i);
+                  i--;
+                }
+              }
+            }
+
+            this.mTreeView.mTreeBox.invalidate();
+          ]]>
+        </body>
+      </method>
+
+      <method name="insertContactIntoTree">
+        <parameter name="contactInfo"/>
+        <body>
+          <![CDATA[
+            var insertBeforeIndex = -1;
+            // XXX: Make this binary search
+            for (var i = 0; i < this.mTreeData.length; i++)
+            {
+              if (this.contactInfoCompare(contactInfo, this.mTreeData[i]) <= 0)
+              {
+                insertBeforeIndex = i;
+                break;
+              }
+            }
+
+            if (insertBeforeIndex != -1)
+            {
+              this.mTreeData.splice(insertBeforeIndex, 0, contactInfo);
+              this.mTreeView.mTreeBox.rowCountChanged(insertBeforeIndex, 1);
+            }
+            else
+            {
+              this.mTreeData.push(contactInfo);
+              this.mTreeView.mTreeBox.rowCountChanged(this.mTreeData.length - 1, 1);
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="contactInfoCompare">
+        <parameter name="a" />
+        <parameter name="b" />
+        <body>
+          <![CDATA[
+            if (a.onlineStatus == b.onlineStatus)
+              return (a.alias.toLowerCase() < b.alias.toLowerCase()) ? -1 : 1;
+
+            var statusMap = { "available": 1, "busy": 2, "away": 3,
+                              "offline": 4, "remote-pending": 5 };
+
+            return statusMap[a.onlineStatus] - statusMap[b.onlineStatus];
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateContactInTree">
+        <parameter name="index"/>
+        <parameter name="contactInfo"/>
+        <body>
+          <![CDATA[
+            // XXX: If alias and online status don't change, just update and invalidate row
+            this.removeContactFromTree(index);
+            this.insertContactIntoTree(contactInfo);
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeContactFromTree">
+        <parameter name="index"/>
+        <body>
+          <![CDATA[
+            this.mTreeData.splice(index, 1);
+            this.mTreeView.mTreeBox.rowCountChanged(index, -1);
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeAccountFromTree">
+        <parameter name="account"/>
+        <body>
+          <![CDATA[
+            for (var i = 0; i < this.mTreeData.length; i++)
+            {
+              if (this.mTreeData[i]["account"] == account)
+              {
+                this.mTreeData.splice(i, 1);
+                this.mTreeView.mTreeBox.rowCountChanged(i, -1);
+                i--;
+              }
+            }
+            this.mTreeView.mTreeBox.invalidate();
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateContact">
+        <parameter name="contact" />
+        <body>
+          <![CDATA[
+            var account = contact.account;
+            var connectionID = contact.connectionID;
+            var address = contact.id;
+            var alias   = contact.alias;
+            var onlineStatus = contact.status;
+            var statusMessage = contact.statusMessage;
+
+            // Check for offline status of accounts
+            if (account == address)
+            {
+              if (onlineStatus == 'offline')
+                this.removeAccountFromTree(account);
+            }
+            else
+            {
+              var itemTreeIndex = -1;
+              for (var i = 0; i < this.mTreeData.length; i++)
+              {
+                if (this.mTreeData[i].account == account &&
+                    this.mTreeData[i].address == address)
+                {
+                  itemTreeIndex = i;
+                  break;
+                }
+              }
+
+              var itemTreeOfflineIndex = -1;
+              for (var i = 0; i < this.mTreeOfflineData.length; i++)
+              {
+                if (this.mTreeOfflineData[i].account == account &&
+                    this.mTreeOfflineData[i].address == address)
+                {
+                  itemTreeOfflineIndex = i;
+                  break;
+                }
+              }
+
+              if (statusMessage == undefined ||
+                  statusMessage == "")
+                statusMessage = onlineStatus;
+
+              var contactInfo = {
+                                  alias:            alias,
+                                  onlineStatus:     onlineStatus,
+                                  statusMessage:    statusMessage,
+                                  account:          account,
+                                  address:          address,
+                                  connectionID:     connectionID
+                                };
+
+              if (onlineStatus == 'remove')
+              {
+                if (itemTreeIndex != -1)
+                  this.removeContactFromTree(itemTreeIndex);
+                if (itemTreeOfflineIndex != -1)
+                  this.mTreeOfflineData.splice(itemTreeOfflineIndex, 1);
+              }
+              else
+              {
+                if (this.mShowOffline || onlineStatus != 'offline')
+                {
+                  if (itemTreeOfflineIndex != -1)
+                    this.mTreeOfflineData.splice(itemTreeOfflineIndex, 1);
+
+                  if (itemTreeIndex != -1)
+                    this.updateContactInTree(itemTreeIndex, contactInfo);
+                  else
+                    this.insertContactIntoTree(contactInfo);
+                }
+                else
+                {
+                  if (itemTreeIndex != -1)
+                    this.removeContactFromTree(itemTreeIndex);
+                  if (itemTreeOfflineIndex != -1)
+                    this.mTreeOfflineData.splice(itemTreeOfflineIndex, 1);
+                  this.mTreeOfflineData.push(contactInfo);
+                }
+              }
+            }
+
+            if (this.mHideWhenOffline && gTelepathy &&
+                gTelepathy.gMyPresence.status == 'offline')
+              this.setAttribute('collapsed', true);
+            else
+              this.removeAttribute('collapsed');
+          ]]>
+        </body>
+      </method>
+
+      <method name="setContactUnreadState">
+        <parameter name="account" />
+        <parameter name="address" />
+        <parameter name="state" />
+        <body>
+          <![CDATA[
+            for (var i = 0; i < this.mTreeData.length; i++)
+            {
+              if (this.mTreeData[i].account == account &&
+                  this.mTreeData[i].address == address)
+              {
+                this.mTreeData[i].unread = (state == "true");
+                this.updateContactInTree(i, this.mTreeData[i]);
+                break;
+              }
+            }
+          ]]>
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="dblclick" button="0">
+        <![CDATA[
+          this.chatWithContact(event);
+        ]]>
+      </handler>
+
+      <handler event="select">
+        <![CDATA[
+          if (this.mToolbarItems.length == 0)
+          {
+            var toolbar = document.getAnonymousElementByAttribute(this, "anonid",
+                                                                  "im-contacts-toolbar");
+            this.mToolbarItems = toolbar.getElementsByTagNameNS(toolbar.namespaceURI, "toolbarbutton");
+          }
+
+          var selection = (this.mTreeView.selection.count > 0)
+          for each (var element in this.mToolbarItems)
+          {
+            if (selection)
+            {
+              if (typeof(element.removeAttribute) == "function")
+                element.removeAttribute("disabled");
+            }
+            else
+            {
+              if (typeof(element.getAttribute) == "function" &&
+                  element.getAttribute("anonid") != "im-contacts-add-button")
+              element.setAttribute("disabled", "true");
+            }
+          }
+
+          document.commandDispatcher.updateCommands("contactlist_select");
+        ]]>
+      </handler>
+
+      <handler event="contextmenu">
+        <![CDATA[
+          if (event.originalTarget.tagName != "xul:treechildren")
+            return;
+
+          if (!this.mContextMenu)
+            this.mContextMenu = document.getAnonymousElementByAttribute(this, "anonid", "im-contacts-context");
+
+          if (this.mTreeView.selection.count > 0)
+            this.mContextMenu.removeAttribute("disabled");
+          else
+            this.mContextMenu.setAttribute("disabled");
+
+          if (event.screenX && event.screenY)
+            this.mContextMenu.openPopupAtScreen(event.screenX, event.screenY, true);
+          else
+            this.mContextMenu.openPopup(this.mTree, null, 0, 0, true);
+        ]]>
+      </handler>
+
+      <handler event="DOMAttrModified">
+        <![CDATA[
+          if (event.originalTarget != this)
+            return;
+
+          if (event.attrName == 'showoffline')
+          {
+            this.mShowOffline = (event.newValue && event.newValue == "true");
+            this.updateShowOffline();
+          }
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+</bindings>

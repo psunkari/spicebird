@@ -1,0 +1,78 @@
+#filter substitution
+@AB_CD@.jar:
+% locale messenger @AB_CD@ %locale/@AB_CD@/messenger/
+# addressbook
+  locale/@AB_CD@/messenger/addressbook/contacts.dtd                     (%addrbook/contacts.dtd)
+  locale/@AB_CD@/messenger/addressbook/contacts.properties              (%addrbook/contacts.properties)
+# mailnews
+  locale/@AB_CD@/messenger/csRSSApplet.dtd                              (%mailnews/csRSSApplet.dtd)
+  locale/@AB_CD@/messenger/csRSSApplet.properties                       (%mailnews/csRSSApplet.properties)
+  locale/@AB_CD@/messenger/csMailnewsApplet.dtd                         (%mailnews/csMailnewsApplet.dtd)
+  locale/@AB_CD@/messenger/csMailnewsApplet.properties                  (%mailnews/csMailnewsApplet.properties)
+  locale/@AB_CD@/messenger/mailnews.dtd                                 (%mailnews/mailnews.dtd)
++ locale/@AB_CD@/messenger/start.dtd                                    (%mailnews/start.dtd)
+  locale/@AB_CD@/messenger/synovel-messenger.properties                 (%mailnews/synovel-messenger.properties)
++ locale/@AB_CD@/messenger/preferences/displayOverlay.dtd               (%mailnews/preferences/displayOverlay.dtd)
+#
+# Changes to the global DTDs
++ locale/@AB_CD@/global/customizeToolbar.dtd                            (%collab/customizeToolbar.dtd)
+#
+# collab
+% locale collab @AB_CD@ %locale/@AB_CD@/collab/
+  locale/@AB_CD@/collab/homebox.dtd                                     (%collab/homebox.dtd)
+  locale/@AB_CD@/collab/credits.dtd                                     (%collab/credits.dtd)
+  locale/@AB_CD@/collab/collab.dtd                                      (%collab/collab.dtd)
+  locale/@AB_CD@/collab/tabcollab.dtd                                   (%collab/tabcollab.dtd)
+  locale/@AB_CD@/collab/collab.properties                               (%collab/collab.properties)
+  locale/@AB_CD@/collab/about.dtd                                       (%collab/about.dtd)
+  locale/@AB_CD@/collab/commands.dtd                                    (%collab/commands.dtd)
+  locale/@AB_CD@/collab/toolbars.dtd                                    (%collab/toolbars.dtd)
+  locale/@AB_CD@/collab/splash.dtd                                      (%collab/splash.dtd)
+  locale/@AB_CD@/collab/migration.dtd                                   (%collab/migration.dtd)
+  locale/@AB_CD@/collab/migration.properties                            (%collab/migration.properties)
+  locale/@AB_CD@/collab/applets.dtd                                     (%collab/applets.dtd)
+  locale/@AB_CD@/collab/timezoneSelect.dtd                              (%collab/timezoneSelect.dtd)
+  locale/@AB_CD@/collab/csGeneralPrefs.dtd                              (%collab/csGeneralPrefs.dtd)
+  locale/@AB_CD@/collab/csDateFormatter.properties                      (%collab/csDateFormatter.properties)
+# 
+# im
+% locale im @AB_CD@ %locale/@AB_CD@/im/
+  locale/@AB_CD@/im/csIMOverlay.dtd                                     (%im/csIMOverlay.dtd)
+  locale/@AB_CD@/im/eventFilterOverlay.dtd                              (%im/eventFilterOverlay.dtd)
+  locale/@AB_CD@/im/im.properties                                       (%im/im.properties)
+  locale/@AB_CD@/im/imAccountSetup.dtd                                  (%im/imAccountSetup.dtd)
+  locale/@AB_CD@/im/imContactDialog.dtd                                 (%im/imContactDialog.dtd)
+  locale/@AB_CD@/im/csTPProtocolParams.dtd                              (%im/csTPProtocolParams.dtd)
+  locale/@AB_CD@/im/csIMPreferences.dtd                                 (%im/csIMPreferences.dtd)
+  locale/@AB_CD@/im/csChatHistory.dtd                                   (%im/csChatHistory.dtd)
+# 
+# chat
+% locale chat @AB_CD@ %locale/@AB_CD@/chat/
+  locale/@AB_CD@/chat/csChatAccountDialog.properties                    (%chat/csChatAccountDialog.properties)
+  locale/@AB_CD@/chat/csChatAccountDialog.dtd                           (%chat/csChatAccountDialog.dtd)
+  locale/@AB_CD@/chat/csChatContactDialogs.dtd                          (%chat/csChatContactDialogs.dtd)
+  locale/@AB_CD@/chat/csChatOverlay.properties                          (%chat/csChatOverlay.properties)
+  locale/@AB_CD@/chat/csChatOverlay.dtd                                 (%chat/csChatOverlay.dtd)
+  locale/@AB_CD@/chat/csChatPreferences.dtd                             (%chat/csChatPreferences.dtd)
+  locale/@AB_CD@/chat/csChatStatuses.properties                         (%chat/csChatStatuses.properties)
+  locale/@AB_CD@/chat/csChatStatuses.dtd                                (%chat/csChatStatuses.dtd)
+  locale/@AB_CD@/chat/csChatWrapper.properties                          (%chat/csChatWrapper.properties)
+
+#
+# calendar/locales/jar.mn packages files to calendar-en-US.jar
+calendar-@AB_CD@.jar:
+% locale calendar @AB_CD@ %locale/@AB_CD@/calendar/
+# calendar
+  locale/@AB_CD@/calendar/csCalendarOverlay.dtd                         (%calendar/csCalendarOverlay.dtd)
+  locale/@AB_CD@/calendar/csCalendarOverlay.properties                  (%calendar/csCalendarOverlay.properties)
+  locale/@AB_CD@/calendar/csCalendarApplets.dtd                         (%calendar/csCalendarApplets.dtd)
+  locale/@AB_CD@/calendar/csCalendarApplets.properties                  (%calendar/csCalendarApplets.properties)
+  locale/@AB_CD@/calendar/event-filter.dtd                              (%calendar/event-filter.dtd)
+  locale/@AB_CD@/calendar/event-filter.properties                       (%calendar/event-filter.properties)
+
+#
+# extensions/blog
+#blog-@AB_CD@.jar:
+#% locale collab-blog @AB_CD@ %locale/@AB_CD@/extensions/blog/
+#*  locale/@AB_CD@/extensions/blog/blog.dtd                               (%extensions/blog/blog.dtd)
+#*  locale/@AB_CD@/extensions/blog/blog.properties                        (%extensions/blog/blog.properties)

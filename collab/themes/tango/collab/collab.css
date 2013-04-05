@@ -1,0 +1,272 @@
+/*
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+# Synovel Software Technologies
+# Portions created by the Initial Developer are Copyright (C) 2007-2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Prasad Sunkari <prasad@synovel.com> (Original Author)
+#   Sivakrishna Edpuganti <sivakrishna@synovel.com> 
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+*/
+
+.closebutton > .toolbarbutton-icon {
+    -moz-margin-end: 0px !important;
+    -moz-padding-end: 2px !important;
+    -moz-padding-start: 2px !important;
+}
+
+.closebutton {
+    list-style-image: url("chrome://global/skin/icons/close.png");
+    -moz-image-region: rect(0px 14px 14px 0px) !important;
+    -moz-appearance: none;
+    border: none !important;
+    padding: 4px 2px;
+    background: transparent;
+}
+
+.closebutton:hover {
+    -moz-image-region: rect(0px 28px 14px 14px) !important;
+}
+
+.closebutton:hover:active {
+    -moz-image-region: rect(0px 42px 14px 28px) !important;
+}
+
+.closebutton[disabled] {
+    -moz-image-region: rect(0px 56px 14px 42px) !important;
+}
+
+.overflow-hidden {
+    overflow: hidden;
+}
+
+.tabcollab-tab[type="home"] {
+    list-style-image: url("chrome://collab/skin/16x16/go-home.png");
+}
+
+#go-home-item, menuitem#home-toolbar, #select-app-menulist[value~="home"] {
+    list-style-image: url("chrome://collab/skin/16x16/go-home.png");
+}
+
+/* Toolbar Buttons */
+
+.padded-toolbarbutton {
+  padding-top: 5px;
+  padding-bottom: 6px;
+  -moz-padding-start: 4px;
+  -moz-padding-end: 5px;
+}
+
+.padded-toolbarbutton:hover:active:not([disabled]),
+.padded-toolbarbutton[open="true"] {
+  padding-top: 6px;
+  padding-bottom: 5px;
+  -moz-padding-start: 5px;
+  -moz-padding-end: 4px;
+}
+
+.padded-toolbarbutton[checked="true"] {
+  padding-top: 6px !important;
+  padding-bottom: 5px !important;
+  -moz-padding-start: 5px !important;
+  -moz-padding-end: 4px !important;
+}
+
+.padded-toolbarbutton .toolbarbutton-icon {
+  -moz-margin-end: 0px;
+}
+
+.padded-toolbarbutton[type="menu"] {
+  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu-vertical");
+}
+
+toolbar[mode="full"] .padded-toolbarbutton {
+  min-width: 55px;
+}
+
+.framework-toolbarbutton {
+    -moz-box-orient: vertical;
+    min-width: 0px;
+}
+
+/* All menu items are iconic */
+menuitem:not([type]) {
+  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic");
+}
+
+/* Without this, menuitems would look bad in Windows7 */
+/* Based on style from menu.css */
+menu:not([type]) > .menu-iconic-left,
+menuitem:not([type]) > .menu-iconic-left {
+  -moz-appearance: menuimage !important;
+  padding-top: 2px !important;
+}
+
+#file-new-menu {
+    -moz-binding: url("chrome://global/content/bindings/menu.xml#menu-iconic");
+    list-style-image: url("chrome://collab/skin/16x16/document-new.png");
+}
+
+#add-applets-menu {
+    -moz-binding: url("chrome://global/content/bindings/menu.xml#menu-iconic");
+    list-style-image: url("chrome://collab/skin/16x16/list-add.png");
+}
+
+#file-close-item {
+    list-style-image: url("chrome://collab/skin/16x16/window-close.png");
+}
+
+#file-exit-item {
+    list-style-image: url("chrome://collab/skin/16x16/application-exit.png");
+}
+
+menuitem[command="cmd_print"] {
+    list-style-image: url("chrome://collab/skin/16x16/document-print.png");
+}
+
+menuitem[command="cmd_printpreview"] {
+    list-style-image: url("chrome://collab/skin/16x16/document-printpreview.png");
+}
+
+#edit-undo-item, menuitem[cmd="cmd_undo"], menuitem[command="cmd_undo"] {
+    list-style-image: url("chrome://collab/skin/16x16/edit-undo.png");
+}
+
+#edit-redo-item, menuitem[cmd="cmd_redo"], menuitem[command="cmd_redo"] {
+    list-style-image: url("chrome://collab/skin/16x16/edit-redo.png");
+}
+
+#edit-cut-item, menuitem[cmd="cmd_cut"], menuitem[command="cmd_cut"] {
+    list-style-image: url("chrome://collab/skin/16x16/edit-cut.png");
+}
+
+#edit-copy-item, menuitem[cmd="cmd_copy"], menuitem[command="cmd_copy"] {
+    list-style-image: url("chrome://collab/skin/16x16/edit-copy.png");
+}
+
+#edit-paste-item, menuitem[cmd="cmd_paste"], menuitem[command="cmd_paste"] {
+    list-style-image: url("chrome://collab/skin/16x16/edit-paste.png");
+}
+
+#edit-delete-item, menuitem[cmd="cmd_delete"], menuitem[command="cmd_delete"] {
+    list-style-image: url("chrome://collab/skin/16x16/edit-delete.png");
+}
+
+#edit-select-all-item, menuitem[cmd="cmd_selectAll"], menuitem[command="cmd_selectAll"] {
+    list-style-image: url("chrome://collab/skin/16x16/edit-select-all.png");
+}
+
+#edit-mail-find-menu {
+    -moz-binding: url("chrome://global/content/bindings/menu.xml#menu-iconic");
+    list-style-image: url("chrome://collab/skin/16x16/edit-find.png");
+}
+
+#tools-devtools-javascript-console-item {
+    list-style-image: url("chrome://collab/skin/16x16/utilities-terminal.png");
+}
+
+#help-contents-item {
+    list-style-image: url("chrome://collab/skin/16x16/help-browser.png");
+}
+
+#help-update-item {
+    list-style-image: url("chrome://collab/skin/16x16/system-software-update.png");
+}
+
+#help-about-item {
+    list-style-image: url("chrome://collab/skin/16x16/help-about.png");
+}
+
+/* End of menu item icon assignment */
+
+#new-toolbutton, [typeid="new-toolbutton"] {
+    list-style-image: url("chrome://collab/skin/22x22/document-new.png");
+}
+#new-toolbutton[disabled], [typeid="new-toolbutton"][disabled] {
+    list-style-image: url("chrome://collab/skin/22x22/document-new-disabled.png");
+}
+
+#cut-toolbutton, [typeid="cut-toolbutton"] {
+    list-style-image: url("chrome://collab/skin/22x22/edit-cut.png");
+}
+#cut-toolbutton[disabled], [typeid="cut-toolbutton"][disabled] {
+    list-style-image: url("chrome://collab/skin/22x22/edit-cut-disabled.png");
+}
+
+#copy-toolbutton, [typeid="copy-toolbutton"] {
+    list-style-image: url("chrome://collab/skin/22x22/edit-copy.png");
+}
+#copy-toolbutton[disabled], [typeid="copy-toolbutton"][disabled] {
+    list-style-image: url("chrome://collab/skin/22x22/edit-copy-disabled.png");
+}
+
+#paste-toolbutton, [typeid="paste-toolbutton"] {
+    list-style-image: url("chrome://collab/skin/22x22/edit-paste.png");
+}
+#paste-toolbutton[disabled], [typeid="paste-toolbutton"][disabled] {
+    list-style-image: url("chrome://collab/skin/22x22/edit-paste-disabled.png");
+}
+
+#delete-toolbutton, [typeid="delete-toolbutton"] {
+    list-style-image: url("chrome://collab/skin/22x22/edit-delete.png");
+}
+#delete-toolbutton[disabled], [typeid="delete-toolbutton"][disabled] {
+    list-style-image: url("chrome://collab/skin/22x22/edit-delete-disabled.png");
+}
+
+#print-toolbutton, [typeid="print-toolbutton"] {
+    list-style-image: url("chrome://collab/skin/22x22/document-print.png");
+}
+#print-toolbutton[disabled], [typeid="print-toolbutton"][disabled] {
+    list-style-image: url("chrome://collab/skin/22x22/document-print-disabled.png");
+}
+
+#printpreview-toolbutton, [typeid="printpreview-toolbutton"] {
+    list-style-image: url("chrome://collab/skin/22x22/document-print-preview.png");
+}
+#printpreview-toolbutton[disabled], [typeid="printpreview-toolbutton"][disabled] {
+    list-style-image: url("chrome://collab/skin/22x22/document-print-preview-disabled.png");
+}
+
+#add-applets-toolbutton {
+  -moz-box-orient: vertical;
+  list-style-image: url("chrome://collab/skin/22x22/list-add.png");
+}
+
+#sidebar {
+  width: 215px;
+}
+
+.main-sidebar-tree > treechildren::-moz-tree-row,
+.main-content-tree > treechildren::-moz-tree-row {
+  height: 1.65em !important;
+}

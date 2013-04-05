@@ -1,0 +1,184 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+#   Sunil Mohan Adapa <sunil@synovel.com>
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** 
+
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= telepathy-glib
+LIBRARY_NAME	= telepathy-glib
+REQUIRES	=				\
+		dbus				\
+		dbus-glib			\
+		$(NULL)
+DIST_INSTALL	= 1
+VISIBILITY_FLAGS = 
+FORCE_SHARED_LIB = 1
+DEFFILE		= $(win_srcdir)/telepathy-glib.def
+
+SHARED_LIBRARY_LIBS = _gen/$(LIB_PREFIX)telepathy-glib-gen.$(LIB_SUFFIX)
+
+EXTRA_DSO_LIBS	=				\
+		dbus				\
+		dbus-glib			\
+		$(NULL)
+
+CSRCS = $(INTERNAL_SOURCES)
+
+EXPORTS		=				\
+		account.h 			\
+		account-manager.h 		\
+		base-connection.h 		\
+		base-connection-manager.h 	\
+		channel.h 			\
+		channel-iface.h 		\
+		channel-dispatcher.h 		\
+		channel-dispatch-operation.h 	\
+		channel-factory-iface.h 	\
+		channel-manager.h 		\
+		channel-request.h 		\
+		client.h 			\
+		connection.h 			\
+		connection-manager.h 		\
+		contact.h 			\
+		contacts-mixin.h 		\
+		dbus.h 				\
+		dbus-daemon.h 			\
+		dbus-properties-mixin.h 	\
+		defs.h 				\
+		debug.h 			\
+		debug-sender.h 			\
+		debug-ansi.h 			\
+		enums.h 			\
+		errors.h 			\
+		exportable-channel.h 		\
+		group-mixin.h 			\
+		gtypes.h 			\
+		handle.h 			\
+		handle-repo.h 			\
+		handle-repo-static.h 		\
+		handle-repo-dynamic.h 		\
+		heap.h 				\
+		interfaces.h 			\
+		intset.h 			\
+		media-interfaces.h 		\
+		message-mixin.h 		\
+		presence-mixin.h 		\
+		properties-mixin.h 		\
+		proxy.h 			\
+		proxy-subclass.h 		\
+		run.h 				\
+		svc-account.h 			\
+		svc-account-manager.h 		\
+		svc-channel-dispatcher.h 	\
+		svc-channel-dispatch-operation.h\
+		svc-channel.h 			\
+		svc-channel-request.h 		\
+		svc-client.h 			\
+		svc-connection.h 		\
+		svc-connection-manager.h 	\
+		svc-debug.h 			\
+		svc-generic.h 			\
+		svc-media-interfaces.h 		\
+		svc-properties-interface.h 	\
+		text-mixin.h 			\
+		util.h				\
+		verify.h			\
+		$(NULL)
+
+INTERNAL_SOURCES =				\
+		account.c 			\
+		account-manager.c 		\
+		base-connection.c 		\
+		base-connection-manager.c 	\
+		channel.c 			\
+		channel-group.c 		\
+		channel-dispatcher.c 		\
+		channel-dispatch-operation.c 	\
+		channel-manager.c 		\
+		channel-request.c 		\
+		client.c 			\
+		connection.c 			\
+		connection-handles.c 		\
+		connection-manager.c 		\
+		contact.c 			\
+		contacts-mixin.c 		\
+		dbus.c 				\
+		dbus-daemon.c 			\
+		dbus-properties-mixin.c 	\
+		debug.c 			\
+		debug-sender.c 			\
+		interfaces.c 			\
+		errors.c 			\
+		exportable-channel.c 		\
+		group-mixin.c 			\
+		gtypes.c 			\
+		handle.c 			\
+		handle-repo.c 			\
+		handle-repo-dynamic.c 		\
+		handle-repo-static.c 		\
+		handle-set.c 			\
+		heap.c 				\
+		intset.c 			\
+		channel-iface.c 		\
+		channel-factory-iface.c 	\
+		media-interfaces.c 		\
+		message-mixin.c 		\
+		presence-mixin.c 		\
+		properties-mixin.c 		\
+		proxy.c 			\
+		proxy-methods.c 		\
+		proxy-signals.c 		\
+		run.c 				\
+		text-mixin.c 			\
+		util.c 				\
+		$(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+CFLAGS		+=				\
+		-I$(srcdir)/..			\
+		-DG_LOG_DOMAIN=\"tp-glib\"	\
+		$(CS_GLIB_CFLAGS)
+
+EXTRA_DSO_LDOPTS +=				\
+		$(CS_GLIB_LIBS)			\
+		$(LIBS_DIR)			\
+		$(EXTRA_DSO_LIBS)

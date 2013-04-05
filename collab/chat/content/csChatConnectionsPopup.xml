@@ -1,0 +1,387 @@
+<?xml version="1.0"?>
+<!--
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+# Synovel Software Technologies
+# Portions created by the Initial Developer are Copyright (C) 2008, 2009
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Prasad Sunkari <prasad@synovel.com> (Original Author)
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+-->
+
+<!DOCTYPE chat-connections-popup [
+  <!ENTITY % dtd SYSTEM "chrome://chat/locale/csChatOverlay.dtd"> %dtd;
+  <!ENTITY % statusDTD SYSTEM "chrome://chat/locale/csChatStatuses.dtd"> %statusDTD;
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
+]>
+
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="connectionsPopup"
+           extends="chrome://global/content/bindings/popup.xml#popup"
+           display="chrome://global/content/bindings/popup.xml#popup">
+    <content>
+      <xul:arrowscrollbox class="popup-internal-box" flex="1" orient="vertical">
+        <children />
+        <xul:menuseparator anonid="accounts-separator" collapsed="true"
+                           style="display:-moz-box !important"/>
+      </xul:arrowscrollbox>
+    </content>
+    <implementation>
+      <constructor>
+        <![CDATA[
+          var mode = this.getAttribute("mode");
+
+          // connections: Menu containing the list of connections
+          //              that are in the 'connected' state
+          // accounts: Accounts configured on Spicebird
+          // default: Both connections and accounts
+          if (["connections","accounts"].indexOf(mode) != -1)
+            this.mDisplayMode = mode;
+          else
+            this.mDisplayMode = 'default';
+
+          this.mAccountsSeparator = document.getAnonymousElementByAttribute(this, 'anonid',
+                                                                            'accounts-separator');
+        ]]>
+      </constructor>
+      <method name="_createNode">
+        <body>
+          <![CDATA[
+            var element;
+            switch (this.mDisplayMode) {
+              case "accounts":
+              case "connections":
+                element = document.createElement('menuitem');
+                element.setAttribute('class', 'menuitem-iconic');
+                break;
+              default:
+                element = document.createElement('menu');
+                break;
+            }
+
+            return element;
+          ]]>
+        </body>
+      </method>
+      <method name="createElementForAccount">
+        <parameter name="aAccount"/>
+        <body>
+          <![CDATA[
+            // If the display mode is connections
+            // we don't care to add any accounts to it
+            if (this.mDisplayMode == 'connections')
+              return;
+
+            var element = this._createNode();
+
+            element.setAttribute('type', 'chat-account');
+            element.setAttribute('class', "chat-protocol " + aAccount.settings.protocol + " menuitem-iconic");
+            element.setAttribute('label', aAccount.settings.account);
+
+            // If the display mode is account, set the
+            // account key as the value of this item
+            if (this.mDisplayMode == 'accounts')
+              element.setAttribute('value', aAccount.key);
+            else
+              element.setAttribute('account', aAccount.key);
+
+            return element;
+          ]]>
+        </body>
+      </method>
+      <method name="createElementForConnection">
+        <parameter name="connection"/>
+        <body>
+          <![CDATA[
+            // If the display mode is accounts
+            // we don't care to add any connections
+            if (this.mDisplayMode == 'accounts')
+              return;
+
+            // If we have a configured account, we would
+            // already have added this to the user interface
+            if (connection.ownConnection && this.mDisplayMode != 'connections')
+              return;
+           
+            var element = this._createNode();
+            var onlineStatus = csChatWrapper.statusMap[connection.myself.presenceStatus];
+
+            element.setAttribute('type', 'chat-connection');
+            element.setAttribute('label', connection.myself.identifier);
+            element.setAttribute('chat-status', onlineStatus);
+
+            // If the display mode is connections, set the
+            // connection unique-id as the value of this item
+            if (this.mDisplayMode == 'connections')
+              element.setAttribute('value', connection.key);
+            else
+              element.setAttribute('connection', connection.key);
+           
+            return element;
+          ]]>
+        </body>
+      </method>
+      <method name="populate">
+        <body>
+          <![CDATA[
+            // If we don't have the global telepathy object, bail out
+            if (csChatWrapper == undefined)
+              return;
+
+            var separator = this.mAccountsSeparator;
+            var scrollbox = separator.parentNode;
+            var count = 0;
+           
+            while(scrollbox.lastChild && scrollbox.lastChild != separator)
+              scrollbox.removeChild(scrollbox.lastChild);
+           
+            // Get available accounts
+            var csChatAccountManager = csChatWrapper.accountManager;
+            for each (var account in csChatAccountManager.accounts) {
+              var element = this.createElementForAccount(account);
+              if (element) {
+                scrollbox.appendChild(element);
+                count++;
+              }
+            }
+           
+            // Get available connections
+            for each (var connection in csChatWrapper.connections) {
+              var element = this.createElementForConnection(connection);
+              if (element) {
+                scrollbox.appendChild(element);
+                count++;
+              }
+            }
+
+            // Make the separator visible, if we have to
+            if (this.childNodes.length > 0 && count > 0)
+              separator.removeAttribute("collapsed");
+            else
+              separator.setAttribute("collapsed", true);
+          ]]>
+        </body>
+      </method>
+    </implementation>
+    <handlers>
+      <handler event="popupshowing" phase="capturing">
+        <![CDATA[
+          if (event.originalTarget != this)
+            return;
+
+          this.populate();
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="accountMenu"
+           extends="chrome://global/content/bindings/menu.xml#menu-iconic">
+    <content>
+      <xul:hbox class="menu-iconic-left" align="center" pack="center">
+        <xul:image xbl:inherits="src=image"/>
+      </xul:hbox>
+      <xul:label class="menu-iconic-text" flex="1"
+                 xbl:inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:hbox class="menu-accel-container" anonid="accel">
+        <xul:label class="menu-iconic-accel" xbl:inherits="value=acceltext"/>
+      </xul:hbox>
+      <xul:hbox class="menu-right" chromedir="&locale.dir;"
+                xbl:inherits="_moz-menuactive,disabled"
+                align="center" pack="center">
+        <xul:image/>
+      </xul:hbox>
+      <xul:menupopup>
+        <xul:menuitem class="menuitem-iconic" collapsed="true"
+                      label="&collab.chat.status.available.label;"
+                      accesskey="&collab.chat.status.available.key;"
+                      chat-status="available"
+                      oncommand="setStatus(event);"/>
+
+        <xul:menuitem class="menuitem-iconic" collapsed="true"
+                      label="&collab.chat.status.away.label;"
+                      accesskey="&collab.chat.status.away.key;"
+                      chat-status="away"
+                      oncommand="setStatus(event);"/>
+
+        <xul:menuitem class="menuitem-iconic" collapsed="true"
+                      label="&collab.chat.status.busy.label;"
+                      accesskey="&collab.chat.status.busy.key;"
+                      chat-status="busy"
+                      oncommand="setStatus(event);"/>
+
+        <xul:menuitem class="menuitem-iconic" collapsed="true"
+                      label="&collab.chat.status.invisible.label;"
+                      accesskey="&collab.chat.status.invisible.key;"
+                      chat-status="invisible"
+                      oncommand="setStatus(event);"/>
+
+        <xul:menuitem class="menuitem-iconic" collapsed="true"
+                      label="&collab.chat.status.offline.label;"
+                      accesskey="&collab.chat.status.offline.key;"
+                      chat-status="offline"
+                      oncommand="setStatus(event);"/>
+
+        <xul:menuitem anonid="enable-account" type="checkbox"
+                      label="&collab.chat.account.enable;"
+                      accesskey="&collab.chat.account.enable.key;"
+                      xbl:inherits="account"
+                      oncommand="enableAccount(event);"/>
+
+        <xul:menuseparator anonid="enable-account-separator"/>
+
+        <xul:menuitem anonid="edit-account"
+                      label="&collab.chat.account.edit;"
+                      accesskey="&collab.chat.account.edit.key;"
+                      xbl:inherits="account"
+                      oncommand="csChatAccountManager.editAccount(mAccountKey);"/>
+
+        <xul:menuitem anonid="delete-account"
+                      label="&collab.chat.account.delete;"
+                      accesskey="&collab.chat.account.delete.key;"
+                      xbl:inherits="account"
+                      oncommand="removeAccount(event);"/>
+      </xul:menupopup>
+    </content>
+    <implementation>
+      <constructor>
+        <![CDATA[
+          if (this.getAttribute("connection")) {
+            this.mIsConnection = true;
+            this.mConnectionKey = this.getAttribute("connection");
+          }
+
+          if (this.getAttribute("account")) {
+            this.mIsAccount = true;
+            this.mAccountKey = this.getAttribute("account");
+          }
+
+          if (!this.mIsAccount) {
+            var accountItemIDs = ['enable-account', 'edit-account',
+                                  'delete-account', 'enable-account-separator'];
+            for each (var id in accountItemIDs) {
+              document.getAnonymousElementByAttribute(this, "anonid", id)
+                      .setAttribute("collapsed", true);
+            }
+
+            var statuses = ['available', 'away', 'busy', 'invisible', 'offline'];
+            for each (var id in statuses) {
+              document.getAnonymousElementByAttribute(this, "chat-status", id)
+                      .removeAttribute("collapsed");
+            }
+          }
+        ]]>
+      </constructor>
+      <method name="enableAccount">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            var target = aEvent.originalTarget;
+            var account = csChatAccountManager.accounts[this.mAccountKey];
+
+            if (account)
+              account.enabled = target.getAttribute("checked");
+          ]]>
+        </body>
+      </method>
+      <method name="removeAccount">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            var target = aEvent.originalTarget;
+            var account = csChatAccountManager.accounts[this.mAccountKey];
+
+            if (!account)
+              return;
+
+            // Confirm before deleting the account.
+            let prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                    .getService(Components.interfaces.nsIPromptService);
+            let button3 = account.enabled?
+                          (prompts.BUTTON_TITLE_IS_STRING * prompts.BUTTON_POS_2): 0;
+            let result = prompts.confirmEx(null,
+                             csChatWrapper._("RemoveAccountTitle"),
+                             csChatWrapper._(["RemoveAccountText", account.account]),
+                             (prompts.BUTTON_TITLE_IS_STRING * prompts.BUTTON_POS_0) +
+                             (prompts.BUTTON_TITLE_IS_STRING * prompts.BUTTON_POS_1) + button3,
+                             csChatWrapper._("RemoveAccountConfirm"), 
+                             csChatWrapper._("RemoveAccountCancel"), 
+                             csChatWrapper._("RemoveAccountDisable"), 
+                             null, {});
+
+            if (result == 0)
+              csChatAccountManager.removeAccount(this.mAccountKey);
+            else if (result == 2)
+              account.enabled = false;
+          ]]>
+        </body>
+      </method>
+      <method name="setStatus">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            var target = aEvent.originalTarget;
+            var status = target.getAttribute("chat-status");
+
+            if (!status || !this.mIsConnection)
+              return;
+
+            var connection = csChatWrapper.connections[this.mConnectionKey];
+            if (status == 'offline')
+              connection.disconnect();
+            else
+              connection.setPresenceStatus(status, csChatWrapper.presence.message);
+          ]]>
+        </body>
+      </method>
+    </implementation>
+    <handlers>
+      <handler event="popupshowing">
+        <![CDATA[
+          if (this.mIsAccount) {
+            var item = document.getAnonymousElementByAttribute(this,
+                                                               "anonid",
+                                                               "enable-account");
+            var account = csChatAccountManager.accounts[this.mAccountKey];
+            if (account.enabled)
+              item.setAttribute("checked", true);
+            else
+              item.removeAttribute("checked");
+          }
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+</bindings>    

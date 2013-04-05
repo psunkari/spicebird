@@ -1,0 +1,352 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Code in this file is generated using a computer program.
+ * Please refer to the corresponding telepathy spec for any help in using the
+ * code here.  You may also feel free to contact the original developer for
+ * any related help.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+
+
+%{C++
+#include "glib/gtypes.h"
+%}
+native gpointer(gpointer);
+
+
+
+/*
+ * A structure representing a contact whose attempt to
+        join a group is to be confirmed by the local user using
+ */
+[scriptable, uuid(28f1fc09-3e47-4940-9f57-8f7275a4c958)]
+interface csITpLocalPendingInfo : nsISupports
+{
+  /* The contact to be added to the group */
+  readonly attribute PRUint32 toBeAdded;
+  /* The contact requesting or causing the change */
+  readonly attribute PRUint32 actor;
+  /* The reason for the change */
+  readonly attribute PRUint32 reason;
+  /* A human-readable message from the Actor, or an empty string
+          if there is no message */
+  readonly attribute AUTF8String message;
+
+  [noscript] gpointer toGLib();
+};
+
+[scriptable, uuid(be9bb8dc-06ca-4a33-89f0-c1f1681d8bf3)]
+interface csITpChannelInterfaceGroupAddMembersCB : nsISupports
+{
+  void onAddMembersError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onAddMembersDone();
+};
+
+[scriptable, uuid(524ba9ed-4fd4-4765-80cc-9a8969d027b8)]
+interface csITpChannelInterfaceGroupGetAllMembersCB : nsISupports
+{
+  void onGetAllMembersError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetAllMembersDone(in PRUint32 aMembersCount, [array, size_is(aMembersCount)] in PRUint32 aMembers, in PRUint32 aLocalPendingCount, [array, size_is(aLocalPendingCount)] in PRUint32 aLocalPending, in PRUint32 aRemotePendingCount, [array, size_is(aRemotePendingCount)] in PRUint32 aRemotePending);
+};
+
+[scriptable, uuid(e207d0ae-97af-490c-b1db-ca9f0168598e)]
+interface csITpChannelInterfaceGroupGroupFlagsCB : nsISupports
+{
+  void getPropertyGroupFlagsError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyGroupFlagsDone(in PRUint32 aGroupFlags);
+};
+
+[scriptable, uuid(e9a79dd7-a88a-4a85-a770-defa0daaa4a8)]
+interface csITpChannelInterfaceGroupGetGroupFlagsCB : nsISupports
+{
+  void onGetGroupFlagsError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetGroupFlagsDone(in PRUint32 aGroupFlags);
+};
+
+/*
+ * A map from channel-specific handles to their owners.
+ */
+[scriptable, uuid(24843e3e-b168-4fe0-9c7f-9f6fbf7df78c)]
+interface csITpHandleOwnerMap : nsISupports
+{
+  /* A nonzero channel-specific handle */
+  readonly attribute PRUint32 channelSpecificHandle;
+  /* The global handle that owns the corresponding channel-specific
+          handle, or 0 if this could not be determined */
+  readonly attribute PRUint32 globalHandle;
+};
+
+[scriptable, uuid(92e980b9-9fb0-4cb9-b429-c52f8becf943)]
+interface csITpChannelInterfaceGroupHandleOwnersCB : nsISupports
+{
+  void getPropertyHandleOwnersError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyHandleOwnersDone(in nsIArray aHandleOwners);
+};
+
+[scriptable, uuid(459f64b7-d82f-42aa-962d-c946dc9af3ac)]
+interface csITpChannelInterfaceGroupHandleOwnersChangedObserver : nsISupports
+{
+  void onHandleOwnersChanged(in nsIArray aAdded, in PRUint32 aRemovedCount, [array, size_is(aRemovedCount)] in PRUint32 aRemoved);
+};
+
+[scriptable, uuid(369ed356-14a9-487b-b632-0837e7efc8b8)]
+interface csITpChannelInterfaceGroupGetHandleOwnersCB : nsISupports
+{
+  void onGetHandleOwnersError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetHandleOwnersDone(in PRUint32 aOwnersCount, [array, size_is(aOwnersCount)] in PRUint32 aOwners);
+};
+
+[scriptable, uuid(00b26caa-c750-433d-8ad2-c034a6d502d7)]
+interface csITpChannelInterfaceGroupGetLocalPendingMembersCB : nsISupports
+{
+  void onGetLocalPendingMembersError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetLocalPendingMembersDone(in PRUint32 aHandlesCount, [array, size_is(aHandlesCount)] in PRUint32 aHandles);
+};
+
+[scriptable, uuid(56309922-b453-4efa-99a7-6b464f31246d)]
+interface csITpChannelInterfaceGroupGetLocalPendingMembersWithInfoCB : nsISupports
+{
+  void onGetLocalPendingMembersWithInfoError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetLocalPendingMembersWithInfoDone(in nsIArray aInfo);
+};
+
+[scriptable, uuid(7e358315-8062-4edb-a864-6562beb9cd99)]
+interface csITpChannelInterfaceGroupLocalPendingMembersCB : nsISupports
+{
+  void getPropertyLocalPendingMembersError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyLocalPendingMembersDone(in nsIArray aLocalPendingMembers);
+};
+
+[scriptable, uuid(f34e5087-af77-4f69-9131-62095cfe124c)]
+interface csITpChannelInterfaceGroupMembersCB : nsISupports
+{
+  void getPropertyMembersError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyMembersDone(in PRUint32 aMembersCount, [array, size_is(aMembersCount)] in PRUint32 aMembers);
+};
+
+[scriptable, uuid(f41834aa-1780-42f4-8bad-5cadf8570488)]
+interface csITpChannelInterfaceGroupGetMembersCB : nsISupports
+{
+  void onGetMembersError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetMembersDone(in PRUint32 aHandlesCount, [array, size_is(aHandlesCount)] in PRUint32 aHandles);
+};
+
+[scriptable, uuid(049e1650-4b68-4795-b4c0-a4800cf42940)]
+interface csITpChannelInterfaceGroupRemotePendingMembersCB : nsISupports
+{
+  void getPropertyRemotePendingMembersError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyRemotePendingMembersDone(in PRUint32 aRemotePendingMembersCount, [array, size_is(aRemotePendingMembersCount)] in PRUint32 aRemotePendingMembers);
+};
+
+[scriptable, uuid(d49ca39c-06bd-4fac-897d-4e292e6bfe11)]
+interface csITpChannelInterfaceGroupGetRemotePendingMembersCB : nsISupports
+{
+  void onGetRemotePendingMembersError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetRemotePendingMembersDone(in PRUint32 aHandlesCount, [array, size_is(aHandlesCount)] in PRUint32 aHandles);
+};
+
+[scriptable, uuid(ca9a0265-112f-44fb-86e4-c3bb1c565609)]
+interface csITpChannelInterfaceGroupSelfHandleChangedObserver : nsISupports
+{
+  void onSelfHandleChanged(in PRUint32 aSelfHandle);
+};
+
+[scriptable, uuid(434ffd80-b439-40a2-9633-1256a20c0e5f)]
+interface csITpChannelInterfaceGroupSelfHandleCB : nsISupports
+{
+  void getPropertySelfHandleError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertySelfHandleDone(in PRUint32 aSelfHandle);
+};
+
+[scriptable, uuid(afbfcd1e-8616-47f0-961e-6470d356fa5f)]
+interface csITpChannelInterfaceGroupGetSelfHandleCB : nsISupports
+{
+  void onGetSelfHandleError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetSelfHandleDone(in PRUint32 aSelfHandle);
+};
+
+[scriptable, uuid(00ac9c77-c597-41b3-8154-547d37696bc8)]
+interface csITpChannelInterfaceGroupGroupFlagsChangedObserver : nsISupports
+{
+  void onGroupFlagsChanged(in PRUint32 aAdded, in PRUint32 aRemoved);
+};
+
+[scriptable, uuid(9251234d-bb79-40b5-b072-96587b1524ff)]
+interface csITpChannelInterfaceGroupMembersChangedObserver : nsISupports
+{
+  void onMembersChanged(in AUTF8String aMessage, in PRUint32 aAddedCount, [array, size_is(aAddedCount)] in PRUint32 aAdded, in PRUint32 aRemovedCount, [array, size_is(aRemovedCount)] in PRUint32 aRemoved, in PRUint32 aLocalPendingCount, [array, size_is(aLocalPendingCount)] in PRUint32 aLocalPending, in PRUint32 aRemotePendingCount, [array, size_is(aRemotePendingCount)] in PRUint32 aRemotePending, in PRUint32 aActor, in PRUint32 aReason);
+};
+
+/*
+ * A map from handles to the corresponding normalized string identifier.
+ */
+[scriptable, uuid(057f8d4d-48ad-4edd-a545-db750e8a58ba)]
+interface csITpHandleIdentifierMap : nsISupports
+{
+  /* A nonzero handle */
+  readonly attribute PRUint32 handle;
+  /* The same string that would be returned by */
+  readonly attribute AUTF8String identifier;
+};
+
+[scriptable, uuid(6ede183a-c0d7-4d44-aea3-eb25c11d53e4)]
+interface csITpChannelInterfaceGroupMembersChangedDetailedObserver : nsISupports
+{
+  void onMembersChangedDetailed(in PRUint32 aAddedCount, [array, size_is(aAddedCount)] in PRUint32 aAdded, in PRUint32 aRemovedCount, [array, size_is(aRemovedCount)] in PRUint32 aRemoved, in PRUint32 aLocalPendingCount, [array, size_is(aLocalPendingCount)] in PRUint32 aLocalPending, in PRUint32 aRemotePendingCount, [array, size_is(aRemotePendingCount)] in PRUint32 aRemotePending, in nsIArray aDetails);
+};
+
+[scriptable, uuid(4a0920ba-1e2b-44ed-9ded-c47148bc74b3)]
+interface csITpChannelInterfaceGroupRemoveMembersCB : nsISupports
+{
+  void onRemoveMembersError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onRemoveMembersDone();
+};
+
+[scriptable, uuid(a8b4e040-f7fe-4514-ada0-284d399ebf94)]
+interface csITpChannelInterfaceGroupRemoveMembersWithReasonCB : nsISupports
+{
+  void onRemoveMembersWithReasonError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onRemoveMembersWithReasonDone();
+};
+
+
+
+[scriptable, uuid(b1ebfeda-0f62-47a2-86b8-4bbb9323b6f9)]
+interface csITpChannelInterfaceGroup : nsISupports
+{
+  void callAddMembers(in PRUint32 aContactsCount, [array, size_is(aContactsCount)] in PRUint32 aContacts, in AUTF8String aMessage, in csITpChannelInterfaceGroupAddMembersCB cb);
+
+  void callGetAllMembers(in csITpChannelInterfaceGroupGetAllMembersCB cb);
+
+  const short Channel_Group_Flags_Can_Add = 1;
+  const short Channel_Group_Flags_Can_Remove = 2;
+  const short Channel_Group_Flags_Can_Rescind = 4;
+  const short Channel_Group_Flags_Message_Add = 8;
+  const short Channel_Group_Flags_Message_Remove = 16;
+  const short Channel_Group_Flags_Message_Accept = 32;
+  const short Channel_Group_Flags_Message_Reject = 64;
+  const short Channel_Group_Flags_Message_Rescind = 128;
+  const short Channel_Group_Flags_Channel_Specific_Handles = 256;
+  const short Channel_Group_Flags_Only_One_Group = 512;
+  const short Channel_Group_Flags_Handle_Owners_Not_Available = 1024;
+  const short Channel_Group_Flags_Properties = 2048;
+  const short Channel_Group_Flags_Members_Changed_Detailed = 4096;
+  const short Channel_Group_Flags_Message_Depart = 8192;
+
+  /* An integer representing the bitwise-OR of flags on this
+        channel. The user interface can use this to present information about
+        which operations are currently valid. Change notification is via
+        the */
+  void getPropertyGroupFlags(in csITpChannelInterfaceGroupGroupFlagsCB cb);
+
+  void callGetGroupFlags(in csITpChannelInterfaceGroupGetGroupFlagsCB cb);
+
+  /* A map from channel-specific handles to their owners, including
+        at least all of the channel-specific handles in this channel's members,
+        local-pending or remote-pending sets as keys. Any handle not in
+        the keys of this mapping is not channel-specific in this channel.
+        Handles which are channel-specific, but for which the owner is
+        unknown, MUST appear in this mapping with 0 as owner. Change
+        notification is via the */
+  void getPropertyHandleOwners(in csITpChannelInterfaceGroupHandleOwnersCB cb);
+
+  void connectToHandleOwnersChanged(in csITpChannelInterfaceGroupHandleOwnersChangedObserver observer);
+  void disconnectFromHandleOwnersChanged(in csITpChannelInterfaceGroupHandleOwnersChangedObserver observer);
+
+  void callGetHandleOwners(in PRUint32 aHandlesCount, [array, size_is(aHandlesCount)] in PRUint32 aHandles, in csITpChannelInterfaceGroupGetHandleOwnersCB cb);
+
+  void callGetLocalPendingMembers(in csITpChannelInterfaceGroupGetLocalPendingMembersCB cb);
+
+  void callGetLocalPendingMembersWithInfo(in csITpChannelInterfaceGroupGetLocalPendingMembersWithInfoCB cb);
+
+  /* An array of structs containing handles representing contacts
+        requesting channel membership and awaiting local approval with */
+  void getPropertyLocalPendingMembers(in csITpChannelInterfaceGroupLocalPendingMembersCB cb);
+
+  /* The members of this channel. */
+  void getPropertyMembers(in csITpChannelInterfaceGroupMembersCB cb);
+
+  void callGetMembers(in csITpChannelInterfaceGroupGetMembersCB cb);
+
+  /* An array of handles representing contacts who have been
+        invited to the channel and are awaiting remote approval. */
+  void getPropertyRemotePendingMembers(in csITpChannelInterfaceGroupRemotePendingMembersCB cb);
+
+  void callGetRemotePendingMembers(in csITpChannelInterfaceGroupGetRemotePendingMembersCB cb);
+
+  void connectToSelfHandleChanged(in csITpChannelInterfaceGroupSelfHandleChangedObserver observer);
+  void disconnectFromSelfHandleChanged(in csITpChannelInterfaceGroupSelfHandleChangedObserver observer);
+
+  /* The handle for the user on this channel (which can also be a
+        local or remote pending member), or 0 if the user is not a member at
+        all (which is likely to be the case, for instance, on */
+  void getPropertySelfHandle(in csITpChannelInterfaceGroupSelfHandleCB cb);
+
+  void callGetSelfHandle(in csITpChannelInterfaceGroupGetSelfHandleCB cb);
+
+  void connectToGroupFlagsChanged(in csITpChannelInterfaceGroupGroupFlagsChangedObserver observer);
+  void disconnectFromGroupFlagsChanged(in csITpChannelInterfaceGroupGroupFlagsChangedObserver observer);
+
+  const short Channel_Group_Change_Reason_None = 0;
+  const short Channel_Group_Change_Reason_Offline = 1;
+  const short Channel_Group_Change_Reason_Kicked = 2;
+  const short Channel_Group_Change_Reason_Busy = 3;
+  const short Channel_Group_Change_Reason_Invited = 4;
+  const short Channel_Group_Change_Reason_Banned = 5;
+  const short Channel_Group_Change_Reason_Error = 6;
+  const short Channel_Group_Change_Reason_Invalid_Contact = 7;
+  const short Channel_Group_Change_Reason_No_Answer = 8;
+  const short Channel_Group_Change_Reason_Renamed = 9;
+  const short Channel_Group_Change_Reason_Permission_Denied = 10;
+  const short Channel_Group_Change_Reason_Separated = 11;
+
+  void connectToMembersChanged(in csITpChannelInterfaceGroupMembersChangedObserver observer);
+  void disconnectFromMembersChanged(in csITpChannelInterfaceGroupMembersChangedObserver observer);
+
+  void connectToMembersChangedDetailed(in csITpChannelInterfaceGroupMembersChangedDetailedObserver observer);
+  void disconnectFromMembersChangedDetailed(in csITpChannelInterfaceGroupMembersChangedDetailedObserver observer);
+
+  void callRemoveMembers(in PRUint32 aContactsCount, [array, size_is(aContactsCount)] in PRUint32 aContacts, in AUTF8String aMessage, in csITpChannelInterfaceGroupRemoveMembersCB cb);
+
+  void callRemoveMembersWithReason(in PRUint32 aContactsCount, [array, size_is(aContactsCount)] in PRUint32 aContacts, in AUTF8String aMessage, in PRUint32 aReason, in csITpChannelInterfaceGroupRemoveMembersWithReasonCB cb);
+
+};

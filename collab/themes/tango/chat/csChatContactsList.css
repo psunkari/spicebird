@@ -1,0 +1,227 @@
+/*
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+# Synovel Software Technologies
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Siva Edpuganti <sivakrishna@synovel.com> (Original Author)
+#   Prasad Sunkari <prasad@synovel.com>
+#   Sunil Mohan Adapa <sunil@synovel.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+*/
+
+[anonid="chat-contacts-tree"] {
+  margin: 0px;
+}
+
+[anonid="chat-contacts-tree"] > treechildren::-moz-tree-cell(status) {
+  height: 2.4em;
+  line-height: 2.4em;
+}
+
+[anonid="chat-contacts-tree"] > treechildren::-moz-tree-indentation {
+  width: 0px;
+}
+
+[anonid="chat-contacts-tree"] > treechildren::-moz-tree-cell-text-part(selected) {
+  color: HighlightText;
+}
+
+/* Bold unread conversation's contact address */
+[anonid="chat-contacts-tree"] > treechildren::-moz-tree-cell-text-part(unread) {
+  font-weight: bold;
+}
+
+/* Offline */
+[anonid="chat-contacts-tree"] > treechildren::-moz-tree-image(status-1) {
+  list-style-image: url(chrome://chat/skin/16x16/statuses.png);
+  -moz-image-region: rect(48px,16px,64px,0px);
+}
+
+/* Available */
+[anonid="chat-contacts-tree"] > treechildren::-moz-tree-image(status-2) {
+  list-style-image: url(chrome://chat/skin/16x16/statuses.png);
+  -moz-image-region: rect(0px,16px,16px,0px);
+}
+
+/* Away */
+[anonid="chat-contacts-tree"] > treechildren::-moz-tree-image(status-3) {
+  list-style-image: url(chrome://chat/skin/16x16/statuses.png);
+  -moz-image-region: rect(32px,16px,48px,0px);
+}
+
+/* Extended Away */
+[anonid="chat-contacts-tree"] > treechildren::-moz-tree-image(status-4) {
+  list-style-image: url(chrome://chat/skin/16x16/statuses.png);
+  -moz-image-region: rect(80px,16px,96px,0px);
+}
+
+/* Hidden */
+[anonid="chat-contacts-tree"] > treechildren::-moz-tree-image(status-5) {
+  list-style-image: url(chrome://chat/skin/16x16/statuses.png);
+  -moz-image-region: rect(64px,16px,80px,0px);
+}
+
+/* Busy */
+[anonid="chat-contacts-tree"] > treechildren::-moz-tree-image(status-6) {
+  list-style-image: url(chrome://chat/skin/16x16/statuses.png);
+  -moz-image-region: rect(16px,16px,32px,0px);
+}
+
+/* Pending */
+[anonid="chat-contacts-tree"] > treechildren::-moz-tree-image(status-9) {
+  list-style-image: url(chrome://chat/skin/16x16/statuses.png);
+  -moz-image-region: rect(96px,16px,112px,0px);
+}
+
+[anonid="chat-contacts-tree"] > treechildren::-moz-tree-description {
+  margin-left: 20px;
+}
+
+[anonid="chat-contacts-tree"] > treechildren::-moz-tree-description-text-part {
+  font-size: smaller;
+  color: ThreeDShadow;
+}
+
+[anonid="chat-contacts-tree"] > treechildren::-moz-tree-description-text-part(selected) {
+  color: HighlightText;
+}
+
+[anonid="chat-contacts-tree"] > treechildren::-moz-tree-cell(group) {
+  border-bottom: solid ThreeDShadow 1px;
+  height: 1.4em;
+  margin-top: 1em;
+}
+
+[anonid="chat-contacts-tree"] > treechildren::-moz-tree-row(group, selected) {
+  background-color: -moz-Field;
+  border-color: -moz-Field;
+}
+
+[anonid="chat-contacts-tree"] > treechildren::-moz-tree-cell(group, label) {
+  margin-left: -20px;
+}
+
+[anonid="chat-contacts-tree"] > treechildren::-moz-tree-cell-text-part(group) {
+  font-weight: bold;
+}
+
+[anonid="chat-contacts-tree"] > treechildren::-moz-tree-cell-text-part(group, selected) {
+  font-weight: bold;
+  color: -moz-FieldText;
+}
+
+[anonid="chat-contacts-tree"] > treechildren::-moz-tree-cell(avatar) {
+  height: 2.4em;
+  margin: 2px 0px 0px;
+  padding: 0px;
+}
+
+[anonid="chat-contacts-tree"] > treechildren::-moz-tree-image(avatar) {
+  width: 32px;
+  height: 32px;
+}
+
+/*
+ *
+ * Toolbars
+ *
+ */
+.chat-contacts-button,
+[anonid="chat-contacts-list-toolbar"] > toolbarbutton {
+  list-style-image: url(chrome://chat/skin/22x22/chat-contacts-toolbar.png);
+}
+
+/* Add Contact */
+#chat-contacts-add-contact-button,
+[anonid="chat-contacts-list-add-contact-button"] {
+  -moz-image-region: rect(0px,22px,22px,0px);
+}
+
+[anonid="chat-contacts-list-add-contact-button"][disabled="true"] {
+  -moz-image-region: rect(22px,22px,44px,0px);
+}
+
+/* Edit Contact */
+#chat-contacts-edit-contact-button,
+[anonid="chat-contacts-list-edit-contact-button"] {
+  -moz-image-region: rect(0px,132px,22px,110px);
+}
+
+[anonid="chat-contacts-list-edit-contact-button"][disabled="true"] {
+  -moz-image-region: rect(22px,132px,44px,110px);
+}
+
+/* Open Chat */
+#chat-contacts-open-chat-button,
+[anonid="chat-contacts-list-open-chat-button"] {
+  -moz-image-region: rect(0px,66px,22px,44px);
+}
+
+[anonid="chat-contacts-list-open-chat-button"][disabled="true"] {
+  -moz-image-region: rect(22px,66px,44px,44px);
+}
+
+/* Call Contact */
+#chat-contacts-call-contact-button,
+[anonid="chat-contacts-list-call-contact-button"] {
+  -moz-image-region: rect(0px,88px,22px,66px);
+}
+
+[anonid="chat-contacts-list-call-contact-button"][disabled="true"] {
+  -moz-image-region: rect(22px,88px,44px,66px);
+}
+
+/* Show Contact */
+#chat-contacts-show-contact-button,
+[anonid="chat-contacts-list-show-contact-button"] {
+  -moz-image-region: rect(0px,110px,22px,88px);
+}
+
+[anonid="chat-contacts-list-show-contact-button"][disabled="true"] {
+  -moz-image-region: rect(22px,110px,44px,88px);
+}
+
+/* Delete Contact */
+#chat-contacts-delete-contact-button,
+[anonid="chat-contacts-list-delete-contact-button"] {
+  -moz-image-region: rect(0px,44px,22px,22px);
+}
+
+[anonid="chat-contacts-list-delete-contact-button"][disabled="true"] {
+  -moz-image-region: rect(22px,44px,44px,22px);
+}
+
+#sidebar-chat-addcontact {
+  list-style-image: url("chrome://collab/skin/16x16/list-add.png");
+}
+

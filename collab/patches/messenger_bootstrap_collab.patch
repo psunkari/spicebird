@@ -1,0 +1,24 @@
+diff --git a/mailnews/base/src/nsMessengerBootstrap.cpp b/mailnews/base/src/nsMessengerBootstrap.cpp
+--- a/mailnews/base/src/nsMessengerBootstrap.cpp
++++ b/mailnews/base/src/nsMessengerBootstrap.cpp
+@@ -63,18 +63,18 @@ nsMessengerBootstrap::nsMessengerBootstr
+ 
+ nsMessengerBootstrap::~nsMessengerBootstrap()
+ {
+ }
+ 
+ NS_IMETHODIMP nsMessengerBootstrap::OpenMessengerWindowWithUri(const char *windowType, const char * aFolderURI, nsMsgKey aMessageKey)
+ {
+   PRBool standAloneMsgWindow = PR_FALSE;
+-  nsCAutoString chromeUrl("chrome://messenger/content/");
+-  if (windowType && !strcmp(windowType, "mail:messageWindow"))
++  nsCAutoString chromeUrl("chrome://collab/content/");
++  if (windowType && !strcmp(windowType, "collab:main"))
+   {
+     chromeUrl.Append("messageWindow.xul");
+     standAloneMsgWindow = PR_TRUE;
+   }
+   nsCOMPtr<nsISupportsArray> argsArray;
+   nsresult rv = NS_NewISupportsArray(getter_AddRefs(argsArray));
+   NS_ENSURE_SUCCESS(rv, rv);
+ 

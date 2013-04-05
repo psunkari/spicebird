@@ -1,0 +1,258 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Code in this file is generated using a computer program.
+ * Please refer to the corresponding telepathy spec for any help in using the
+ * code here.  You may also feel free to contact the original developer for
+ * any related help.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+#include "nsIVariant.idl"
+
+
+%{C++
+#include "glib/gtypes.h"
+%}
+native gpointer(gpointer);
+
+
+
+/*
+ * A struct (tube ID, initiator handle, tube type,
+        service name, parameters, state) representing a tube, as returned
+        by ListTubes on the Tubes channel type.
+ */
+[scriptable, uuid(fdb0c850-0877-46b0-8468-37ce5a1bcdf4)]
+interface csITpTubeInfo : nsISupports
+{
+  readonly attribute PRUint32 identifier;
+  readonly attribute PRUint32 initiator;
+  readonly attribute PRUint32 type;
+  readonly attribute AUTF8String service;
+  readonly attribute nsIArray parameters;
+  readonly attribute PRUint32 state;
+
+  [noscript] gpointer toGLib();
+};
+
+/*
+ * Represents a participant in a multi-user D-Bus tube, as
+        returned by
+ */
+[scriptable, uuid(0e6ac3ae-6bc6-4908-beca-126c965a4569)]
+interface csITpDBusTubeMember : nsISupports
+{
+  /* The handle of a participant in this D-Bus tube. */
+  readonly attribute PRUint32 handle;
+  /* That participant's unique name. */
+  readonly attribute AUTF8String uniqueName;
+
+  [noscript] gpointer toGLib();
+};
+
+/*
+ * The supported socket address and access-control types
+        for tubes. See GetAvailableStreamTubeTypes.
+ */
+[scriptable, uuid(91d01230-309a-495e-afe1-451d57cd7d1e)]
+interface csITpSupportedSocketMap : nsISupports
+{
+  readonly attribute PRUint32 addressType;
+  void getAccessControl(out PRUint32 aAccessControlCount, [array, size_is(aAccessControlCount)] out PRUint32 aAccessControl);
+};
+
+[scriptable, uuid(68319d93-0ffc-4f3f-a273-bfa086490c36)]
+interface csITpChannelTypeTubesGetAvailableStreamTubeTypesCB : nsISupports
+{
+  void onGetAvailableStreamTubeTypesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetAvailableStreamTubeTypesDone(in nsIArray aAvailableStreamTubeTypes);
+};
+
+[scriptable, uuid(76d56a54-6209-4037-bf35-072d044ab118)]
+interface csITpChannelTypeTubesGetAvailableTubeTypesCB : nsISupports
+{
+  void onGetAvailableTubeTypesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetAvailableTubeTypesDone(in PRUint32 aAvailableTubeTypesCount, [array, size_is(aAvailableTubeTypesCount)] in PRUint32 aAvailableTubeTypes);
+};
+
+[scriptable, uuid(3668305f-ea6a-4ab7-b2f9-d8bffdf7ceab)]
+interface csITpChannelTypeTubesListTubesCB : nsISupports
+{
+  void onListTubesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onListTubesDone(in nsIArray aTubes);
+};
+
+[scriptable, uuid(455ce4d4-8f7e-4ae6-b4f0-5d14f0a2bb02)]
+interface csITpChannelTypeTubesOfferDBusTubeCB : nsISupports
+{
+  void onOfferDBusTubeError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onOfferDBusTubeDone(in PRUint32 aTubeID);
+};
+
+[scriptable, uuid(a75a84b0-1660-40db-b765-ca5bd1aa3a0c)]
+interface csITpChannelTypeTubesOfferStreamTubeCB : nsISupports
+{
+  void onOfferStreamTubeError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onOfferStreamTubeDone(in PRUint32 aTubeID);
+};
+
+[scriptable, uuid(8a26f7b2-737e-44b1-9680-a0472aca094e)]
+interface csITpChannelTypeTubesNewTubeObserver : nsISupports
+{
+  void onNewTube(in PRUint32 aID, in PRUint32 aInitiator, in PRUint32 aType, in AUTF8String aService, in nsIArray aParameters, in PRUint32 aState);
+};
+
+[scriptable, uuid(8ff93c6c-fbf1-4d63-b043-bba347dbaa6f)]
+interface csITpChannelTypeTubesAcceptDBusTubeCB : nsISupports
+{
+  void onAcceptDBusTubeError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onAcceptDBusTubeDone(in AUTF8String aAddress);
+};
+
+[scriptable, uuid(b58f02c6-9d90-46b1-82c1-1baee3ac2872)]
+interface csITpChannelTypeTubesAcceptStreamTubeCB : nsISupports
+{
+  void onAcceptStreamTubeError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onAcceptStreamTubeDone(in nsIVariant aAddress);
+};
+
+[scriptable, uuid(07285633-3dd9-481e-a60c-8982fd256348)]
+interface csITpChannelTypeTubesTubeStateChangedObserver : nsISupports
+{
+  void onTubeStateChanged(in PRUint32 aID, in PRUint32 aState);
+};
+
+[scriptable, uuid(95840bf4-80f9-4933-8fd5-3f3b314a5eeb)]
+interface csITpChannelTypeTubesCloseTubeCB : nsISupports
+{
+  void onCloseTubeError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onCloseTubeDone();
+};
+
+[scriptable, uuid(72e9bccb-ad16-4645-acf1-d9a001710f3c)]
+interface csITpChannelTypeTubesTubeClosedObserver : nsISupports
+{
+  void onTubeClosed(in PRUint32 aID);
+};
+
+[scriptable, uuid(e717087b-9bbc-48c6-8feb-96a512eac361)]
+interface csITpChannelTypeTubesGetDBusTubeAddressCB : nsISupports
+{
+  void onGetDBusTubeAddressError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetDBusTubeAddressDone(in AUTF8String aAddress);
+};
+
+[scriptable, uuid(e99e96ed-01d2-4ca6-a81e-75785e938f97)]
+interface csITpChannelTypeTubesGetDBusNamesCB : nsISupports
+{
+  void onGetDBusNamesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetDBusNamesDone(in nsIArray aDBusNames);
+};
+
+[scriptable, uuid(6fb30277-4f4d-41b3-9220-b6b1f7260d99)]
+interface csITpChannelTypeTubesDBusNamesChangedObserver : nsISupports
+{
+  void onDBusNamesChanged(in PRUint32 aID, in nsIArray aAdded, in PRUint32 aRemovedCount, [array, size_is(aRemovedCount)] in PRUint32 aRemoved);
+};
+
+[scriptable, uuid(37fd7540-0e58-415f-9e34-48151aa42e73)]
+interface csITpChannelTypeTubesGetStreamTubeSocketAddressCB : nsISupports
+{
+  void onGetStreamTubeSocketAddressError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetStreamTubeSocketAddressDone(in PRUint32 aAddressType, in nsIVariant aAddress);
+};
+
+[scriptable, uuid(e97258d8-bb4f-4783-bb22-5271dec4fc90)]
+interface csITpChannelTypeTubesStreamTubeNewConnectionObserver : nsISupports
+{
+  void onStreamTubeNewConnection(in PRUint32 aID, in PRUint32 aHandle);
+};
+
+
+
+[scriptable, uuid(8877528c-d8c8-4494-b878-53b440b450a1)]
+interface csITpChannelTypeTubes : nsISupports
+{
+  const short Tube_Type_DBus = 0;
+  const short Tube_Type_Stream = 1;
+
+  const short Tube_State_Local_Pending = 0;
+  const short Tube_State_Remote_Pending = 1;
+  const short Tube_State_Open = 2;
+
+  void callGetAvailableStreamTubeTypes(in csITpChannelTypeTubesGetAvailableStreamTubeTypesCB cb);
+
+  void callGetAvailableTubeTypes(in csITpChannelTypeTubesGetAvailableTubeTypesCB cb);
+
+  void callListTubes(in csITpChannelTypeTubesListTubesCB cb);
+
+  void callOfferDBusTube(in AUTF8String aService, in nsIArray aParameters, in csITpChannelTypeTubesOfferDBusTubeCB cb);
+
+  void callOfferStreamTube(in AUTF8String aService, in nsIArray aParameters, in PRUint32 aAddressType, in nsIVariant aAddress, in PRUint32 aAccessControl, in nsIVariant aAccessControlParam, in csITpChannelTypeTubesOfferStreamTubeCB cb);
+
+  void connectToNewTube(in csITpChannelTypeTubesNewTubeObserver observer);
+  void disconnectFromNewTube(in csITpChannelTypeTubesNewTubeObserver observer);
+
+  void callAcceptDBusTube(in PRUint32 aID, in csITpChannelTypeTubesAcceptDBusTubeCB cb);
+
+  void callAcceptStreamTube(in PRUint32 aID, in PRUint32 aAddressType, in PRUint32 aAccessControl, in nsIVariant aAccessControlParam, in csITpChannelTypeTubesAcceptStreamTubeCB cb);
+
+  void connectToTubeStateChanged(in csITpChannelTypeTubesTubeStateChangedObserver observer);
+  void disconnectFromTubeStateChanged(in csITpChannelTypeTubesTubeStateChangedObserver observer);
+
+  void callCloseTube(in PRUint32 aID, in csITpChannelTypeTubesCloseTubeCB cb);
+
+  void connectToTubeClosed(in csITpChannelTypeTubesTubeClosedObserver observer);
+  void disconnectFromTubeClosed(in csITpChannelTypeTubesTubeClosedObserver observer);
+
+  void callGetDBusTubeAddress(in PRUint32 aID, in csITpChannelTypeTubesGetDBusTubeAddressCB cb);
+
+  void callGetDBusNames(in PRUint32 aID, in csITpChannelTypeTubesGetDBusNamesCB cb);
+
+  void connectToDBusNamesChanged(in csITpChannelTypeTubesDBusNamesChangedObserver observer);
+  void disconnectFromDBusNamesChanged(in csITpChannelTypeTubesDBusNamesChangedObserver observer);
+
+  void callGetStreamTubeSocketAddress(in PRUint32 aID, in csITpChannelTypeTubesGetStreamTubeSocketAddressCB cb);
+
+  void connectToStreamTubeNewConnection(in csITpChannelTypeTubesStreamTubeNewConnectionObserver observer);
+  void disconnectFromStreamTubeNewConnection(in csITpChannelTypeTubesStreamTubeNewConnectionObserver observer);
+
+};

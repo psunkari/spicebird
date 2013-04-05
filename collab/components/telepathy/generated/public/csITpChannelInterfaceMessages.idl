@@ -1,0 +1,201 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Code in this file is generated using a computer program.
+ * Please refer to the corresponding telepathy spec for any help in using the
+ * code here.  You may also feel free to contact the original developer for
+ * any related help.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIVariant.idl"
+#include "nsIArray.idl"
+
+
+%{C++
+#include "glib/gtypes.h"
+%}
+native gpointer(gpointer);
+
+
+
+[scriptable, uuid(906112ad-3199-4206-9477-44033ce8c41e)]
+interface csITpChannelInterfaceMessagesSupportedContentTypesCB : nsISupports
+{
+  void getPropertySupportedContentTypesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertySupportedContentTypesDone(in PRUint32 aSupportedContentTypesCount, [array, size_is(aSupportedContentTypesCount)] in string aSupportedContentTypes);
+};
+
+[scriptable, uuid(7e1bf0c1-8d74-4b24-b4a8-70a0ef8d8790)]
+interface csITpChannelInterfaceMessagesMessagePartSupportFlagsCB : nsISupports
+{
+  void getPropertyMessagePartSupportFlagsError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyMessagePartSupportFlagsDone(in PRUint32 aMessagePartSupportFlags);
+};
+
+/*
+ * 
+ */
+[scriptable, uuid(ddfd3728-0372-4553-b290-920b06076e55)]
+interface csITpMessagePart : nsISupports
+{
+  /* A key, which SHOULD be one of the well-known keys specified, if
+          possible. */
+  readonly attribute AUTF8String key;
+  /* The value corresponding to the given key, which must be of one of
+          the types indicated. */
+  readonly attribute nsIVariant value;
+};
+
+/*
+ * A mapping from message part indexes to their content, as returned by
+ */
+[scriptable, uuid(77de6009-fc98-4101-8a47-dc8ee50ee4cb)]
+interface csITpMessagePartContentMap : nsISupports
+{
+  /* Indexes into the array of */
+  readonly attribute PRUint32 part;
+  /* The message part's content. The variant MUST contain either type
+          's' or 'ay' (UTF-8 text string, or byte array), following the
+          same rules as for the value of the 'content' key in
+          the */
+  readonly attribute nsIVariant content;
+};
+
+[scriptable, uuid(2ad47abb-0766-4b4f-ac16-38891026707c)]
+interface csITpChannelInterfaceMessagesSendMessageCB : nsISupports
+{
+  void onSendMessageError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onSendMessageDone(in AUTF8String aToken);
+};
+
+[scriptable, uuid(7c01333c-843b-4ff9-a924-60ec1dfd3958)]
+interface csITpChannelInterfaceMessagesMessageSentObserver : nsISupports
+{
+  void onMessageSent(in nsIArray aContent, in PRUint32 aFlags, in AUTF8String aMessageToken);
+};
+
+[scriptable, uuid(2f29b7c8-abaf-491a-bd0f-10b9b0c870b1)]
+interface csITpChannelInterfaceMessagesPendingMessagesCB : nsISupports
+{
+  void getPropertyPendingMessagesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyPendingMessagesDone(in nsIArray aPendingMessages);
+};
+
+[scriptable, uuid(e0701126-fa78-4762-8269-855ddd49df3f)]
+interface csITpChannelInterfaceMessagesPendingMessagesRemovedObserver : nsISupports
+{
+  void onPendingMessagesRemoved(in PRUint32 aMessageIDsCount, [array, size_is(aMessageIDsCount)] in PRUint32 aMessageIDs);
+};
+
+[scriptable, uuid(f048ad8a-ce60-49ff-8013-348413365442)]
+interface csITpChannelInterfaceMessagesGetPendingMessageContentCB : nsISupports
+{
+  void onGetPendingMessageContentError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetPendingMessageContentDone(in nsIArray aContent);
+};
+
+[scriptable, uuid(d3385afb-9585-48d8-82c3-5fcbd1432eec)]
+interface csITpChannelInterfaceMessagesMessageReceivedObserver : nsISupports
+{
+  void onMessageReceived(in nsIArray aMessage);
+};
+
+[scriptable, uuid(edae6d45-47a3-4dee-9e8a-aabd8da33d33)]
+interface csITpChannelInterfaceMessagesDeliveryReportingSupportCB : nsISupports
+{
+  void getPropertyDeliveryReportingSupportError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyDeliveryReportingSupportDone(in PRUint32 aDeliveryReportingSupport);
+};
+
+
+
+[scriptable, uuid(26127862-4801-49e4-b424-29a5c2e97ce0)]
+interface csITpChannelInterfaceMessages : nsISupports
+{
+  void getPropertySupportedContentTypes(in csITpChannelInterfaceMessagesSupportedContentTypesCB cb);
+
+  /* Flags indicating the level of support for message parts on this
+        channel. */
+  void getPropertyMessagePartSupportFlags(in csITpChannelInterfaceMessagesMessagePartSupportFlagsCB cb);
+
+  /*  */
+  const short Message_Part_Support_Flags_One_Attachment = 1;
+  const short Message_Part_Support_Flags_Multiple_Attachments = 2;
+
+  void callSendMessage(in nsIArray aMessage, in PRUint32 aFlags, in csITpChannelInterfaceMessagesSendMessageCB cb);
+
+  /* Flags altering the way a message is sent. The "most usual" action
+        should always be to have these flags unset. */
+  const short Message_Sending_Flags_Report_Delivery = 1;
+
+  void connectToMessageSent(in csITpChannelInterfaceMessagesMessageSentObserver observer);
+  void disconnectFromMessageSent(in csITpChannelInterfaceMessagesMessageSentObserver observer);
+
+  /* A list of incoming messages that have neither been acknowledged nor
+        rejected. This list is a more detailed version of the one returned
+        by */
+  void getPropertyPendingMessages(in csITpChannelInterfaceMessagesPendingMessagesCB cb);
+
+  void connectToPendingMessagesRemoved(in csITpChannelInterfaceMessagesPendingMessagesRemovedObserver observer);
+  void disconnectFromPendingMessagesRemoved(in csITpChannelInterfaceMessagesPendingMessagesRemovedObserver observer);
+
+  void callGetPendingMessageContent(in PRUint32 aMessageID, in PRUint32 aPartsCount, [array, size_is(aPartsCount)] in PRUint32 aParts, in csITpChannelInterfaceMessagesGetPendingMessageContentCB cb);
+
+  void connectToMessageReceived(in csITpChannelInterfaceMessagesMessageReceivedObserver observer);
+  void disconnectFromMessageReceived(in csITpChannelInterfaceMessagesMessageReceivedObserver observer);
+
+  /*  */
+  const short Delivery_Status_Unknown = 0;
+  const short Delivery_Status_Delivered = 1;
+  const short Delivery_Status_Temporarily_Failed = 2;
+  const short Delivery_Status_Permanently_Failed = 3;
+  const short Delivery_Status_Accepted = 4;
+
+  /* Flags indicating the level of support for delivery reporting on this
+        channel. Any future flags added to this set will conform to the
+        convention that the presence of an extra flag implies that
+        more operations will succeed. */
+  const short Delivery_Reporting_Support_Flags_Receive_Failures = 1;
+  const short Delivery_Reporting_Support_Flags_Receive_Successes = 2;
+
+  /* A bitfield indicating features supported by this channel. */
+  void getPropertyDeliveryReportingSupport(in csITpChannelInterfaceMessagesDeliveryReportingSupportCB cb);
+
+};

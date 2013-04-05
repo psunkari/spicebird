@@ -1,0 +1,4 @@
+venkman.jar:
+% overlay chrome://collab/content/collab.xul chrome://venkman/content/venkman-overlay.xul
++ skin/modern/venkman/venkman-overlay.css    (skin/venkman-overlay.css)
++ content/venkman/venkman-overlay.xul        (content/venkman-overlay.xul)

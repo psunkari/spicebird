@@ -1,0 +1,1090 @@
+<?xml version="1.0"?>
+<!--
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+# Synovel Software Technologies
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Siva Edpuganti <sivakrishna@synovel.com> (Original Author)
+#   Prasad Sunkari <prasad@synovel.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+-->
+
+<!DOCTYPE im-bindings [
+  <!ENTITY % imOverlayDTD SYSTEM "chrome://im/locale/csIMOverlay.dtd"> %imOverlayDTD;
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
+  <!ENTITY % commandsDTD SYSTEM "chrome://collab/locale/commands.dtd"> %commandsDTD;
+]>
+
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="imChatWindow">
+    <resources>
+      <stylesheet src="chrome://im/skin/chatWindow.css"/>
+      <stylesheet src="chrome://collab/skin/collab.css"/>
+    </resources>
+
+    <content>
+      <xul:vbox anonid="chatwindow-box" class="chatwindow-box" flex="1">
+        <xul:hbox anonid="remote-user" xbl:inherits="collapsed=readonly">
+          <xul:vbox>
+            <xul:image anonid="remote-user-status"/>
+            <xul:spacer flex="1"/>
+          </xul:vbox>
+          <xul:vbox flex="1">
+            <xul:hbox>
+              <xul:label anonid="remote-user-address" flex="1" crop="end"/>
+              <xul:image anonid="remote-user-chatstate"/>
+              <xul:toolbarbutton class="dock-button" oncommand="toggleDock();"
+                                 xbl:inherits="detachedwindow"/>
+              <xul:toolbarbutton class="closebutton" oncommand="close();"
+                                 xbl:inherits="collapsed=detachedwindow"/>
+            </xul:hbox>
+            <xul:label anonid="remote-user-statusmessage" flex="1"
+                       crop="end" collapsed="true"/>
+          </xul:vbox>
+        </xul:hbox>
+        <xul:vbox anonid="chat-session" flex="1">
+          <xul:iframe anonid="chat-browser" flex="3" class="browser"
+                      type="content"/>
+          <xul:splitter anonid="chat-splitter" class="chat-splitter" xbl:inherits="collapsed=readonly"/>
+          <xul:vbox anonid="compose-box" xbl:inherits="collapsed=readonly">
+            <xul:textbox anonid="chat-editor" flex="1" multiline="true"/>
+          </xul:vbox>
+        </xul:vbox>
+      </xul:vbox>
+
+      <xul:menupopup anonid="conversationpopup"
+                     onpopuphiding="event.originalTarget.parentNode.focus();">
+        <xul:menuitem anonid="menuitem-copy" command="cmd_copy"
+                      key="key_copy"
+                      label="&cmd.edit.copy.label;"/>
+        <xul:menuseparator anonid="menu-copy-separator"/>
+        <xul:menuitem anonid="menuitem-select-all" command="cmd_selectAll"
+                      key="key_selectAll"
+                      label="&cmd.edit.selectall.label;"/>
+      </xul:menupopup>
+    </content>
+
+    <!--
+      TODO:
+        - Handle offline messages
+        - Show messageinfo for successive messages also in case of a timeout.
+        - Send composing/paused chat states to remote user
+        - Currently charCode is used for keypress events, (keyCode = 0, DOM_VK_B != e.charCode)
+    -->
+    <implementation>
+      <constructor>
+        <![CDATA[
+          this.mDateFormatService = Components.classes["@mozilla.org/intl/scriptabledateformat;1"]
+                                              .getService(Components.interfaces.nsIScriptableDateFormat);
+
+          this.imStatusService = Components.classes["@synovel.com/collab/im/imstatusservice;1"]
+                                           .getService(Components.interfaces.csIIMStatusService);
+
+          this.mSerializer = new XMLSerializer();
+
+          this.mDOMParser = new DOMParser();
+
+          this._session = {};
+          this._pendingSentMessages = new Array();
+
+          // Get the mozTXTToHTMLConv and the flags
+          this.mTXTToHTMLConv = Components.classes["@mozilla.org/txttohtmlconv;1"]
+                                          .createInstance(Components.interfaces.mozITXTToHTMLConv);
+          this.mTXTToHTMLConvFlags = this.mTXTToHTMLConv.kEntities |
+                                     this.mTXTToHTMLConv.kURLs |
+                                     this.mTXTToHTMLConv.kGlyphSubstitution |
+                                     this.mTXTToHTMLConv.kStructPhrase;
+
+          // Check if this is inside Spicebird
+          if (this.baseURI == 'chrome://collab/content/collab.xul') {
+            this._docked = true;
+            this._controller = window.gConversationManager;
+            this._telepathy = window.gTelepathy;
+          }
+          else {
+            this._docked = false;
+            this._controller = window.opener.gConversationManager;
+            this._telepathy = window.opener.gTelepathy;
+
+            // Blur and focus handlers on the window
+            var self = this;
+            window.onblur = function() {
+              self._hasFocus = false;
+            }
+
+            window.onfocus = function() {
+              self._hasFocus = true;
+            }
+          }
+
+          // Add html header & body to style information
+          var data = '<html>' + 
+                       '<head>' + 
+                         '<link type="text/css" rel="important stylesheet"' + 
+                               'href="chrome://messagebody/skin/messageBody.css"/>' + 
+                         '<link type="text/css" rel="stylesheet"' + 
+                               'href="chrome://imcontent/skin/chatBrowser.css"/>' +
+                       '</head>' +
+                       '<body id="chat-data" showtimestamp="false"/>' + 
+                     '</html>'
+          this.mBrowserSrc = 'data:text/html;base64,' + window.btoa(data);
+
+          var htmlChars = [];
+          for (var htmlChar in this.htmlCharMap)
+            htmlChars.push(htmlChar);
+          this.htmlCharRegex = new RegExp(htmlChars.join('|'), 'g');
+
+          this.mChatBrowser = document.getAnonymousElementByAttribute(this, "anonid", "chat-browser");
+          this.mChatEditor  = document.getAnonymousElementByAttribute(this, "anonid", "chat-editor");
+
+          // Sound alert if we don't have focus
+          if (!this.hasFocus())
+            this._controller.soundAlert(true);
+        ]]>
+      </constructor>
+
+      <destructor>
+        <![CDATA[
+          this.cleanup();
+        ]]>
+      </destructor>
+
+      <field name="IM_ENTER_KEYCODE">13</field>
+
+      <field name="mDateFormatService">null</field>
+      <field name="imStatusService">null</field>
+      <field name="localUser">null</field>
+      <field name="localUserNick">null</field>
+      <field name="remoteUser">null</field>
+      <field name="remoteUserNick">null</field>
+      <field name="date_format_short">false</field>
+      <field name="mSerializer">null</field>
+      <field name="mDOMParser">null</field>
+      <field name="mBrowserSrc">null</field>
+      <field name="mChatBrowser">null</field>
+      <field name="mChatEditor">null</field>
+
+      <field name="account">null</field>
+      <field name="address">null</field>
+
+      <field name="_channel">null</field>
+      <field name="_session">null</field>
+      <field name="_controller">null</field>
+      <field name="_telepathy">null</field>
+
+      <field name="_docked">false</field>
+      <field name="_hasFocus">false</field>
+      <field name="_typing">-1</field>
+
+      <field name="_chatWindowInitialized">false</field>
+      
+      <field name="_requestedNewChannel">false</field>
+      <field name="_pendingSentMessages">null</field>
+
+      <field name="_readonly">false</field>
+      <field name="_keywords">null</field>
+      <field name="_keywordRegex">null</field>
+      <field name="_keywordIndexes">null</field>
+
+      <!-- To be set to show an existing chat log -->
+      <property name="readonly"
+                onget="return this._readonly;"
+                onset="this._readonly = val; this.setAttribute('readonly', val); 
+                      return val;"/>
+
+      <!-- Keywords to be higlighted in each chat message -->
+      <property name="keywords"
+                onget="return this._keywords;"
+                onset="this._keywords = val; this.setHighlightRegExp(val); 
+                      return val;"/>
+
+      <method name="setHighlightRegExp">
+        <parameter name="aKeywords"/>
+        <body>
+          <![CDATA[
+            var pattern = "";
+            for each (var keyword in aKeywords) {
+              if (keyword)
+                pattern += "(" + keyword + ")|";
+            }
+            pattern = pattern.replace(/\|$/, "");
+
+            this._keywordRegex = null;
+            if (pattern)
+              this._keywordRegex = new RegExp(pattern, "g");
+
+            // Build keywordIndexes whenever keywords are set
+            this._keywordIndexes = [];
+            var count = 0;
+            for each (var keyword in this.keywords)
+              if (keyword)
+                this._keywordIndexes[keyword] = count++;
+          ]]>
+        </body>
+      </method>
+
+      <method name="highlightKeywords">
+        <parameter name="aData"/>
+        <body>
+          <![CDATA[
+            if (!this._keywordRegex)
+              return aData;
+
+            function getHighlightString(aKeyword) {
+              var _self = arguments.callee._self;
+              var colorClass = "color-" + _self._keywordIndexes[aKeyword];
+              var highlightBegin = "<span class='highlight " + colorClass + "'>";
+              var highlightEnd   = "</span>";
+
+              return highlightBegin + aKeyword + highlightEnd;
+            }
+            getHighlightString._self = this;
+
+            return aData.replace(this._keywordRegex, getHighlightString);
+          ]]>
+        </body>
+      </method>
+
+      <property name="channel"
+                onget="return this._channel;"
+                onset="this.updateChannel(val); return val;"/>
+
+      <property name="session"
+                onget="return this._session;"
+                onset="this.updateSession(val); return val;"/>
+
+      <method name="editorWindowFocused">
+        <parameter name="event"/>
+        <body>
+          <![CDATA[
+            var chatWindow = event.currentTarget.chatWindow;
+            if (chatwindow.readonly)
+              return;
+
+            chatWindow._controller.focusedConversation(chatWindow.account, chatWindow.address);
+
+            if (chatWindow._docked) {
+              var chatWindowBox = document.getAnonymousElementByAttribute(chatWindow, "anonid", "chatwindow-box");
+              chatWindowBox.setAttribute("selected", "true");
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="editorWindowBlured">
+        <parameter name="event"/>
+        <body>
+          <![CDATA[
+            var chatWindow = event.currentTarget.chatWindow;
+            if (chatwindow.readonly)
+              return;
+            
+            if (chatWindow._docked) {
+              var chatWindowBox = document.getAnonymousElementByAttribute(chatWindow, "anonid", "chatwindow-box");
+              chatWindowBox.removeAttribute("selected");
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="initChatWindow">
+        <body>
+          <![CDATA[
+            // Chat Input
+            this.mChatEditor.addEventListener('focus', this.editorWindowFocused, false);
+            this.mChatEditor.addEventListener('blur', this.editorWindowBlured, false);
+            this.mChatEditor.chatWindow = this;
+
+            // Chat Output Browser
+            // Listener to add chat history after browser load
+            const nsIWebProgress = Components.interfaces.nsIWebProgress;
+            var webProgress = this.mChatBrowser.docShell.QueryInterface(nsIWebProgress);
+            webProgress.addProgressListener(this.progressListener, nsIWebProgress.NOTIFY_STATE_DOCUMENT);
+
+            // Setting 'same' value to src does not reload the content
+            if (this.mChatBrowser.getAttribute("src") != this.mBrowserSrc)
+              this.mChatBrowser.setAttribute("src", this.mBrowserSrc);
+            else
+              this.mChatBrowser.contentDocument.location.reload(true);
+
+            this.mChatBrowser.chatWindow = this;
+            this.mChatBrowser.onclick = function(event) {
+                                          if (event.button == 0) 
+                                            this.chatWindow.focus();};
+
+            // Online status/alias updates
+            this.imStatusService.addListener(this.statusUpdateListener);
+
+            this._chatWindowInitialized = true;
+          ]]>
+        </body>
+      </method>
+
+      <field name="htmlCharRegex">null</field>
+      <field name="htmlCharMap" readonly="true">
+        <![CDATA[
+        ({
+          '<br>'   : '\n', 
+          '&nbsp;' : ' ' ,
+          '&quot;' : '"' ,
+          '&amp;'  : '&' ,
+          '&gt;'   : '>' ,
+          '&lt;'   : '<'
+        })
+        ]]>
+      </field>
+
+      <field name="htmlEscapeRegex">null</field>
+      <field name="htmlEscapeMap" readonly="true">
+        <![CDATA[
+        ({
+          '\n' : '<br>'
+        })
+        ]]>
+      </field>
+
+      <field name="progressListener" readonly="true">
+        <![CDATA[
+        ({
+          _self: this,
+
+          QueryInterface: function(aIID) {
+            if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
+                aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
+                aIID.equals(Components.interfaces.nsISupports))
+              return this;
+            throw Components.results.NS_NOINTERFACE;
+          },
+
+          onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
+            const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+            if ((aStateFlags & nsIWebProgressListener.STATE_STOP) && 
+                (aStateFlags & nsIWebProgressListener.STATE_IS_DOCUMENT)) {
+
+              // Remove the listener, we are not interesting in anymore
+              // status changes from this listener.
+              // Will be attached again on reload
+              const nsIWebProgress = Components.interfaces.nsIWebProgress;
+              var webProgress = this._self.mChatBrowser.docShell
+                                          .QueryInterface(nsIWebProgress);
+              webProgress.removeProgressListener(this._self.progressListener);
+
+              // Load history, if any
+              var messages = [];
+              if (this._self._session.messages)
+                messages = this._self._session.messages.slice(0);
+
+              this._self._session.messages = [];
+
+              for (var i = 0; i < messages.length; i++)
+                this._self.seenMessage(messages[i].body, messages[i].time, messages[i].direction);
+
+              // Get pending messages
+              this._self.pendingMessagesListCB.mPendingMessages = [];
+              if (this._self.channel)
+                this._self.channel.listPendingMessages(true, this._self.pendingMessagesListCB);
+
+              // Set the timestamp flag
+              this._self.setTimestampState(this._self._session.showTimestamps);
+            }
+          }
+        })
+        ]]>
+      </field>
+
+      <field name="statusUpdateListener" readonly="true">
+        <![CDATA[
+        ({
+          _self: this,
+
+          statusUpdated: function(contact) {
+            var elementId;
+
+            // listenerObject._self => chatwindow 
+            if (contact.id == this._self.remoteUser) {
+              // update online status
+              var img = document.getAnonymousElementByAttribute(this._self, "anonid", "remote-user-status");
+              img.setAttribute("im-status", contact.status);
+
+              // update status message
+              this._self.setStatusMessage(contact.statusMessage);
+            }
+          }
+        })
+        ]]>
+      </field>
+
+      <method name="initUserInfo">
+        <body>
+          <![CDATA[
+            var contact;
+
+            // Local User
+            this.localUser = this.account;
+            contact = this.imStatusService.getContactStatus(this.localUser, this.localUser);
+            if (contact)
+              this.localUserNick = contact.alias;
+            else
+              this.localUserNick = this.account;
+
+            // Remote User
+            this.remoteUser = this.address;
+            contact = this.imStatusService.getContactStatus(this.localUser, this.remoteUser);
+            if (contact) {
+              this.remoteUserNick = contact.alias;
+
+              // update online status
+              document.getAnonymousElementByAttribute(this, "anonid", "remote-user-status")
+                      .setAttribute("im-status", contact.status);
+
+              // update status message
+              this.setStatusMessage(contact.statusMessage);
+            }
+            else
+              this.remoteUserNick = this.address;
+
+            document.getAnonymousElementByAttribute(this, "anonid", "remote-user-address")
+                    .setAttribute("value", this.remoteUserNick);
+
+            if (!this._docked && !this.readonly)
+              document.title = this.remoteUserNick;
+
+            // Reset chat state
+            var img = document.getAnonymousElementByAttribute(this, "anonid", "remote-user-chatstate");
+            img.removeAttribute("chatstate");
+          ]]>
+        </body>
+      </method>
+
+      <method name="cleanup">
+        <body>
+          <![CDATA[
+            // cleanup telepathy channel
+            this.channel = null;
+
+            try {
+              // Remove the status listener
+              this.imStatusService.removeListener(this.statusUpdateListener);
+
+              if (this._chatWindowInitialized) {
+                // Remove focus listener
+                this.mChatEditor.removeEventListener('focus', this.editorWindowFocused, false);
+                this.mChatEditor.removeEventListener('blur', this.editorWindowBlured, false);
+
+                this._chatWindowInitialized = false;
+              }
+            } catch(ex) {
+              dump('WARNING: Exception in cleanup: ' + ex + '\n');
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="sendMessageRequested">
+        <body>
+          <![CDATA[
+            var message = this.mChatEditor.value;
+            if (message != "") {
+              var htmlCharMapTmp = this.htmlCharMap;
+              var unescapedMessage = message.replace(this.htmlCharRegex, 
+                                                     function (str) {
+                                                       return htmlCharMapTmp[str]; 
+                                                     });
+              this.sendMessage(unescapedMessage);
+              this.mChatEditor.value = "";
+            }
+            this.mChatEditor.focus();
+          ]]>
+        </body>
+      </method>
+
+      <method name="sendMessage">
+        <parameter name="messageBody"/>
+        <body>
+          <![CDATA[ 
+            var sendCB = {
+              _self: this,
+
+              doAction: function() {
+              },
+
+              onError: function(aErrorCode) {
+                // TODO: Report could not send message to user inside chat window
+                dump("ERROR: sendMessage - " + this._self.getLocaleString([ ['telepathy.error.' + aErrorCode] ]));
+                gIMPromptService.alert(null, this._self.getLocaleString([ ['ChannelErrorTitle'] ]),
+                                       this._self.getLocaleString([ ['SendMessageError'], 
+                                                              ['telepathy.error.' + aErrorCode], 
+                                                              ['RestartChatSessionMessage'] ]) );
+              }
+            };
+            if (!this.channel) {
+              try {
+                if (!this._requestedNewChannel) {
+                  this._telepathy.sendMessage(this.account, this.address);
+                  this._requestedNewChannel = true;
+                }
+                this._pendingSentMessages.push(messageBody);
+              } catch(ex) {};
+            } else {
+              this.channel.send(0, messageBody, sendCB);
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="chopBR">
+        <parameter name="dom"/>
+        <body>
+          <![CDATA[
+            if (/br/i.test(dom.lastChild.nodeName))
+              dom.removeChild(dom.lastChild);
+
+            return dom;
+          ]]>
+        </body>
+      </method>
+
+      <method name="filterMessage">
+        <parameter name="aMessage"/>
+        <body>
+          <![CDATA[
+            return this.mTXTToHTMLConv.scanTXT(aMessage, this.mTXTToHTMLConvFlags);
+          ]]>
+        </body>
+      </method>
+
+      <method name="seenMessage">
+        <parameter name="body"/>
+        <parameter name="time"/>
+        <parameter name="direction"/>
+        <body>
+          <![CDATA[
+            if (body == undefined)
+              return;
+
+            // Check time
+            if (time == undefined) {
+              time = new Date();
+            }
+
+            // Store stanza to session
+            this._session.messages.push({body: body, direction: direction, time: time});
+
+            var timeString = this.getTimeString(time);
+            var bodyString = this.filterMessage(body);
+
+            this.addMsgToBrowser(bodyString, direction, timeString);
+          ]]>
+        </body>
+      </method>
+
+      <method name="getTimeString">
+        <parameter name="time"/> <!-- Number of seconds since epoch -->
+        <body>
+          <![CDATA[
+            var dateObject = new Date();
+            dateObject.setTime(parseInt(time)*1000);
+
+            return this.mDateFormatService.FormatTime("",
+                                                 Components.interfaces.nsIScriptableDateFormat.timeFormatSeconds,
+                                                 dateObject.getHours(),
+                                                 dateObject.getMinutes(),
+                                                 dateObject.getSeconds());
+          ]]>
+        </body>
+      </method>
+
+      <method name="addMsgToBrowser">
+        <parameter name="data"/>
+        <parameter name="direction"/>
+        <parameter name="timeString"/>
+        <parameter name="offline"/>
+        <body>
+          <![CDATA[
+            var chatData = this.mChatBrowser.contentDocument.getElementById("chat-data");
+            var p  = this.mChatBrowser.contentDocument.createElement("p");
+
+            var user;
+            if (direction == "incoming")
+              user = this.remoteUserNick;
+            else if (direction == "outgoing")
+              user = this.localUserNick;
+
+            if (direction == "error")
+              messageClass = 'error';
+            else if (offline)
+              messageClass = 'offline';
+            else
+              messageClass = direction;
+
+            // Escape white spaces & some special characters
+            var htmlEscapeMapTmp = this.htmlEscapeMap;
+            var escapedData      = data.replace( this.htmlEscapeRegex, 
+                                                 function (str) {
+                                                   return htmlEscapeMapTmp[str]; 
+                                                 } );
+
+            data = escapedData;
+
+            // Highlight keywords
+            if (this.keywords && this.keywords.length > 0)
+              data = this.highlightKeywords(data);
+
+            var html = "<span class=" + messageClass + ">";
+            if (user) {
+              html += "<span class=messageinfo>" + user;
+              if (timeString)
+                html += "<span class=timestamp> (" + timeString + ")</span>";
+
+              html += ":";
+            }
+            html += "</span>";
+            html += data + "</span>";
+
+            p.innerHTML = html;
+            p.className = messageClass;
+
+            var shouldScroll = chatData.scrollHeight >= chatData.scrollTop + chatData.clientHeight;
+            chatData.appendChild(p);
+
+            if (shouldScroll)
+              // TODO: Should not need a setTimeout here. Remote messages work fine.
+              setTimeout( function() { p.scrollIntoView(true); }, 0 );
+
+          ]]>
+        </body>
+      </method>
+
+      <!-- Called by the manager window. -->
+      <method name="setTimestampState">
+        <parameter name="state"/>
+        <body>
+          <![CDATA[
+            var chatData = this.mChatBrowser.contentDocument.getElementById("chat-data");
+
+            this._session.showTimestamps = state;
+
+            // If there is no chat data, nothing to do
+            if (!chatData)
+              return;
+
+            if (state)
+              chatData.setAttribute("showtimestamp", "true");
+            else
+              chatData.setAttribute("showtimestamp", "false");
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateSession">
+        <parameter name="session"/>
+        <body>
+          <![CDATA[
+            if (!session.account || !session.address) {
+              dump('ERROR: cannot update session without account & address');
+              return;
+            }
+            this._session.account = session.account;
+            this._session.address = session.address;
+            this._session.channel = session.channel;
+            this._session.messages = (session.messages || []).slice(0);
+            this._session.showTimestamps = session.showTimestamps;
+
+            this.loadSession();
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateChannel">
+        <parameter name="channel"/>
+        <parameter name="aIgnorePending"/>
+        <body>
+          <![CDATA[
+            if (this.channel) {
+              // TODO: Remove telepathy listeners, if channel already exists
+              this.channel.removeReceivedObserver(this.channelObserver);
+              this.channel.removeSentObserver(this.channelObserver);
+              this.channel.removeSendErrorObserver(this.channelObserver);
+            }
+
+            this._channel = channel;
+            if (this._requestedNewChannel)
+              this._requestedNewChannel = false;
+
+            // If new value is null, nothing more to do
+            if (channel == null) 
+              return;
+            
+            // Add observers to channel
+            this.initTelepathy();
+              
+            // Get pending messages
+            if (!aIgnorePending) {
+              this.pendingMessagesListCB.mPendingMessages = [];
+              this.channel.listPendingMessages(true, this.pendingMessagesListCB);
+
+              if (this._pendingSentMessages)
+                for each (var message in this._pendingSentMessages)
+                  this.sendMessage(message);
+
+              this._pendingSentMessages = new Array();
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="initTelepathy">
+        <body>
+          <![CDATA[
+            // Register for received/sent messages
+            this.channel.addReceivedObserver(this.channelObserver);
+            this.channel.addSentObserver(this.channelObserver);
+            this.channel.addSendErrorObserver(this.channelObserver);
+
+            // TODO: Register for chat state changes
+            //this.channel.addChatStateObserver();
+
+            // Error handling
+          ]]>
+        </body>
+      </method>
+
+      <method name="hasFocus">
+        <body>
+          <![CDATA[
+            if (!this._docked)
+              return this._hasFocus;
+
+            if (window.gIMCollabHasFocus &&
+                window.gCurrentApplication == window.gIMAppName)
+              return true;
+            
+            return false;
+          ]]>
+        </body>
+      </method>
+
+      <field name="channelObserver" readonly="true">
+        <![CDATA[
+        ({
+          _self: this,
+
+          // Text Received/Sent
+          onTextReceived: function(aId, aTimeStamp, aSender, aType, aFlags, aTextMessage) {
+            //TODO:
+            this._self.seenMessage(aTextMessage, aTimeStamp, 'incoming');
+            this._self._controller.soundAlert(!this._self.hasFocus())
+
+            // Acknowledge seen messages
+            var emptyCB = {
+              __self: this._self,
+
+              doAction: function() {
+                // TODO: Nothing here?
+              },
+
+              onError: function(aErrorCode) {
+                dump("ERROR: acknowledgePendingMessages - " + 
+                     this.__self.getLocaleString([['telepathy.error.' + aErrorCode]]));
+              }
+            };
+            this._self.channel.acknowledgePendingMessages(1, [ aId ], emptyCB);
+          },
+
+          onTextSent: function(aTimeStamp, aType, aTextMessage) {
+            //TODO:
+            this._self.seenMessage(aTextMessage, aTimeStamp, 'outgoing');
+          },
+
+          onTextSendError: function(aErrorCode, aTimeStamp, aType, aTextMessage) {
+            var message = this._self.getLocaleString([['telepathy.text.senderror.' + aErrorCode, aTextMessage]]);
+            this._self.seenMessage(message, aTimeStamp, 'error');
+          },
+
+          // Chat state
+          doUpdateChatState: function(aContact, aChatState) {
+            //TODO:
+          }
+        })
+        ]]>
+      </field>
+
+
+      <field name="pendingMessagesListCB" readonly="true">
+        <![CDATA[
+        ({
+          _self: this,
+
+          mPendingMessages: [],
+
+          onError: function(aErrorCode) {
+            dump("ERROR: list pending messages - " + this._self.getLocaleString([ ['telepathy.error.' + aErrorCode] ]));
+            gIMPromptService.alert(null, this._self.getLocaleString([ ['ChannelErrorTitle'] ]),
+                                   this._self.getLocaleString([ ['telepathy.error.' + aErrorCode] ]));
+          },
+
+          onAddItem: function(aItem) {
+            var message = aItem.QueryInterface(Components.interfaces.csITPTextChannelPendingMessage);
+            this.mPendingMessages.push(message);
+          },
+
+          onItemsComplete: function() {
+            if (this.mPendingMessages.length == 0)
+              return; // Nothing to do
+
+            var msgIds = [];
+            for each (var message in this.mPendingMessages) {
+              msgIds.push(message.id);
+              this._self.seenMessage(message.text, message.timestamp, 'incoming');
+            }
+
+            /*
+            // Acknowledge seen messages
+            var emptyCB = {
+              __self: this._self,
+
+              doAction: function() {
+                // TODO: Nothing here?
+              },
+
+              onError: function(aErrorCode) {
+                dump("ERROR: acknowledgePendingMessages - " + this.__self.getLocaleString([ ['telepathy.error.' + aErrorCode] ]));
+                gIMPromptService.alert(null, this.__self.getLocaleString([ ['ChannelErrorTitle'] ]),
+                                       this.__self.getLocaleString([ ['telepathy.error.' + aErrorCode] ]));
+              }
+            };
+            this._self.channel.acknowledgePendingMessages(msgIds.length, msgIds, emptyCB);
+            */
+          }
+        })
+        ]]>
+      </field>
+
+      <method name="loadSession">
+        <body>
+          <![CDATA[
+            this.cleanup();
+
+            this.account = this._session.account;
+            this.address = this._session.address;
+
+            this.updateChannel(this._session.channel, true);
+            this.initUserInfo();
+            this.initChatWindow();
+            this.setTimestampState(this._session.showTimestamps);
+
+            this.focus();
+          ]]>
+        </body>
+      </method>
+
+      <method name="closeSession">
+        <body>
+          <![CDATA[
+            this._session = {};
+            this.cleanup();
+          ]]>
+        </body>
+      </method>
+
+      <method name="setChatState">
+        <parameter name="chatstate"/>
+        <body>
+          <![CDATA[
+            if (chatstate == 'composing') {
+              // If previous state is also typing
+              if (this._typing > 0)
+                this._typing == 5 ? this._typing = 1 : this._typing++;
+              else
+                this._typing = 1;
+
+              chatstate += this._typing;
+            }
+            // If not composing, reset to initial value
+            else
+              this._typing = -1;
+
+            var img = document.getAnonymousElementByAttribute(this, "anonid", "remote-user-chatstate");
+            img.setAttribute("chatstate", chatstate);
+          ]]>
+        </body>
+      </method>
+
+      <method name="close">
+        <body>
+          <![CDATA[
+            if (this.readonly)
+              return;
+
+            this._controller.closeConversation(this.account, this.address);
+          ]]>
+        </body>
+      </method>
+
+      <method name="hideStatus">
+        <body>
+          <![CDATA[
+            var label = document.getAnonymousElementByAttribute(this, "anonid", "remote-user-statusmessage");
+            label.parentNode.collapsed = true;
+          ]]>
+        </body>
+      </method>
+
+      <method name="setStatusMessage">
+        <parameter name="statusMessage"/>
+        <body>
+          <![CDATA[
+            if (!this._docked) {
+              var label = document.getAnonymousElementByAttribute(this, "anonid", "remote-user-statusmessage");
+
+              var oldState = label.collapsed;
+              if (statusMessage == undefined || statusMessage == "")
+                label.collapsed = true;
+              else {
+                label.collapsed = false;
+                label.setAttribute("value", statusMessage);
+              }
+
+              // Need to adjust view, if status message label is uncollapsed now
+              if (!label.collapsed && oldState) {
+                var chatData = this.mChatBrowser.contentDocument.getElementById("chat-data");
+                if (chatData && chatData.lastChild)
+                  chatData.lastChild.scrollIntoView(true); 
+              }
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="toggleDock">
+        <body>
+          <![CDATA[
+            if (this.readonly)
+              return;
+
+            if (this._docked)
+              this._controller.detachWindow(this.account, this.address);
+            else
+              this._controller.dockWindow(this.account, this.address);
+          ]]>
+        </body>
+      </method>
+
+      <method name="getLocaleString">
+        <parameter name="aLocaleCodes"/>
+        <body>
+          <![CDATA[ 
+            var localeString = '';
+
+            for each (var localeCode in aLocaleCodes) {
+              if (localeCode.length > 1)
+                localeString += gIMStringBundle.getFormattedString(localeCode[0], localeCode.slice(1)) + '\n\n';
+              else
+                localeString += gIMStringBundle.getString(localeCode[0]) + '\n\n';
+            }
+
+            // chop trailing '\n\n'
+            localeString = localeString.substring(0, localeString.length-2);
+
+            return localeString;
+          ]]>
+        </body>
+      </method>
+
+    </implementation>
+
+    <handlers>
+      <handler event="focus">
+        <![CDATA[
+          if (this.readonly)
+            return;
+
+          var target = event.originalTarget;
+          if (target != this.mChatEditor &&
+              document.getBindingParent(target) != this.mChatEditor)
+            this.mChatEditor.focus();
+        ]]>
+      </handler>
+
+      <handler event="contextmenu">
+        <![CDATA[
+          var contextMenu = document.getAnonymousElementByAttribute(this, "anonid", "conversationpopup");
+
+          if (event.screenX && event.screenY)
+            contextMenu.openPopupAtScreen(event.screenX, event.screenY, true);
+          else
+            contextMenu.openPopup(this.mChatBrowser, null, 0, 0, true);
+        ]]>
+      </handler>
+
+      <handler event="keypress">
+        <![CDATA[
+          if (this.readonly)
+            return;
+
+          switch (event.keyCode) {
+            case KeyEvent.DOM_VK_F9:
+                this._controller.nextUnreadConversation();
+                return;
+
+            case KeyEvent.DOM_VK_TAB:
+              // Ignore if it is a detached window
+              if (!this._docked)
+                return;
+
+              if (event.shiftKey)
+                this._controller.prevConversation();
+              else
+                this._controller.nextConversation();
+              event.preventDefault();
+              return;
+
+            case KeyEvent.DOM_VK_RETURN:
+              if (event.shiftKey || event.ctrlKey)
+                return;
+
+              this.sendMessageRequested();
+
+              event.preventDefault();
+              break;
+          }
+        ]]>
+      </handler>
+    </handlers>
+
+  </binding>
+
+</bindings>    

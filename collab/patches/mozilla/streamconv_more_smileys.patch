@@ -1,0 +1,114 @@
+diff --git a/netwerk/streamconv/converters/mozTXTToHTMLConv.cpp b/netwerk/streamconv/converters/mozTXTToHTMLConv.cpp
+--- a/netwerk/streamconv/converters/mozTXTToHTMLConv.cpp
++++ b/netwerk/streamconv/converters/mozTXTToHTMLConv.cpp
+@@ -836,16 +836,21 @@ mozTXTToHTMLConv::GlyphHit(const PRUnich
+                    outputHTML, glyphTextLen) ||
+   
+           SmilyHit(aInString, aInLength, bArg,
+                    ":)",
+                    "moz-smiley-s1", // smile
+                    outputHTML, glyphTextLen) ||
+           
+           SmilyHit(aInString, aInLength, bArg,
++                   ":D",
++                   "moz-smiley-s5", // laughing
++                   outputHTML, glyphTextLen) ||
++          
++          SmilyHit(aInString, aInLength, bArg,
+                    ":-D",
+                    "moz-smiley-s5", // laughing
+                    outputHTML, glyphTextLen) ||
+           
+           SmilyHit(aInString, aInLength, bArg,
+                    ":-(",
+                    "moz-smiley-s2", // frown
+                    outputHTML, glyphTextLen) ||
+@@ -871,36 +876,61 @@ mozTXTToHTMLConv::GlyphHit(const PRUnich
+                    outputHTML, glyphTextLen) ||
+           
+           SmilyHit(aInString, aInLength, bArg,
+                    ":-\\",
+                    "moz-smiley-s7", // undecided
+                    outputHTML, glyphTextLen) ||
+           
+           SmilyHit(aInString, aInLength, bArg,
++                   ":-/",
++                   "moz-smiley-s7", // undecided
++                   outputHTML, glyphTextLen) ||
++          
++          SmilyHit(aInString, aInLength, bArg,
+                    ":-P",
+                    "moz-smiley-s4", // tongue
+                    outputHTML, glyphTextLen) ||
+                    
+           SmilyHit(aInString, aInLength, bArg,
+                    ";-P",
+                    "moz-smiley-s4", // tongue
+                    outputHTML, glyphTextLen) ||  
+          
+           SmilyHit(aInString, aInLength, bArg,
++                   ":P",
++                   "moz-smiley-s4", // tongue
++                   outputHTML, glyphTextLen) ||  
++         
++          SmilyHit(aInString, aInLength, bArg,
++                   ";P",
++                   "moz-smiley-s4", // tongue
++                   outputHTML, glyphTextLen) ||  
++         
++          SmilyHit(aInString, aInLength, bArg,
+                    "=-O",
+                    "moz-smiley-s8", // surprise
+                    outputHTML, glyphTextLen) ||
+          
+           SmilyHit(aInString, aInLength, bArg,
++                   ":-o",
++                   "moz-smiley-s8", // surprise
++                   outputHTML, glyphTextLen) ||
++         
++          SmilyHit(aInString, aInLength, bArg,
+                    ":-*",
+                    "moz-smiley-s9", // kiss
+                    outputHTML, glyphTextLen) ||
+          
+           SmilyHit(aInString, aInLength, bArg,
++                   ":*",
++                   "moz-smiley-s9", // kiss
++                   outputHTML, glyphTextLen) ||
++         
++          SmilyHit(aInString, aInLength, bArg,
+                    ">:o",
+                    "moz-smiley-s10", // yell
+                    outputHTML, glyphTextLen) ||
+           
+           SmilyHit(aInString, aInLength, bArg,
+                    ">:-o",
+                    "moz-smiley-s10", // yell
+                    outputHTML, glyphTextLen) ||
+@@ -926,16 +956,26 @@ mozTXTToHTMLConv::GlyphHit(const PRUnich
+                    outputHTML, glyphTextLen) ||
+          
+           SmilyHit(aInString, aInLength, bArg,
+                    ":'(",
+                    "moz-smiley-s15", // cry
+                    outputHTML, glyphTextLen) ||
+          
+           SmilyHit(aInString, aInLength, bArg,
++                   ":((",
++                   "moz-smiley-s15", // cry
++                   outputHTML, glyphTextLen) ||
++
++          SmilyHit(aInString, aInLength, bArg,
++                   ":-((",
++                   "moz-smiley-s15", // cry
++                   outputHTML, glyphTextLen) ||
++
++          SmilyHit(aInString, aInLength, bArg,
+                    ":-X",
+                    "moz-smiley-s16", // sealed
+                    outputHTML, glyphTextLen) 
+         )
+     )
+     {
+         aOutputString.Append(outputHTML);
+         return PR_TRUE;

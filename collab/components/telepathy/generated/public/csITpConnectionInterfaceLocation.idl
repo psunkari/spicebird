@@ -1,0 +1,149 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Code in this file is generated using a computer program.
+ * Please refer to the corresponding telepathy spec for any help in using the
+ * code here.  You may also feel free to contact the original developer for
+ * any related help.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIVariant.idl"
+#include "nsIArray.idl"
+
+
+%{C++
+#include "glib/gtypes.h"
+%}
+native gpointer(gpointer);
+
+
+
+/*
+ * A user's location, represented as an extensible mapping.
+ */
+[scriptable, uuid(89e40a4c-1b48-4dfa-bdda-c3479d8602b4)]
+interface csITpLocation : nsISupports
+{
+  /*  */
+  readonly attribute AUTF8String key;
+  /* The value corresponding to the well-known key. */
+  readonly attribute nsIVariant value;
+};
+
+/*
+ * A map from contacts to their locations.
+ */
+[scriptable, uuid(b6b42789-ca06-442a-93b9-17831ba12bb4)]
+interface csITpContactLocations : nsISupports
+{
+  /* A contact */
+  readonly attribute PRUint32 contact;
+  /* The contact's location, which MAY be empty to indicate
+          that the contact's location is unknown */
+  readonly attribute nsIArray location;
+};
+
+[scriptable, uuid(860576cf-804a-40df-bc27-3c4f011ac034)]
+interface csITpConnectionInterfaceLocationGetLocationsCB : nsISupports
+{
+  void onGetLocationsError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetLocationsDone(in nsIArray aLocations);
+};
+
+[scriptable, uuid(0e741605-3529-48d0-829b-a74e439f1fc2)]
+interface csITpConnectionInterfaceLocationRequestLocationCB : nsISupports
+{
+  void onRequestLocationError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onRequestLocationDone(in nsIArray aLocation);
+};
+
+[scriptable, uuid(12998d66-5441-43cb-ba30-932e003a00fe)]
+interface csITpConnectionInterfaceLocationLocationUpdatedObserver : nsISupports
+{
+  void onLocationUpdated(in PRUint32 aContact, in nsIArray aLocation);
+};
+
+[scriptable, uuid(f4c48ed5-088d-4875-9ee8-b479c8476b07)]
+interface csITpConnectionInterfaceLocationSetLocationCB : nsISupports
+{
+  void onSetLocationError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onSetLocationDone();
+};
+
+[scriptable, uuid(9c967d16-63e5-45ff-8cb8-514e00237774)]
+interface csITpConnectionInterfaceLocationLocationAccessControlTypesCB : nsISupports
+{
+  void getPropertyLocationAccessControlTypesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyLocationAccessControlTypesDone(in PRUint32 aLocationAccessControlTypesCount, [array, size_is(aLocationAccessControlTypesCount)] in PRUint32 aLocationAccessControlTypes);
+};
+
+[scriptable, uuid(6ffe149c-7d1a-4522-a70d-542777a255f8)]
+interface csITpConnectionInterfaceLocationLocationAccessControlCB : nsISupports
+{
+  void getPropertyLocationAccessControlError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void getPropertyLocationAccessControlDone(in nsISupports aLocationAccessControl);
+};
+
+
+
+[scriptable, uuid(90b49e4f-690c-4d2c-8b53-5bad71160b84)]
+interface csITpConnectionInterfaceLocation : nsISupports
+{
+  void callGetLocations(in PRUint32 aContactsCount, [array, size_is(aContactsCount)] in PRUint32 aContacts, in csITpConnectionInterfaceLocationGetLocationsCB cb);
+
+  void callRequestLocation(in PRUint32 aContact, in csITpConnectionInterfaceLocationRequestLocationCB cb);
+
+  void connectToLocationUpdated(in csITpConnectionInterfaceLocationLocationUpdatedObserver observer);
+  void disconnectFromLocationUpdated(in csITpConnectionInterfaceLocationLocationUpdatedObserver observer);
+
+  void callSetLocation(in nsIArray aLocation, in csITpConnectionInterfaceLocationSetLocationCB cb);
+
+  /* The types of access control that are supported by this
+        connection. */
+  void getPropertyLocationAccessControlTypes(in csITpConnectionInterfaceLocationLocationAccessControlTypesCB cb);
+
+  /* The current access control mechanism and settings
+        for this connection. Before publishing location for the first time,
+        if this has not been set by a client, implementations SHOULD
+        set it to be as restrictive as possible (an empty whitelist, if
+        supported). */
+  void getPropertyLocationAccessControl(in csITpConnectionInterfaceLocationLocationAccessControlCB cb);
+
+};

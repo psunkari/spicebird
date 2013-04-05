@@ -1,0 +1,818 @@
+<?xml version="1.0"?>
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+#   Ashok Gudibandla <ashok@synovel.com>
+# Portions created by the Initial Developer are Copyright (C) 2007-2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Sivakrishna Edpuganti <sivakrishna@synovel.com> 
+#   Fred Jendrzejewski <fred.jen@web.de>
+#   Denis Shvydkiy <motobuzz@gmail.com>
+#
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** 
+<!DOCTYPE folderviewApplet SYSTEM "chrome://messenger/locale/csMailnewsApplet.dtd">
+
+<bindings id="csMailnewsAppletsBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:nc="http://home.netscape.com/NC-rdf#"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="folderview">
+    <content> 
+      <xul:stringbundleset>
+         <xul:stringbundle anonid="folderview-stringbundle"
+            src="chrome://messenger/locale/csMailnewsApplet.properties"/>
+      </xul:stringbundleset>
+      <xul:hbox flex="1" ondraggesture="">
+        <xul:vbox anonid="folderview-container" xbl:inherits="homekey" flex="1">
+          <xul:groupbox anonid="folderview-config-container" 
+                        class="applet-config-pane" collapsed="true" >
+            <xul:hbox align="center" flex="1">
+              <xul:label value="&applets.mailnews.msgfolder;"/>
+              <xul:menulist oncommand="doPrefUpdate('folder');"
+                            anonid="folderview-config-folder" flex="1">
+                <xul:menupopup class="folderTargetPopup" flex="1"/>
+              </xul:menulist>
+            </xul:hbox>
+            <xul:hbox align="center" flex="1">
+               <xul:label value="&applets.mailnews.duration;" crop="end" flex="1"/>
+               <xul:menulist anonid="folderview-config-duration" sizetopopup="none"
+                     oncommand="doPrefUpdate('duration');" flex="1">
+                    <xul:menupopup>
+                      <xul:menuitem label="&applets.mailnews.nolimit;" value="10000000"/>
+                      <xul:menuitem label="&applets.mailnews.oneday;"  value="1"/>
+                      <xul:menuitem label="&applets.mailnews.twodays;" value="2"/>
+                      <xul:menuitem label="&applets.mailnews.oneweek;" value="7"/>
+                      <xul:menuitem label="&applets.mailnews.twoweeks;" value="14"/>
+                      <xul:menuitem label="&applets.mailnews.onemonth;" value="30"/>
+                    </xul:menupopup>
+               </xul:menulist>
+            </xul:hbox>
+            <xul:hbox align="center" flex="1">
+               <xul:label value="&applets.mailnews.tags;" crop="end" flex="1"/>
+               <xul:menulist anonid="folderview-config-tag" sizetopopup="none"
+                     oncommand="doPrefUpdate('tag');" flex="1">
+                    <xul:menupopup onpopupshowing="updateTagList()"/>
+               </xul:menulist>
+            </xul:hbox>
+            <xul:hbox align="center" flex="1">
+               <xul:label value="&applets.mailnews.maxlimit;" crop="end" flex="1"/>
+               <xul:textbox type="number"
+                   onchange="doPrefUpdate('mailnum')" 
+                   anonid="folderview-config-mailnum"
+                   min="1" max="25" size="2" flex="1"/>
+               <xul:spacer flex="10"/>
+            </xul:hbox>
+            <xul:checkbox label="&applets.mailnews.unreadonly;" checked="false" 
+                anonid="folderview-config-unread"
+                oncommand="doPrefUpdate('unread')" flex="1"/>
+          </xul:groupbox>
+
+          <xul:menupopup anonid="applet-menu">
+            <xul:menuitem class="folderview-menu menuitem-iconic" anonid="folderview-menu-getmsg" label="&applets.mailnews.menu.getmails;" 
+                        value="1" oncommand="getMessages()"/>
+            <xul:menuitem class="folderview-menu menuitem-iconic" anonid="folderview-menu-newmsg" label="&applets.mailnews.menu.newmail;"
+                        value="1" oncommand="MsgNewMessage(event)"/>
+          </xul:menupopup>
+
+          <xul:label anonid="folderview-status" class="applet-status-label" collapsed="true" crop="end" />
+
+          <xul:richlistbox anonid="folderview-list-box" flex="1" class="homebox-list" 
+                           onblur="event.originalTarget.clearSelection();" />
+        </xul:vbox>
+      </xul:hbox>
+    </content>
+
+    <implementation>
+      <field name="mPrefBranch">null</field>
+      <field name="mFolder">null</field>
+      <field name="mFolderUri">null</field>
+      <field name="mMailnum">null</field>
+      <field name="mUnreadOnly">null</field>
+      <field name="mKey">null</field>
+      <field name="mStatusLabel">null</field>
+      <field name="mStringBundle">null</field>
+      <field name="mListBox">null</field>
+      <field name="mMailSession">null</field>
+      <field name="mDuration">null</field>
+      <field name="mTagService">null</field>
+      <field name="mMsgDbService">null</field>
+      <field name="mMsgDb">null</field>
+      <field name="mMsgDbListener">null</field>
+      <field name="mTagKey">null</field>
+      <field name="mSearchItems">new Array()</field>
+
+      <property name="folderUri" onget="return this.mFolderUri">
+         <setter>
+            <![CDATA[
+               if (this.mFolder) 
+                  this.mFolder = null;
+
+               // Remove listeners added for previous folder.
+               if (this.mFolderUri)
+                 this.mMsgDbService.unregisterPendingListener(this.mMsgDbListener);
+
+               this.mFolderUri = val;
+               this.mFolder = GetMsgFolderFromUri(val);
+
+               // Hold a reference to the database to prevent gc.
+               this.mMsgDb = this.mMsgDbService.openFolderDB(this.mFolder, false, false); 
+               this.mMsgDbService.registerPendingListener(this.mFolder, this.mMsgDbListener);
+               
+               var folderDisplayName = "";
+               if ( this.mFolder != this.mFolder.rootFolder ) 
+                  folderDisplayName =  this.mStringBundle.getFormattedString("collab.folderviewApplet.place", 
+                     [this.mFolder.name, this.mFolder.rootFolder.name]);
+               else 
+                  folderDisplayName = this.mFolder.name;
+               
+               document.getAnonymousElementByAttribute(this, "anonid", "folderview-config-folder")
+                  .setAttribute("label", folderDisplayName);
+
+               var node = this.parentNode;
+               while (node && node.tagName != "homeapplet")
+                 node = node.parentNode;
+               if (node)
+                 node.title = folderDisplayName;
+
+            ]]>
+         </setter>
+      </property>
+      <property name="mailnum" onget="return this.mMailnum">
+         <setter>
+            <![CDATA[
+               if ( typeof(val) != "number" )
+                   return;
+               this.mMailnum = val;
+               document.getAnonymousElementByAttribute(this, "anonid", "folderview-config-mailnum").value = val;
+            ]]>
+         </setter>
+      </property>
+      <property name="duration" onget="return this.mDuration">
+         <setter>
+            <![CDATA[
+               if ( typeof(val) != "number" )
+                   return;
+               this.mDuration = val;
+               document.getAnonymousElementByAttribute(this, "anonid", "folderview-config-duration").value = val;
+            ]]>
+         </setter>
+      </property>
+      <property name="tagKey" onget="return this.mTagKey">
+         <setter>
+            <![CDATA[
+               this.updateTagList();
+               var tagName = (val != "-none-") ? this.mTagService.getTagForKey(val) : val;
+               var tagList = document.getAnonymousElementByAttribute(this, "anonid", "folderview-config-tag");
+               var tagPopup = tagList.firstChild;
+               var selectItem = tagList.getElementsByAttribute("label", tagName).item(0);
+               if (selectItem)
+                tagList.selectedItem = selectItem;
+               else
+                tagList.selectedItem = tagList.firstChild;
+               this.mTagKey = val;
+            ]]>
+         </setter>
+      </property>
+ 
+      <property name="unreadOnly" onget="return this.mUnreadOnly">
+         <setter>
+            <![CDATA[
+               if ( typeof(val) != "boolean" )
+                   return;
+               this.mUnreadOnly = val;
+               document.getAnonymousElementByAttribute(this, "anonid", "folderview-config-unread").checked = val;
+            ]]>
+         </setter>
+      </property>
+
+      <constructor>
+        <![CDATA[
+          this.mKey = this.parentNode.getAttribute("homekey");
+          if (!this.mKey)
+            return;
+          this.mTagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
+                             .getService(Components.interfaces.nsIMsgTagService);
+
+          // xxx: adding folder listener to mailSession (not the folder) since adding it on the
+          // folder causes a crash and this seems to be the only alternative as found on the forums.
+          this.mMailSession = Components.classes["@mozilla.org/messenger/services/session;1"]
+                                 .getService(Components.interfaces.nsIMsgMailSession); 
+
+          var notifyFlags = Components.interfaces.nsIFolderListener.all;
+          this.mMailSession.AddFolderListener(this.mFolderObserver, notifyFlags);  
+
+          this.mPrefBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                                       .getService(Components.interfaces.nsIPrefService)
+                                       .getBranch("collab.home.applets." + this.mKey + ".")
+
+          this.mStatusLabel = document.getAnonymousElementByAttribute(this,"anonid", "folderview-status");
+
+          this.mListBox = document.getAnonymousElementByAttribute(this, "anonid", "folderview-list-box");
+          this.mListBox.selected = -1;
+          
+          this.mStringBundle = document.getAnonymousElementByAttribute(this,
+                  "anonid", "folderview-stringbundle");
+
+          try {
+            this.unreadOnly = this.mPrefBranch.getBoolPref("unread");
+          } catch (ex) { 
+            this.unreadOnly = true;
+          }
+
+          try {
+            this.mailnum = this.mPrefBranch.getIntPref("mailnum");
+          } catch (ex) { 
+            this.mailnum = 5;
+          }
+
+          try {
+            this.duration = this.mPrefBranch.getIntPref("duration");
+          } catch (ex) { 
+            this.duration = 2;
+          }
+
+          // Add a listner on db for the folder to observe any header changes on tag applied/removed 
+          this.mMsgDbService = Components.classes["@mozilla.org/msgDatabase/msgDBService;1"]
+                             .getService(Components.interfaces.nsIMsgDBService);
+          var self = this;
+          this.mMsgDbListener = {
+            QueryInterface: function(aIID) {
+               if (iid.equals(Components.interfaces.nsIDBChangeListener) ||
+                   iid.equals(Components.interfaces.nsISupports))
+                 return this;
+               throw Components.results.NS_NOINTERFACE;
+            },
+            onHdrFlagsChanged: function(aHdrChanged, aOldFlags, aNewFlags, aInstigator) {
+              self.refresh();
+            },
+            onHdrDeleted: function(aHdrChanged, aParentKey, aFlags, aInstigator) {},
+            onHdrAdded: function(aHdrChanged, aParentKey, aFlags, aInstigator) {},
+            onParentChanged: function (aKeyChanged, oldParent,newParent, aInstigator){},
+            onAnnouncerGoingAway: function(aInstigator) {},
+            onReadChanged: function(aInstigator){},
+            onJunkScoreChanged: function(aInstigator){},
+            onHdrPropertyChanged: function(aHdrToChange, aPreChange, aStatus, aInstigator){}
+          };
+
+          try {
+            this.folderUri = this.mPrefBranch.getCharPref("folder");
+          } catch (ex) { 
+          }
+
+          try {
+            this.tagKey = this.mPrefBranch.getCharPref("tagkey");
+          } catch (ex) { 
+            this.tagKey = "-none-";
+          }
+
+          if (!this.folderUri) {
+            var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"]
+                                    .getService(Components.interfaces.nsIMsgAccountManager);
+            if (!accountManager.accounts.Count()) {
+              this.showMessage(this.mStringBundle.getString("collab.folderviewApplet.noaccount"));
+              return;
+            }
+            var folder = GetInboxFolder(accountManager.defaultAccount.incomingServer);
+            if (!folder) {
+              this.showMessage(this.mStringBundle.getString("collab.folderviewApplet.configure"));
+              return;
+            }
+                
+            folder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
+            this.folderUri = folder.URI;
+            this.mPrefBranch.setCharPref ("folder", this.folderUri);
+          }
+
+          this.refresh();
+        ]]>
+      </constructor>
+      <destructor>
+        <![CDATA[
+          if (this.mMailSession)
+            this.mMailSession.RemoveFolderListener(this.mFolderObserver);  
+
+          this.mMsgDbService.unregisterPendingListener(this.mMsgDbListener);
+        ]]>
+      </destructor>
+
+      <method name="collapse">
+        <parameter name="aAppletContainer"/>
+        <body>
+          <![CDATA[
+            if (aAppletContainer)
+              aAppletContainer.setAttribute("collapsed", "true");
+          ]]>
+        </body>
+      </method>
+
+      <method name="show">
+        <parameter name="aAppletContainer"/>
+        <body>
+          <![CDATA[
+            if (aAppletContainer)
+              aAppletContainer.removeAttribute("collapsed");
+
+            this.resize();
+          ]]>
+        </body>
+      </method>
+
+      <method name="resize">
+        <body>
+          <![CDATA[
+          var totalHeight = 0;
+          for each (var listItem in this.mListBox.children) {
+            totalHeight += listItem.boxObject.height;
+          }
+          this.mListBox.height = totalHeight;
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateTagList">
+        <body>
+          <![CDATA[
+            var tagList = document.getAnonymousElementByAttribute(this, "anonid", "folderview-config-tag");
+            var tagPopup = tagList.firstChild;
+            while(tagPopup.lastChild)
+              tagPopup.removeChild(tagPopup.lastChild);
+            var nullItem = document.createElement("menuitem");
+            var noneStr = this.mStringBundle.getString("collab.folderviewApplet.none");
+            nullItem.setAttribute("label", noneStr);
+            nullItem.setAttribute("value", "-none-");
+            tagPopup.appendChild(nullItem);
+            tagPopup.appendChild(document.createElement("menuseparator"));
+
+            var tagArray = this.mTagService.getAllTags({});
+            for (var i=0; i < tagArray.length; ++i) {
+              var tagItem = document.createElement("menuitem");
+              tagItem.setAttribute("label", tagArray[i].tag);
+              tagItem.setAttribute("value", tagArray[i].key);
+              tagPopup.appendChild(tagItem);
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="showMessage">
+        <parameter name="aMsg"/>
+        <body>
+          <![CDATA[
+             this.mStatusLabel.value = aMsg;
+             this.mStatusLabel.collapsed = false;
+          ]]>
+        </body>
+      </method>
+
+      <method name="getMessages">
+        <body>
+          <![CDATA[
+            MsgGetMessagesForAccount(this.mFolder);
+          ]]>
+        </body>
+      </method>
+
+      <method name="hideMessage">
+        <body>
+          <![CDATA[
+             this.mStatusLabel.value = "";
+             this.mStatusLabel.collapsed = true;
+          ]]>
+        </body>
+      </method>
+
+      <method name="getMenu">
+         <body>
+           <![CDATA[
+             /* Method called by the framework applet to get the menupopup for the applet */
+             return document.getAnonymousElementByAttribute(this, "anonid", "applet-menu");
+           ]]>
+         </body>
+      </method>
+
+      <method name="isMsgInFolder">
+        <parameter name="aItem"/>
+        <body>
+          <![CDATA[
+            if (! (aItem instanceof Components.interfaces.nsIMsgDBHdr) ) 
+               return false;
+            return aItem.folder.URI == this.mFolderUri ;
+          ]]>
+        </body>
+      </method>
+
+      <method name="refresh">
+        <body>
+          <![CDATA[
+            this.showMessage(this.mStringBundle.getString("collab.folderviewApplet.loading"));
+            var Ci = Components.interfaces;
+
+            var duration = this.duration;
+            var timeSearchVal = {
+               QueryInterface: function(aIId) {
+                  if (aIId == Ci.nsIMsgSearchValue)
+                   return this;
+                  return null;
+               },
+               attrib : Ci.nsMsgSearchAttrib.AgeInDays,
+               age : duration,
+            };
+
+            var tagKey = this.mTagKey;
+            var tagSearchVal = {
+               QueryInterface: function(aIId) {
+                  if (aIId == Ci.nsIMsgSearchValue)
+                   return this;
+                  return null;
+               },
+               attrib : Ci.nsMsgSearchAttrib.Keywords,
+               str: tagKey,
+            };
+
+            var searchListener = {
+              applet: this,
+              results : new Array(),
+              onSearchHit: function (aHdr, aFolder) {
+                  if (this.applet.unreadOnly && aHdr.isRead)
+                     return;
+                  this.results.push(aHdr);
+              },
+              onSearchDone: function(aStatus) {
+                // sort by descending order of date.
+                var items = this.results.sort(function (aItm1, aItm2) {
+                                    if(aItm1.date > aItm2.date)
+                                       return -1;
+                                    return 1;
+                                  });
+                if (items.length > this.applet.mailnum )
+                   items.length = this.applet.mailnum;
+                this.applet.updateList(items);
+              },
+              onNewSearch: function() {
+              }
+            }
+
+            var searchSession = Components.classes["@mozilla.org/messenger/searchSession;1"]
+                              .createInstance(Components.interfaces.nsIMsgSearchSession);
+            searchSession.addScopeTerm(Ci.nsMsgSearchScope.offlineMail, this.mFolder );
+            
+            var timeSearchTerm = searchSession.createTerm();
+            timeSearchTerm.attrib = Ci.nsMsgSearchAttrib.AgeInDays;
+            timeSearchTerm.op = Ci.nsMsgSearchOp.IsLessThan;
+            timeSearchTerm.value = timeSearchVal;
+            timeSearchTerm.booleanAnd = true;
+            searchSession.appendTerm(timeSearchTerm);
+            
+            var tagSearchTerm = searchSession.createTerm();
+            tagSearchTerm.attrib = Ci.nsMsgSearchAttrib.Keywords;
+            tagSearchTerm.op = Ci.nsMsgSearchOp.Contains;
+            tagSearchTerm.value = tagSearchVal;
+            tagSearchTerm.booleanAnd = true;
+            if (tagKey != "-none-")
+              searchSession.appendTerm(tagSearchTerm);
+
+            searchSession.registerListener(searchListener);
+            searchSession.search(msgWindow);
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateList">
+        <parameter name="aItems"/>
+        <body>
+          <![CDATA[
+            // Clear contents of the listbox
+            while (this.mListBox.getRowCount())
+              this.mListBox.removeItemAt(0);
+
+            var numAdded = 0;
+            for ( ; numAdded < aItems.length; numAdded++) {
+              let msgItem = aItems[numAdded].QueryInterface(Components.interfaces.nsIMsgDBHdr);
+              if (!msgItem ) {
+                this.showMessage(this.mStringBundle("collab.folderviewApplet.errorMsg"));
+                return;
+              }
+
+              var item = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                   "richlistitem");
+              item.setAttribute("class", "folderview-item homebox-listitem");
+              this.mListBox.appendChild(item);
+              item.mail = msgItem;
+              if ( this.mFolder.server.type == "rss" ) {
+                 item.setAttribute("isfeed", "true");
+              }
+            }
+            if (numAdded == 0) {
+              var stringId = this.unreadOnly ? "collab.folderviewApplet.nounreadmails"
+                                       : "collab.folderviewApplet.nomails";
+              this.showMessage (this.mStringBundle.getString(stringId));
+            }
+            else
+              this.hideMessage ();
+
+           this.resize();
+          ]]>
+        </body>
+      </method>
+
+      <method name="getSelectedDays">
+        <body>
+          <![CDATA[
+            var dt = now();
+            if (dt.hour > this.mPrevHours)
+              dt.hour -= this.mPrevHours;
+            else
+              dt.hour = dt.minute = dt.second = 0;
+            this.mStartDate = dt.clone();
+           
+            if (this.mDays != 0) {
+              dt.hour = dt.minute = dt.second = 0;
+              dt.day += this.mDays;
+              this.mEndDate = dt.clone();
+            } else {
+              this.mEndDate = null;
+            }
+          ]]>
+        </body>
+      </method>
+      <method name="add">
+        <parameter name="aItem" />
+        <body>
+          <![CDATA[
+            var item = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                "richlistitem");
+            item.setAttribute("class", "folderview-item");
+
+            var nodes = this.mListBox.children;
+            var added = false;
+            for each (var node in nodes) {
+              var ev = node.event;
+              var st = ev.startDate || ev.dueDate || ev.entryDate;
+              if (st.compare(rawStart) > 0) {
+                this.mListBox.insertBefore(item, node);
+                added = true;
+                break;
+              }
+            }
+            if (!added)
+              this.mListBox.appendChild(item);
+
+            item.event = aItem;
+          ]]>
+        </body>
+      </method>
+      <method name="delete">
+        <parameter name="aItem" />
+        <body>
+          <![CDATA[
+            var items = this.mListBox.children;
+
+            for each (var item in items) {
+              if (item.event.id == aItem.id) {
+                this.mListBox.removeChild(item);
+                break;
+              }
+            }
+          ]]>
+        </body>
+      </method>
+      <method name="doPrefUpdate">
+        <parameter name="aParam"/>
+        <body>
+          <![CDATA[
+            var value = null;
+
+            switch (aParam) {
+              case "folder":
+                value = document.getAnonymousElementByAttribute(this, "anonid", "folderview-config-folder").menupopup.getAttribute('uri');
+                this.folderUri = value;
+                this.mPrefBranch.setCharPref ("folder", value);
+                this.hideMessage();
+                break;
+              case "mailnum":
+                value = document.getAnonymousElementByAttribute(this, "anonid", "folderview-config-mailnum").value;
+                this.mMailnum = parseInt(value);
+                this.mPrefBranch.setIntPref ("mailnum", value);
+                break;
+              case "unread":
+                value = document.getAnonymousElementByAttribute(this, "anonid", "folderview-config-unread").checked;
+                this.mUnreadOnly = value;
+                this.mPrefBranch.setBoolPref ("unread", value);
+                break;
+              case "duration":
+                value = document.getAnonymousElementByAttribute(this, "anonid", "folderview-config-duration").value;
+                value = parseInt(value);
+                this.mDuration = value;
+                this.mPrefBranch.setIntPref ("duration", value);
+                break;
+              case "tag":
+                value = document.getAnonymousElementByAttribute(this, "anonid", "folderview-config-tag").value;
+                this.mTagKey = value;
+                this.mPrefBranch.setCharPref ("tagkey", value);
+                break;
+            }
+            this.refresh();
+          ]]>
+        </body>
+      </method>
+      <method name="hideConfigPane">
+        <body>
+          <![CDATA[
+            document.getAnonymousElementByAttribute(this, "anonid", "folderview-config-container")
+                    .setAttribute("collapsed", true);
+          ]]>
+        </body>
+      </method>
+      <method name="showConfigPane">
+        <body>
+          <![CDATA[
+            document.getAnonymousElementByAttribute(this, "anonid", "folderview-config-folder")
+                    .value = this.mFolderUri;
+
+            var node = this.parentNode;
+            while (node && node.tagName != "homeapplet")
+              node = node.parentNode;
+
+            document.getAnonymousElementByAttribute(this, "anonid", "folderview-config-container")
+                    .removeAttribute("collapsed");
+          ]]>
+        </body>
+      </method>
+
+      <field name="mFolderObserver">
+        <![CDATA[
+         ({
+            folderview : this,
+            mBatchCount: 0,
+         
+            QueryInterface: function (aIID) 
+            {
+              if (!aIID.equals(Components.interfaces.nsIFolderListener) &&
+                  !aIID.equals(Components.interfaces.nsISupports)) {
+                throw Cr.NS_ERROR_NO_INTERFACE;
+              }
+         
+              return this;
+            },
+
+            OnItemAdded :function( parentItem, item) {
+               if (this.folderview.isMsgInFolder(item))
+                  this.folderview.refresh();
+            },
+
+            OnItemRemoved : function( parentItem, item) {
+               if (this.folderview.isMsgInFolder(item))
+                  this.folderview.refresh();
+            },
+
+            OnItemPropertyChanged : function (item, property, oldValue, newValue) {
+               if (this.folderview.isMsgInFolder(item))
+                  this.folderview.refresh();
+            },
+
+            OnItemIntPropertyChanged : function (item, property, oldValue, newValue) {
+               if (this.folderview.isMsgInFolder(item))
+                  this.folderview.refresh();
+            },
+
+            OnItemBoolPropertyChanged : function (item, property, oldValue, newValue) {
+               if (this.folderview.isMsgInFolder(item))
+                  this.folderview.refresh();
+            },
+
+            OnItemUnicharPropertyChanged : function (item, property, oldValue, newValue) {
+               if (this.folderview.isMsgInFolder(item))
+                  this.folderview.refresh();
+            },
+  
+            OnItemPropertyFlagChanged : function (item, property, oldValue, newValue) {
+               if (this.folderview.isMsgInFolder(item))
+                  this.folderview.refresh();
+            },
+
+            OnItemEvent : function (item, event) {
+               if (this.folderview.isMsgInFolder(item))
+                  this.folderview.refresh();
+            }
+
+          })
+        ]]>
+      </field>
+    </implementation>
+  </binding>
+
+  <binding id="folderview-item" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+    <content>
+      <xul:stringbundleset>
+         <xul:stringbundle anonid="mail-item-stringbundle"
+            src="chrome://messenger/locale/csMailnewsApplet.properties"/>
+      </xul:stringbundleset>
+      <xul:hbox flex="1">
+         <xul:vbox >
+            <xul:image src="" width="16" height="16" anonid="folderview-listitem-image"/>
+            <xul:spacer flex="1"/>
+         </xul:vbox>
+         <xul:vbox flex="1">
+           <xul:hbox>
+              <xul:label anonid="mail-item-from" crop="end" flex="1"/>
+              <xul:label anonid="mail-item-date"/>
+           </xul:hbox>
+           <xul:description anonid="mail-item-title" flex="1" />
+         </xul:vbox>
+      </xul:hbox>
+    </content>
+    <implementation>
+      <field name="mMailItem">null</field>
+      <property name="mail">
+        <getter>
+          <![CDATA[
+            return this.mMailItem;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            this.mMailItem = val;
+            var titleLabel = document.getAnonymousElementByAttribute(this, "anonid", "mail-item-title");
+            titleLabel.appendChild(document.createTextNode(this.mMailItem.mime2DecodedSubject));
+            if (!this.mMailItem.isRead)
+               this.setAttribute("unreadmail", "true");
+
+            var fromLabel = document.getAnonymousElementByAttribute(this, "anonid", "mail-item-from");
+            let author = new String(this.mMailItem.mime2DecodedAuthor);
+            fromLabel.value = author.replace(/<[^>]*>/, "" );
+
+            var dateLabel = document.getAnonymousElementByAttribute(this, "anonid", "mail-item-date");
+            let date = new Date(this.mMailItem.dateInSeconds*1000);
+
+            var stringBundle = document.getAnonymousElementByAttribute(this,
+                  "anonid", "mail-item-stringbundle");
+
+            Components.utils.import("resource://gre/modules/csDateFormatter.jsm");
+            dateLabel.value = getFriendlyDateTime(date);
+          ]]>
+        </setter>
+      </property>
+    </implementation>
+     <handlers>
+      <handler event="dblclick">
+        <![CDATA[
+          if (!this.mMailItem)
+            return;
+
+          var self = this;
+          document.getElementById("tabcollab")
+                  .openTab("message", {
+                      msgHdr: self.mMailItem,
+                      background: false
+                  });
+        ]]>
+      </handler>
+      <handler event="click">
+        <![CDATA[
+          if (!this.mMailItem || !event.button == 1)
+            return;
+
+          var bgLoad = gPrefBranch.getBoolPref("mail.tabs.loadInBackground");
+          var self = this;
+          document.getElementById("tabcollab")
+                  .openTab("message", {
+                      msgHdr: self.mMailItem,
+                      background: bgLoad
+                  });
+        ]]>
+      </handler>
+    </handlers>
+ </binding>
+
+</bindings>

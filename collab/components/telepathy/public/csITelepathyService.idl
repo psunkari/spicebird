@@ -1,0 +1,106 @@
+/* -*- Mode: idl; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ * Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008, 2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIArray;
+
+[scriptable, uuid(9019a281-1acf-4104-b769-cbf0c0b676d5)]
+interface csITpGetConnectionListCB: nsISupports
+{
+  void onGetConnectionListDone(in nsIArray aConnections);
+  void onGetConnectionListError(in ACString aErrorDomain, in PRUint32 aErrorCode, in AUTF8String aErrorDesc);
+};
+
+[scriptable, uuid(51d6c45b-60b9-4e52-9b55-abaaa2121a80)]
+interface csITpGetManagerListCB: nsISupports
+{
+  void onGetManagerListDone(in nsIArray aManagers);
+  void onGetManagerListError(in ACString aErrorDomain, in PRUint32 aErrorCode, in AUTF8String aErrorDesc);
+};
+
+/**
+ * csITelepathyService
+ *
+ * An interface that gives access to the Telepathy core.
+ * Starting point for most of the stuff w.r.t Telepathy.
+ *
+ * @status: NOT FROZEN
+ */
+
+[scriptable, uuid(cd0564a6-f493-4fd4-aa3e-416f1397f56e)]
+interface csITelepathyService : nsISupports
+{
+  /**
+   * Error codes
+   */
+  const long Error_NetworkError = 0;
+  const long Error_NotImplemented = 1;
+  const long Error_InvalidArgument = 2;
+  const long Error_NotAvailable = 3;
+  const long Error_PermissionDenied = 4;
+  const long Error_Disconnected = 5;
+  const long Error_InvalidHandle = 6;
+  const long Error_Channel_Banned = 7;
+  const long Error_Channel_Full = 8;
+  const long Error_Channel_InviteOnly = 9;
+  const long Error_NotYours = 10;
+  const long Error_Cancelled = 11;
+  const long Error_AuthenticationFailed = 12;
+  const long Error_EncryptionNotAvailable = 13;
+  const long Error_EncryptionError = 14;
+  const long Error_Cert_NotProvided = 15;
+  const long Error_Cert_Untrusted = 16;
+  const long Error_Cert_Expired = 17;
+  const long Error_Cert_NotActivated = 18;
+  const long Error_Cert_FingerprintMismatch = 19;
+  const long Error_Cert_HostnameMismatch = 20;
+  const long Error_Cert_SelfSigned = 21;
+  const long Error_Cert_Invalid = 22;
+
+  /**
+   * Initiate retrieval of the list of connection managers
+   */
+  void getManagerList(in csITpGetManagerListCB cb);
+
+  /**
+   * Initiate retrieval of the list of connections
+   */
+  void getConnectionList(in csITpGetConnectionListCB cb);
+};
+

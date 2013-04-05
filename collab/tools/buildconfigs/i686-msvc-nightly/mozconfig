@@ -1,0 +1,37 @@
+# To build collabsuite
+. ${topsrcdir}/collab/config/mozconfig
+
+# Enable parallel build so we can do distribute compile
+mk_add_options MOZ_MAKE_FLAGS=-j2
+
+# Static build required for building the installer
+ac_add_options --enable-static --disable-shared
+
+# Tests have problem with static builds
+ac_add_options --disable-tests
+
+# Optimised build
+ac_add_options --enable-optimize --disable-debug
+
+# Enabling update packaging create mar files and corresponding description files
+ac_add_options --enable-update-packaging
+
+# Set this to nightly channel so that app.update.channel is set properly
+# Thus setting the update query to AUS properly. Nightly channel is
+# different from the release channel and updates happen differently
+ac_add_options --enable-update-channel=nightly
+
+# Disable Windows Vista parental controls, others the build fails asking more SDKs
+#ac_add_options --disable-parental-controls
+
+# Disable Vista SDK requirements
+#ac_add_options --disable-vista-sdk-requirements
+
+# We don't have ATL in Vista SDK
+# Temporarily disable it till we get the Windows 2003 SDK
+# MozillaBuild-1.3 has the capability to use both VistaSDK and Windows2003 SDK
+#ac_add_options --disable-xpconnect-idispatch
+#ac_add_options --disable-activex
+#ac_add_options --disable-activex-scripting
+#ac_add_options --disable-accessibility
+

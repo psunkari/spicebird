@@ -1,0 +1,394 @@
+diff --git a/mailnews/base/src/nsMsgDBView.cpp b/mailnews/base/src/nsMsgDBView.cpp
+--- a/mailnews/base/src/nsMsgDBView.cpp
++++ b/mailnews/base/src/nsMsgDBView.cpp
+@@ -72,16 +72,18 @@
+ #include "nsTextFormatter.h"
+ #include "nsIMutableArray.h"
+ #include "nsIMimeConverter.h"
+ #include "nsMsgMessageFlags.h"
+ #include "nsIPrompt.h"
+ #include "nsIWindowWatcher.h"
+ #include "nsMsgDBCID.h"
+ 
++#define PREF_DATETIME_BUFFER_LENGTH 160
++
+ nsrefcnt nsMsgDBView::gInstanceCount  = 0;
+ 
+ #ifdef SUPPORT_PRIORITY_COLORS
+ nsIAtom * nsMsgDBView::kHighestPriorityAtom = nsnull;
+ nsIAtom * nsMsgDBView::kHighPriorityAtom = nsnull;
+ nsIAtom * nsMsgDBView::kLowestPriorityAtom = nsnull;
+ nsIAtom * nsMsgDBView::kLowPriorityAtom = nsnull;
+ #endif
+@@ -113,21 +115,28 @@ PRUnichar * nsMsgDBView::kHighPrioritySt
+ PRUnichar * nsMsgDBView::kLowestPriorityString = nsnull;
+ PRUnichar * nsMsgDBView::kLowPriorityString = nsnull;
+ PRUnichar * nsMsgDBView::kNormalPriorityString = nsnull;
+ PRUnichar * nsMsgDBView::kReadString = nsnull;
+ PRUnichar * nsMsgDBView::kRepliedString = nsnull;
+ PRUnichar * nsMsgDBView::kForwardedString = nsnull;
+ PRUnichar * nsMsgDBView::kNewString = nsnull;
+ 
++char* nsMsgDBView::kDateFormatTodayString = nsnull;
++char* nsMsgDBView::kDateFormatYesterdayString = nsnull;
++char* nsMsgDBView::kDateFormatThisWeekString = nsnull;
++char* nsMsgDBView::kDateFormatThisYearString = nsnull;
++char* nsMsgDBView::kDateFormatOlderString = nsnull;
++
+ PRUnichar * nsMsgDBView::kKiloByteString = nsnull;
+ 
+ nsDateFormatSelector  nsMsgDBView::m_dateFormatDefault = kDateFormatShort;
+ nsDateFormatSelector  nsMsgDBView::m_dateFormatThisWeek = kDateFormatShort;
+ nsDateFormatSelector  nsMsgDBView::m_dateFormatToday = kDateFormatNone;
++PRBool                nsMsgDBView::m_showShortDate = PR_TRUE;
+ 
+ static const PRUint32 kMaxNumSortColumns = 2;
+ 
+ // this is passed into NS_QuickSort as custom data.
+ class viewSortInfo
+ {
+ public:
+   nsMsgDBView *view;
+@@ -221,16 +230,27 @@ void nsMsgDBView::InitializeAtomsAndLite
+ 
+   // priority strings
+   kHighestPriorityString = GetString(NS_LITERAL_STRING("priorityHighest").get());
+   kHighPriorityString = GetString(NS_LITERAL_STRING("priorityHigh").get());
+   kLowestPriorityString = GetString(NS_LITERAL_STRING("priorityLowest").get());
+   kLowPriorityString = GetString(NS_LITERAL_STRING("priorityLow").get());
+   kNormalPriorityString = GetString(NS_LITERAL_STRING("priorityNormal").get());
+ 
++  PRUnichar* tmpStr = GetString(NS_LITERAL_STRING("mailnews.listitem.dateformat.today").get());
++  kDateFormatTodayString = NS_strdup(NS_ConvertUTF16toUTF8(nsDependentString(tmpStr)).get());
++  tmpStr = GetString(NS_LITERAL_STRING("mailnews.listitem.dateformat.yesterday").get());
++  kDateFormatYesterdayString = NS_strdup(NS_ConvertUTF16toUTF8(nsDependentString(tmpStr)).get());
++  tmpStr = GetString(NS_LITERAL_STRING("mailnews.listitem.dateformat.thisweek").get());
++  kDateFormatThisWeekString = NS_strdup(NS_ConvertUTF16toUTF8(nsDependentString(tmpStr)).get());
++  tmpStr = GetString(NS_LITERAL_STRING("mailnews.listitem.dateformat.thisyear").get());
++  kDateFormatThisYearString = NS_strdup(NS_ConvertUTF16toUTF8(nsDependentString(tmpStr)).get());
++  tmpStr = GetString(NS_LITERAL_STRING("mailnews.listitem.dateformat.older").get());
++  kDateFormatOlderString = NS_strdup(NS_ConvertUTF16toUTF8(nsDependentString(tmpStr)).get());
++
+   kLabelColorWhiteAtom = NS_NewAtom("lc-white");
+   kLabelColorBlackAtom = NS_NewAtom("lc-black");
+ 
+   kReadString = GetString(NS_LITERAL_STRING("read").get());
+   kRepliedString = GetString(NS_LITERAL_STRING("replied").get());
+   kForwardedString = GetString(NS_LITERAL_STRING("forwarded").get());
+   kNewString = GetString(NS_LITERAL_STRING("new").get());
+ 
+@@ -274,16 +294,22 @@ nsMsgDBView::~nsMsgDBView()
+     NS_IF_RELEASE(kLabelColorBlackAtom);
+ 
+     NS_Free(kHighestPriorityString);
+     NS_Free(kHighPriorityString);
+     NS_Free(kLowestPriorityString);
+     NS_Free(kLowPriorityString);
+     NS_Free(kNormalPriorityString);
+ 
++    NS_Free(kDateFormatTodayString);
++    NS_Free(kDateFormatYesterdayString);
++    NS_Free(kDateFormatThisWeekString);
++    NS_Free(kDateFormatThisYearString);
++    NS_Free(kDateFormatOlderString);
++
+     NS_Free(kReadString);
+     NS_Free(kRepliedString);
+     NS_Free(kForwardedString);
+     NS_Free(kNewString);
+     NS_Free(kKiloByteString);
+   }
+ }
+ 
+@@ -310,21 +336,37 @@ PRUnichar * nsMsgDBView::GetString(const
+   if (!mMessengerStringBundle)
+   {
+     static const char propertyURL[] = MESSENGER_STRING_URL;
+     nsCOMPtr<nsIStringBundleService> sBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &res);
+     if (NS_SUCCEEDED(res) && sBundleService)
+       res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(mMessengerStringBundle));
+   }
+ 
++  if (!mMessengerStringBundle2)
++  {
++    static const char propertyURL[] = MESSENGER_STRING_URL2;
++    nsCOMPtr<nsIStringBundleService> sBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &res);
++    if (NS_SUCCEEDED(res) && sBundleService)
++      res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(mMessengerStringBundle2));
++  }
++
+   if (mMessengerStringBundle)
+     res = mMessengerStringBundle->GetStringFromName(aStringName, &ptrv);
+ 
+   if ( NS_SUCCEEDED(res) && (ptrv) )
+     return ptrv;
++  else if (mMessengerStringBundle2)  // If string not present in messenger.prop,
++  {                                  // check in collab's messenger.prop
++    res = mMessengerStringBundle2->GetStringFromName(aStringName, &ptrv);
++    if ( NS_SUCCEEDED(res) && (ptrv) )
++      return ptrv;
++    else
++      return NS_strdup(aStringName);
++  }
+   else
+     return NS_strdup(aStringName);
+ }
+ 
+ // helper function used to fetch localized strings from the prefs
+ nsresult nsMsgDBView::GetPrefLocalizedString(const char *aPrefName, nsString& aResult)
+ {
+   nsresult rv = NS_OK;
+@@ -477,16 +519,19 @@ nsresult nsMsgDBView::FetchSubject(nsIMs
+ // of the Date: date.
+ nsresult nsMsgDBView::FetchDate(nsIMsgDBHdr * aHdr, nsAString &aDateString, PRBool rcvDate)
+ {
+   PRTime dateOfMsg;
+   PRTime dateOfMsgLocal;
+   PRUint32 rcvDateSecs;
+   nsresult rv;
+ 
++  if (m_showShortDate)
++    return FetchShortDate(aHdr, aDateString, rcvDate);
++
+   if (!mDateFormatter)
+     mDateFormatter = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID);
+ 
+   NS_ENSURE_TRUE(mDateFormatter, NS_ERROR_FAILURE);
+   // Silently return Date: instead if Received: is unavailable
+   if (rcvDate)
+   {
+     rv = aHdr->GetUint32Property("dateReceived", &rcvDateSecs);
+@@ -567,16 +612,119 @@ nsresult nsMsgDBView::FetchDate(nsIMsgDB
+                                       dateFormat,
+                                       kTimeFormatNoSeconds,
+                                       dateOfMsg,
+                                       aDateString);
+ 
+   return rv;
+ }
+ 
++// An alternate implementation of ::FetchDate used in Spicebird to produce
++// even shorter date/time strings
++nsresult nsMsgDBView::FetchShortDate(nsIMsgDBHdr * aHdr, nsAString &aDateString, PRBool rcvDate)
++{
++  PRTime dateOfMsg;
++  PRTime dateOfMsgLocal;
++  PRUint32 rcvDateSecs;
++  nsresult rv;
++
++  if (!mDateFormatter)
++    mDateFormatter = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID);
++
++  NS_ENSURE_TRUE(mDateFormatter, NS_ERROR_FAILURE);
++  // Silently return Date: instead if Received: is unavailable
++  if (rcvDate)
++  {
++    rv = aHdr->GetUint32Property("dateReceived", &rcvDateSecs);
++    if (rcvDateSecs != 0)
++      Seconds2PRTime(rcvDateSecs, &dateOfMsg);
++  }
++  if (!rcvDate || rcvDateSecs == 0)
++    rv = aHdr->GetDate(&dateOfMsg);
++
++  PRTime currentTime = PR_Now();
++  PRExplodedTime explodedCurrentTime;
++  PR_ExplodeTime(currentTime, PR_LocalTimeParameters, &explodedCurrentTime);
++  PRExplodedTime explodedMsgTime;
++  PR_ExplodeTime(dateOfMsg, PR_LocalTimeParameters, &explodedMsgTime);
++
++  char* dateFormat = kDateFormatOlderString;
++  // If the message date is today, assign date format defined for today.
++  if (explodedCurrentTime.tm_year == explodedMsgTime.tm_year &&
++      explodedCurrentTime.tm_month == explodedMsgTime.tm_month &&
++      explodedCurrentTime.tm_mday == explodedMsgTime.tm_mday)
++  {
++    // same day...
++    dateFormat = kDateFormatTodayString;
++  }
++  // If the message date is not in future,
++  // assign different date formats if the message belongs to 
++  // yesterday, this week or this year.
++  else if (LL_CMP(currentTime, >, dateOfMsg))
++  {
++    // some constants for calculation
++    static PRInt64 microSecondsPerSecond;
++    static PRInt64 secondsPerDay;
++    static PRInt64 microSecondsPerDay;
++    static PRInt64 microSecondsPer6Days;
++
++    static PRBool bGotConstants = PR_FALSE;
++    if ( !bGotConstants )
++    {
++      // seeds
++      LL_I2L  ( microSecondsPerSecond,  PR_USEC_PER_SEC );
++      LL_UI2L ( secondsPerDay,          60 * 60 * 24 );
++
++      // derivees
++      LL_MUL( microSecondsPerDay,   secondsPerDay,      microSecondsPerSecond );
++      LL_MUL( microSecondsPer6Days, microSecondsPerDay, 6 );
++
++      bGotConstants = PR_TRUE;
++    }
++
++    // setting the time variables to local time
++    PRInt64 GMTLocalTimeShift;
++    LL_ADD( GMTLocalTimeShift, explodedCurrentTime.tm_params.tp_gmt_offset, explodedCurrentTime.tm_params.tp_dst_offset );
++    LL_MUL( GMTLocalTimeShift, GMTLocalTimeShift, microSecondsPerSecond );
++    LL_ADD( currentTime, currentTime, GMTLocalTimeShift );
++    LL_ADD( dateOfMsgLocal, dateOfMsg, GMTLocalTimeShift );
++
++    // the most recent midnight, counting from current time
++    PRInt64 todaysMicroSeconds, mostRecentMidnight;
++    LL_MOD( todaysMicroSeconds, currentTime, microSecondsPerDay );
++    LL_SUB( mostRecentMidnight, currentTime, todaysMicroSeconds );
++
++    // most recent midnight minus 6 days
++    PRInt64 mostRecentWeek;
++    LL_SUB( mostRecentWeek, mostRecentMidnight, microSecondsPer6Days );
++
++    PRInt64 midnightBeforeYesterday;
++    LL_SUB( midnightBeforeYesterday, mostRecentMidnight, microSecondsPerDay );
++    // previous year
++    PRInt64 lastYearEndMicroSeconds;
++    PRInt64 microSecondsInThisYear;
++    LL_MUL( microSecondsInThisYear, explodedCurrentTime.tm_yday, microSecondsPerDay );
++    LL_ADD( microSecondsInThisYear, microSecondsInThisYear, todaysMicroSeconds );
++    LL_SUB( lastYearEndMicroSeconds, currentTime, microSecondsInThisYear );
++ 
++    if ( LL_CMP(dateOfMsgLocal, >, midnightBeforeYesterday))
++      dateFormat = kDateFormatYesterdayString;
++    else if ( LL_CMP( dateOfMsgLocal, >=, mostRecentWeek ))
++      dateFormat = kDateFormatThisWeekString;
++    else if ( LL_CMP( dateOfMsgLocal, >=, lastYearEndMicroSeconds))
++      dateFormat = kDateFormatThisYearString;
++  }
++  char strOut[PREF_DATETIME_BUFFER_LENGTH];  // buffer for date and time
++  if (PR_FormatTime (strOut, PREF_DATETIME_BUFFER_LENGTH, dateFormat, &explodedMsgTime) > 0)
++    aDateString.Assign(NS_ConvertUTF8toUTF16(nsDependentCString(strOut)));
++  else
++    return NS_ERROR_FAILURE;
++  return NS_OK;
++}
++
+ nsresult nsMsgDBView::FetchStatus(PRUint32 aFlags, nsAString &aStatusString)
+ {
+   if (aFlags & nsMsgMessageFlags::Replied)
+     aStatusString = kRepliedString;
+   else if (aFlags & nsMsgMessageFlags::Forwarded)
+     aStatusString = kForwardedString;
+   else if (aFlags & nsMsgMessageFlags::New)
+     aStatusString = kNewString;
+@@ -7188,16 +7336,22 @@ nsresult nsMsgDBView::InitDisplayFormats
+ {
+   m_dateFormatDefault   = kDateFormatShort;
+   m_dateFormatThisWeek  = kDateFormatShort;
+   m_dateFormatToday     = kDateFormatNone;
+ 
+   nsresult rv = NS_OK;
+   nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+   NS_ENSURE_SUCCESS(rv,rv);
++
++  nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(prefs);
++  rv = prefBranch->GetBoolPref("mailnews.display.short_date", &m_showShortDate);
++  if (NS_FAILED(rv))
++    m_showShortDate = PR_TRUE;
++
+   nsCOMPtr<nsIPrefBranch> dateFormatPrefs;
+   rv = prefs->GetBranch("mail.ui.display.dateformat.", getter_AddRefs(dateFormatPrefs));
+   NS_ENSURE_SUCCESS(rv,rv);
+ 
+   getDateFormatPref( dateFormatPrefs, "default", m_dateFormatDefault );
+   getDateFormatPref( dateFormatPrefs, "thisweek", m_dateFormatThisWeek );
+   getDateFormatPref( dateFormatPrefs, "today", m_dateFormatToday );
+   return rv;
+diff --git a/mailnews/base/src/nsMsgDBView.h b/mailnews/base/src/nsMsgDBView.h
+--- a/mailnews/base/src/nsMsgDBView.h
++++ b/mailnews/base/src/nsMsgDBView.h
+@@ -64,16 +64,17 @@
+ #include "nsIMsgFilterPlugin.h"
+ #include "nsIStringBundle.h"
+ #include "nsMsgTagService.h"
+ #include "nsCOMArray.h"
+ #include "nsTArray.h"
+ #include "nsIMsgCustomColumnHandler.h"
+ #include "nsAutoPtr.h"
+ #define MESSENGER_STRING_URL       "chrome://messenger/locale/messenger.properties"
++#define MESSENGER_STRING_URL2       "chrome://messenger/locale/synovel-messenger.properties"
+ 
+ typedef nsAutoTArray<nsMsgViewIndex, 1> nsMsgViewIndexArray;
+ 
+ enum eFieldType {
+     kCollationKey,
+     kU32
+ };
+ 
+@@ -175,16 +176,22 @@ protected:
+ #endif
+ 
+   static PRUnichar* kHighestPriorityString;
+   static PRUnichar* kHighPriorityString;
+   static PRUnichar* kLowestPriorityString;
+   static PRUnichar* kLowPriorityString;
+   static PRUnichar* kNormalPriorityString;
+ 
++  static char* kDateFormatTodayString;
++  static char* kDateFormatYesterdayString;
++  static char* kDateFormatThisWeekString;
++  static char* kDateFormatThisYearString;
++  static char* kDateFormatOlderString;
++
+   static nsIAtom* kLabelColorWhiteAtom;
+   static nsIAtom* kLabelColorBlackAtom;
+ 
+   static nsIAtom* kJunkMsgAtom;
+   static nsIAtom* kNotJunkMsgAtom;
+ 
+   static nsIAtom* kDummyMsgAtom;
+ 
+@@ -464,16 +471,17 @@ protected:
+   // I18N date formatter service which we'll want to cache locally.
+   nsCOMPtr<nsIDateTimeFormat> mDateFormatter;
+   nsCOMPtr<nsIMsgHeaderParser> mHeaderParser;
+   nsCOMPtr<nsIMsgTagService> mTagService;
+   nsWeakPtr mMessengerWeak;
+   nsWeakPtr mMsgWindowWeak;
+   nsCOMPtr<nsIMsgDBViewCommandUpdater> mCommandUpdater; // we push command update notifications to the UI from this.
+   nsCOMPtr<nsIStringBundle> mMessengerStringBundle;  
++  nsCOMPtr<nsIStringBundle> mMessengerStringBundle2;  
+ 
+   // used for the preference labels
+   nsString mLabelPrefDescriptions[PREF_LABELS_MAX];
+   nsString mLabelPrefColors[PREF_LABELS_MAX];
+   // used to cache the atoms created for each color to be displayed
+   static nsIAtom* mLabelPrefColorAtoms[PREF_LABELS_MAX];
+ 
+   // used to determine when to start and end
+@@ -511,24 +519,28 @@ void ValidateSort();
+ 
+ protected:
+   static nsresult   InitDisplayFormats();
+ 
+ private:
+   static nsDateFormatSelector  m_dateFormatDefault;
+   static nsDateFormatSelector  m_dateFormatThisWeek;
+   static nsDateFormatSelector  m_dateFormatToday;
++  static PRBool                m_showShortDate;
+   PRBool ServerSupportsFilterAfterTheFact();
+ 
+   nsresult PerformActionsOnJunkMsgs(PRBool msgsAreJunk);
+   nsresult DetermineActionsForJunkChange(PRBool msgsAreJunk,
+                                          nsIMsgFolder *srcFolder,
+                                          PRBool &moveMessages,
+                                          PRBool &changeReadState,
+                                          nsIMsgFolder** targetFolder);
++  nsresult FetchShortDate(nsIMsgDBHdr * aHdr,
++                          nsAString & aDateString,
++                          PRBool rcvDate = PR_FALSE);
+ 
+   class nsMsgViewHdrEnumerator : public nsISimpleEnumerator 
+   {
+   public:
+     NS_DECL_ISUPPORTS
+ 
+     // nsISimpleEnumerator methods:
+     NS_DECL_NSISIMPLEENUMERATOR

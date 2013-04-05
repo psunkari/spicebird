@@ -1,0 +1,172 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Code in this file is generated using a computer program.
+ * Please refer to the corresponding telepathy spec for any help in using the
+ * code here.  You may also feel free to contact the original developer for
+ * any related help.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIVariant.idl"
+
+
+%{C++
+#include "glib/gtypes.h"
+%}
+native gpointer(gpointer);
+
+
+
+/*
+ * A mapping from strings representing D-Bus
+      properties (by their namespaced names) to their values.
+ */
+[scriptable, uuid(be7cf0f9-edb4-4561-bccf-afe9d35adf95)]
+interface csITpQualifiedPropertyValueMap : nsISupports
+{
+  /* A D-Bus interface name, followed by a dot and a D-Bus property name. */
+  readonly attribute AUTF8String key;
+  /* The value of the property. */
+  readonly attribute nsIVariant value;
+};
+
+/*
+ * A mapping from strings to variants representing extra
+      key-value pairs.
+ */
+[scriptable, uuid(ce7e68c5-428c-43d4-88c8-5316d5ab448c)]
+interface csITpStringVariantMap : nsISupports
+{
+  readonly attribute AUTF8String key;
+  readonly attribute nsIVariant value;
+};
+
+/*
+ * A mapping from strings to strings representing extra
+      key-value pairs.
+ */
+[scriptable, uuid(d385d279-7875-48a0-8a8c-6bf6e9620cd9)]
+interface csITpStringStringMap : nsISupports
+{
+  readonly attribute AUTF8String key;
+  readonly attribute AUTF8String value;
+};
+
+/*
+ * An IP address and port.
+ */
+[scriptable, uuid(bac798ca-8677-43c8-93df-2b793094abc9)]
+interface csITpSocketAddressIP : nsISupports
+{
+  /* Either a dotted-quad IPv4 address literal as for */
+  readonly attribute AUTF8String address;
+  /* The TCP or UDP port number. */
+  readonly attribute PRUint16 port;
+
+  [noscript] gpointer toGLib();
+};
+
+/*
+ * An IPv4 address and port.
+ */
+[scriptable, uuid(516c7f4e-6d74-452e-ac7c-867e417c38db)]
+interface csITpSocketAddressIPv4 : nsISupports
+{
+  /* A dotted-quad IPv4 address literal: four ASCII decimal
+        numbers, each between 0 and 255 inclusive, e.g.
+        "192.168.0.1". */
+  readonly attribute AUTF8String address;
+  /* The TCP or UDP port number. */
+  readonly attribute PRUint16 port;
+
+  [noscript] gpointer toGLib();
+};
+
+/*
+ * An IPv6 address and port.
+ */
+[scriptable, uuid(e418fc7f-00d7-43d8-875d-e180bc7ad989)]
+interface csITpSocketAddressIPv6 : nsISupports
+{
+  /* An IPv6 address literal as specified by RFC2373
+        section 2.2, e.g. "2001:DB8::8:800:200C:4171". */
+  readonly attribute AUTF8String address;
+  /* The TCP or UDP port number. */
+  readonly attribute PRUint16 port;
+
+  [noscript] gpointer toGLib();
+};
+
+/*
+ * An IPv4 network or subnet.
+ */
+[scriptable, uuid(76a8b6d8-28a2-4d64-a931-dc72157491e8)]
+interface csITpSocketNetmaskIPv4 : nsISupports
+{
+  /* A dotted-quad IPv4 address literal: four ASCII decimal
+        numbers, each between 0 and 255 inclusive, e.g.
+        "192.168.0.1". */
+  readonly attribute AUTF8String address;
+  /* The number of leading bits of the address that must
+        match, for this netmask to be considered to match an
+        address. */
+  readonly attribute PRUint8 prefixLength;
+
+  [noscript] gpointer toGLib();
+};
+
+/*
+ * An IPv6 network or subnet.
+ */
+[scriptable, uuid(db3263ff-fb2f-428b-a2c8-fb8d0cbdf321)]
+interface csITpSocketNetmaskIPv6 : nsISupports
+{
+  /* An IPv6 address literal as specified by RFC2373
+        section 2.2, e.g. "2001:DB8::8:800:200C:4171". */
+  readonly attribute AUTF8String address;
+  /* The number of leading bits of the address that must
+        match, for this netmask to be considered to match an
+        address. */
+  readonly attribute PRUint8 prefixLength;
+
+  [noscript] gpointer toGLib();
+};
+
+

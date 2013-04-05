@@ -1,0 +1,18 @@
+classic.jar:
+% skin chat classic/1.0 %skin/classic/chat/
+  skin/classic/chat/16x16/statuses.png                          (16x16/statuses.png)
+  skin/classic/chat/16x16/chat.png                              (16x16/chat.png)
+  skin/classic/chat/16x16/protocols.png                         (16x16/protocols.png)
+  skin/classic/chat/22x22/chat-contacts-toolbar.png             (22x22/chat-contacts-toolbar.png)
+  skin/classic/chat/32x32/chat.png                              (32x32/chat.png)
+  skin/classic/chat/images/composing.gif                        (images/composing.gif)
+  skin/classic/chat/images/paused.gif                           (images/paused.gif)
+  skin/classic/chat/images/protocols.png                        (images/protocols.png)
+* skin/classic/chat/csChatContactsList.css
+* skin/classic/chat/csChatContactDialogs.css
+* skin/classic/chat/csChatOverlay.css
+* skin/classic/chat/csChatProtocols.css
+* skin/classic/chat/csChatQuickStatus.css
+* skin/classic/chat/csChatStatuses.css
+* skin/classic/chat/csTextChatWindow.css
+* skin/classic/chat/textchat.css

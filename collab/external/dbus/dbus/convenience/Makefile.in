@@ -1,0 +1,154 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+#   Sunil Mohan Adapa <sunil@synovel.com>
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** 
+
+DEPTH		= ../../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= dbus
+LIBRARY_NAME	= dbus-convenience_s
+VISIBILITY_FLAGS = 
+FORCE_STATIC_LIB = 1
+
+CSRCS		=					\
+		$(DBUS_LIB_SOURCES)			\
+		$(DBUS_SHARED_SOURCES)			\
+		$(DBUS_UTIL_SOURCES)			\
+		$(NULL)
+
+DBUS_LIB_SOURCES =					\
+		../dbus-address.c			\
+		../dbus-auth.c				\
+		../dbus-auth-script.c			\
+		../dbus-bus.c				\
+		../dbus-connection.c			\
+		../dbus-credentials.c			\
+		../dbus-errors.c			\
+		../dbus-keyring.c			\
+		../dbus-marshal-header.c		\
+		../dbus-marshal-byteswap.c		\
+		../dbus-marshal-recursive.c		\
+		../dbus-marshal-validate.c		\
+		../dbus-message.c			\
+		../dbus-misc.c				\
+		../dbus-nonce.c				\
+		../dbus-object-tree.c			\
+		../dbus-pending-call.c			\
+		../dbus-resources.c			\
+		../dbus-server.c			\
+		../dbus-server-debug-pipe.c		\
+		../dbus-server-socket.c			\
+		../dbus-sha.c				\
+		../dbus-signature.c			\
+		../dbus-timeout.c			\
+		../dbus-threads.c			\
+		../dbus-transport.c			\
+		../dbus-transport-socket.c		\
+		../dbus-watch.c				\
+		$(NULL)
+
+DBUS_SHARED_SOURCES =					\
+		../dbus-dataslot.c			\
+		../dbus-hash.c				\
+		../dbus-internals.c			\
+		../dbus-list.c				\
+		../dbus-marshal-basic.c			\
+		../dbus-memory.c			\
+		../dbus-mempool.c			\
+		../dbus-string.c			\
+		../dbus-sysdeps.c			\
+		$(NULL)
+
+DBUS_UTIL_SOURCES =					\
+		../dbus-auth-util.c			\
+		../dbus-credentials-util.c		\
+		../dbus-mainloop.c			\
+		../dbus-marshal-byteswap-util.c		\
+		../dbus-marshal-recursive-util.c	\
+		../dbus-marshal-validate-util.c		\
+		../dbus-message-factory.c		\
+		../dbus-message-util.c			\
+		../dbus-shell.c				\
+		../dbus-string-util.c			\
+		../dbus-sysdeps-util.c			\
+		../dbus-test.c				\
+		$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+DBUS_LIB_SOURCES +=					\
+		../dbus-server-win.c			\
+		../dbus-transport-win.c			\
+		$(NULL)
+
+DBUS_SHARED_SOURCES +=					\
+		../dbus-spawn-win.c			\
+		../dbus-sysdeps-thread-win.c		\
+		../dbus-sysdeps-win.c			\
+		../dbus-sysdeps-util-win.c		\
+		$(NULL)
+else
+DBUS_LIB_SOURCES +=					\
+		../dbus-server-unix.c			\
+		../dbus-spawn.c				\
+		../dbus-transport-unix.c		\
+		../dbus-uuidgen.c			\
+		$(NULL)
+
+DBUS_SHARED_SOURCES +=					\
+		../dbus-sysdeps-pthread.c		\
+		../dbus-sysdeps-unix.c			\
+		../dbus-userdb.c			\
+		$(NULL)
+
+DBUS_UTIL_SOURCES +=					\
+		../dbus-spawn.c				\
+		../dbus-sysdeps-util-unix.c		\
+		../dbus-userdb-util.c			\
+		$(NULL)
+endif
+
+include $(topsrcdir)/config/rules.mk
+
+CFLAGS		+=					\
+		-I$(srcdir)/..				\
+		-I$(srcdir)/../..			\
+		-DDBUS_COMPILATION			\
+		-DDBUS_MACHINE_UUID_FILE=\""$(localstatedir)/lib/dbus/machine-id"\"	\
+		$(NULL)

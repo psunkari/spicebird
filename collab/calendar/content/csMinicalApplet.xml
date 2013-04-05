@@ -1,0 +1,544 @@
+<?xml version="1.0"?>
+
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is Synovel Software
+# Portions created by the Initial Developer are Copyright (C) 2007-2010
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Ashok Gudibandla <ashok@synovel.com> (Original Author)
+#   Prasad Sunkari <prasad@synovel.com>
+#
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** 
+
+<!DOCTYPE overlay [
+  <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/csCalendarApplets.dtd" > %dtd1;
+]>
+
+<bindings id="csCalendarAppletsBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="datepicker">
+    <resources>
+      <stylesheet src="chrome://calendar/skin/csCalendarApplets.css"/>
+    </resources>
+    <content>
+      <xul:hbox flex="1">
+      <xul:vbox anonid="datepicker-container" xbl:inherits="homekey" flex="1">
+      <xul:stringbundle anonid="datepicker-stringbundle"
+             src="chrome://calendar/locale/csCalendarApplets.properties"/>
+      <xul:groupbox anonid="datepicker-config-container" 
+                    class="applet-config-pane" collapsed="true" >
+        <xul:grid>
+          <xul:columns>
+            <xul:column flex="1" />
+            <xul:column flex="5" />
+          </xul:columns>
+          <xul:rows>
+            <xul:row align="center">
+              <xul:label value="&applets.agenda.calendar.label;" crop="end" flex="1" />
+              <xul:menulist oncommand="doPrefUpdate('calendar');" sizetopopup="none"
+                            anonid="datepicker-config-calendar" flex="1">
+                <xul:menupopup anonid="datepicker-config-calpopup" />
+              </xul:menulist>
+            </xul:row>
+          </xul:rows>
+        </xul:grid>
+        <xul:checkbox label="&applets.agenda.showEvents.label;" checked="false" 
+                      anonid="datepicker-config-events"
+                      flex="1" crop="end"
+                      oncommand="doPrefUpdate('events')" />
+        <xul:checkbox label="&applets.agenda.showTasks.label;" checked="false" 
+                      anonid="datepicker-config-tasks"
+                      flex="1" crop="end"
+                      oncommand="doPrefUpdate('tasks')" />
+        <xul:checkbox style="padding-left: 20px" 
+                      anonid="datepicker-config-completed"
+                      flex="1" crop="end"
+                      label="&applets.agenda.showCompleted.label;" checked="false" disabled="true" 
+                      oncommand="doPrefUpdate('completed')" />
+      </xul:groupbox>
+      <xul:label anonid="minical-status-label" class="applet-status-label" 
+                 collapsed="true" crop="end"/>
+      <xul:hbox anonid="container-box" align="center" flex="1"
+                style="overflow: hidden" tooltip="_child">
+        <xul:toolbarbutton anonid="left-button" 
+                           oncommand="this.kMinimonth.advanceMonth(-1)"/>
+        <xul:spacer flex="1"/>
+        <xul:minimonth anonid="datepicker-minimonth" freebusy="true"
+                       ondblclick="onMinimonthDoubleClick(event);"/>
+        <xul:spacer flex="1"/>
+        <xul:toolbarbutton anonid="right-button"
+                           oncommand="this.kMinimonth.advanceMonth(1)"/>
+        <xul:tooltip anonid="datepicker-tooltip"
+                     onpopupshowing="return updateAgendaTooltip(event);">
+          <xul:hbox align="center" anonid="datepicker-tooltip-loading">
+            <xul:image class="datepicker-tooltip-loading" anonid="tooltip-loading-image"/>
+            <xul:label value="&applets.datePicker.tooltipLoading;"/>
+          </xul:hbox>
+        </xul:tooltip>
+      </xul:hbox> 
+      </xul:vbox>
+      </xul:hbox>
+    </content>
+    <implementation implements="calIOperationListener">
+      <property name="calendarName">
+        <setter>
+          <![CDATA[
+            this.mCalendarName = val || '-all-calendars-';
+            this.mCalendar = null;
+
+            // Get the calendar if we have a name
+            if (this.mCalendarName) {
+              var cals = getCalendarManager().getCalendars({});
+              for each (var cal in cals) {
+                if (cal.name == this.mCalendarName) 
+                  this.mCalendar = cal;
+              }
+            }
+
+            // Calendar with that name does not exist
+            if (!this.mCalendar) {
+              this.mCalendarName = "-all-calendars-";
+              this.mCalendar = getAgendaCompositeCalendar();
+            }
+          
+            this.mMinimonth.calendar = this.mCalendar;
+          ]]>
+        </setter>
+      </property>
+      <method name="hideConfigPane">
+        <body>
+          <![CDATA[
+            document.getAnonymousElementByAttribute(this, "anonid", "datepicker-config-container")
+                    .setAttribute("collapsed", true);
+          ]]>
+        </body>
+      </method>
+      <method name="showConfigPane">
+        <body>
+          <![CDATA[
+            this.initCalendarsPopup();
+
+            document.getAnonymousElementByAttribute(this, "anonid", "datepicker-config-events")
+                    .checked = this.mShowEvents;
+            document.getAnonymousElementByAttribute(this, "anonid", "datepicker-config-tasks")
+                    .checked = this.mShowTasks;
+            document.getAnonymousElementByAttribute(this, "anonid", "datepicker-config-completed")
+                    .checked = this.mShowCompleted;
+            document.getAnonymousElementByAttribute(this, "anonid", "datepicker-config-calendar")
+                    .value = this.mCalendarName;
+
+            if (this.mShowTasks) {
+              document.getAnonymousElementByAttribute(this, "anonid", "datepicker-config-completed")
+                      .removeAttribute("disabled");
+            } else {
+              document.getAnonymousElementByAttribute(this, "anonid", "datepicker-config-completed")
+                      .setAttribute("disabled", "true");
+            }
+
+            document.getAnonymousElementByAttribute(this, "anonid", "datepicker-config-container")
+                    .removeAttribute("collapsed");
+          ]]>
+        </body>
+      </method>
+      <method name="initCalendarsPopup">
+        <body>
+          <![CDATA[
+              var menu  = document.getAnonymousElementByAttribute(this, "anonid", "datepicker-config-calendar");
+              menu.removeAllItems();
+              menu.appendItem(this.mStringBundle.getString("collab.agenda.all-calendars"), "-all-calendars-");
+
+              var cals = getCalendarManager().getCalendars({});
+              for each (var cal in cals) 
+                menu.appendItem(cal.name, cal.name);
+          ]]>
+        </body>
+      </method>
+      <method name="doPrefUpdate">
+        <parameter name="aParam"/>
+        <body>
+          <![CDATA[
+            var value = null;
+
+            switch (aParam) {
+              case "calendar":
+                value = document.getAnonymousElementByAttribute(this, "anonid", "datepicker-config-calendar").value;
+                this.calendarName = value;
+                if (value && value != "-all-calendars-")
+                  this.mPrefBranch.setCharPref("calendar", value);
+                else
+                  try { 
+                    this.mPrefBranch.clearUserPref("calendar"); 
+                  } catch (ex) {}
+                break;
+              case "tasks":
+                value = document.getAnonymousElementByAttribute(this, "anonid", "datepicker-config-tasks").checked;
+                this.mShowTasks = value;
+                this.mPrefBranch.setBoolPref("tasks", value);
+                this.updateItemsFilter();
+                if (value)
+                  document.getAnonymousElementByAttribute(this, "anonid", "datepicker-config-completed")
+                          .removeAttribute("disabled");
+                else
+                  document.getAnonymousElementByAttribute(this, "anonid", "datepicker-config-completed")
+                          .setAttribute("disabled", "true");
+                break;
+              case "events":
+                value = document.getAnonymousElementByAttribute(this, "anonid", "datepicker-config-events").checked;
+                this.mShowEvents = value;
+                this.mPrefBranch.setBoolPref("events", value);
+                this.updateItemsFilter();
+                break;
+              case "completed":
+                value = document.getAnonymousElementByAttribute(this, "anonid", "datepicker-config-completed").checked;
+                this.mShowCompleted = value;
+                this.mPrefBranch.setBoolPref("completed", value);
+                this.updateItemsFilter();
+                break;
+            }
+          ]]>
+        </body>
+      </method>
+      <method name="updateItemsFilter">
+        <body>
+          <![CDATA[
+            var filter = this.mCalendar.ITEM_FILTER_CLASS_OCCURRENCES;
+
+            if (this.mShowCompleted) 
+              filter |= this.mCalendar.ITEM_FILTER_COMPLETED_ALL;
+            else
+              filter |= this.mCalendar.ITEM_FILTER_COMPLETED_NO;
+         
+            if (this.mShowTasks)
+              filter |= this.mCalendar.ITEM_FILTER_TYPE_TODO;
+            if (this.mShowEvents)
+              filter |= this.mCalendar.ITEM_FILTER_TYPE_EVENT;
+
+            this.mItemsFilter = filter;
+            this.mMinimonth.calendarItemsFilter = filter;
+          ]]>
+        </body>
+      </method>
+
+      <field name="mMinimonth">null</field>
+      <field name="mLeftArrow">null</field>
+      <field name="mStringBundle">null</field>
+      <field name="mStatusLabel">null</field>
+      <field name="mRightArrow">null</field>
+      <field name="mTooltip">null</field>
+      <field name="mCalendar">null</field>
+      <field name="mCalendarName">null</field>
+      <field name="mShowTasks">true</field>
+      <field name="mShowEvents">true</field>
+
+      <constructor>
+        <![CDATA[
+          this.mParent = this.parentNode;
+          while (this.mParent && this.mParent.tagName != "homeapplet")
+            this.mParent = this.mParent.parentNode;
+          if (!this.mParent)
+            return;
+          
+          this.mKey = this.mParent.getAttribute("homekey");
+          if (!this.mKey)
+            return;
+
+          this.mPrefBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                                       .getService(Components.interfaces.nsIPrefService)
+                                       .getBranch("collab.home.applets." + this.mKey + ".")
+          
+          var mainBox = document.getAnonymousElementByAttribute(this, "anonid", "container-box");
+          this.mLeftArrow = mainBox.firstChild;
+          this.mMinimonth = this.mLeftArrow.nextSibling.nextSibling; 
+          this.mRightArrow = this.mMinimonth.nextSibling.nextSibling;
+
+          this.mRightArrow.kMinimonth = this.mMinimonth;
+          this.mLeftArrow.kMinimonth = this.mMinimonth;
+
+          this.mTooltip = document.getAnonymousElementByAttribute(this, "anonid", "datepicker-tooltip");
+          this.mTooltipBusyItem = document.getAnonymousElementByAttribute(this, "anonid", "datepicker-tooltip-loading");
+          this.mStatusLabel = document.getAnonymousElementByAttribute(this, "anonid", "minical-status-label");
+          this.mStringBundle = document.getAnonymousElementByAttribute(this, "anonid", "datepicker-stringbundle");
+
+          // If the calendar application is not loaded, show error
+          var appInfoClass = Components.classes["@synovel.com/collab/calendar-appinfo;1"];
+          if (appInfoClass) {
+            var calAppInfo = appInfoClass.getService(Components.interfaces.csIAppInfo);
+            if (calAppInfo && !calAppInfo.enabled) {
+              this.showErrorMessage(this.mStringBundle.getString("collab.calendar.applets.calendar-not-loaded"));
+              return;
+            }
+          }
+
+          try {
+            this.calendarName = this.mPrefBranch.getCharPref("calendar");
+          } catch (ex) { 
+            this.calendarName = null;
+          }
+
+          try {
+            this.mShowTasks = this.mPrefBranch.getBoolPref("tasks");
+            this.mShowEvents = this.mPrefBranch.getBoolPref("events");
+            this.mShowCompleted = this.mPrefBranch.getBoolPref("completed");
+          } catch (ex) {
+            this.mShowTasks = true;
+            this.mShowEvents = true;
+            this.mShowCompleted = true;
+          }
+          this.updateItemsFilter();
+
+          var self = this;
+          this.mMinimonth.addEventListener("monthchange", function(event) {
+                                                            self.updateTitleBar();
+                                                          }, true);
+          mainBox.addEventListener("mouseover", function(event) {
+                                                  self.updateItemForTooltip(event);
+                                                }, true);
+
+          setTimeout(function() { self.mMinimonth.advanceMonth(0); }, 0);
+        ]]>
+      </constructor>
+      <destructor>
+        <![CDATA[
+          var minimonth = this.mMinimonth;
+        ]]>
+      </destructor>
+
+      <method name="showErrorMessage">
+        <parameter name="aErrorText"/>
+        <body>
+          <![CDATA[
+          if (aErrorText) {
+            this.mStatusLabel.collapsed = false;
+            this.mStatusLabel.value = aErrorText;
+            var mainBox = document.getAnonymousElementByAttribute(this, "anonid", "container-box");
+            mainBox.setAttribute("collapsed","true");
+          } else {
+            this.mStatusLabel.collapsed = true;
+            this.mStatusLabel.value = "";
+          }
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateTitleBar">
+        <parameter name="aRealSelf" />
+        <body>
+          <![CDATA[
+            var self = this;
+            if (aRealSelf)
+              self = aRealSelf;
+
+            try {
+              let header = document.getAnonymousElementByAttribute(self.mMinimonth,
+                                                                   "anonid",
+                                                                   "minimonth-header");
+              let monthHdr = document.getAnonymousElementByAttribute(header, "anonid", "monthheader");
+              let month = monthHdr.selectedPanel.value || monthHdr.selectedPanel.getAttribute('label');
+              let year = document.getAnonymousElementByAttribute(header, "anonid", "yearcell")
+                                 .getAttribute('label');
+              self.mParent.title = month + ", " + year;
+            } catch (ex) {}
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateItemForTooltip">
+        <parameter name="event" />
+        <body>
+          <![CDATA[
+            var box = event.originalTarget;
+            this.mItemForTooltip = null;
+            if (this.mTooltip.state == "open")
+              this.mTooltip.hidePopup();
+
+            // Check if it is a day from the minical
+            if (box.getAttribute("class") != "minimonth-day")
+              return;
+
+            // Is the day marked busy?
+            if (!box.hasAttribute("busy"))
+              return;
+
+            this.mItemForTooltip = box;
+
+            // Show loading on tooltip and remove other children
+            this.mTooltipBusyItem.removeAttribute("collapsed");
+            while(this.mTooltip.lastChild != this.mTooltipBusyItem)
+               this.mTooltip.removeChild(this.mTooltip.lastChild);
+
+            // If there is a pending operation, cancel it.
+            if (this.mCurrentOperation && this.mCurrentOperation.isPending)
+              this.mCurrentOperation.cancel();
+
+            // Start a request to get the day's items.
+            let d = box.date;
+            let start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+            let end = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 0, 0, 0, 0);
+            this.mCurrentOperation = this.mCalendar.getItems(this.mItemsFilter, 0,
+                                                             jsDateToDateTime(start),
+                                                             jsDateToDateTime(end), this);
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateAgendaTooltip">
+        <parameter name="event" />
+        <body>
+          <![CDATA[
+            if (!this.mItemForTooltip)
+              return false;
+
+            return true;
+          ]]>
+        </body>
+      </method>
+
+      <method name="onOperationComplete">
+        <parameter name="aCalendar"/>
+        <parameter name="aStatus"/>
+        <parameter name="aOperationType"/>
+        <parameter name="aId"/>
+        <parameter name="aDetail"/>
+        <body><![CDATA[
+        ]]></body>
+      </method>
+
+      <method name="onGetResult">
+        <parameter name="aCalendar"/>
+        <parameter name="aStatus"/>
+        <parameter name="aItemType"/>
+        <parameter name="aDetail"/>
+        <parameter name="aCount"/>
+        <parameter name="aItems"/>
+        <body>
+          <![CDATA[
+            if (!this.mItemForTooltip)
+              return;
+
+            var formatter = Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
+                                      .getService(Components.interfaces.calIDateTimeFormatter);
+
+            function getTimeString(aItem, aCurDate) {
+               var startDate = null;
+               var endDate = null;
+               if (isToDo(aItem)) {
+                  startDate = aItem.entryDate;
+                  endDate = aItem.dueDate;
+               }
+               else if (isEvent(aItem)) {
+                  startDate = aItem.startDate;
+                  endDate   = aItem.endDate;
+               }
+
+               var timeString = "";
+
+               if (startDate) {
+                  startDate = startDate.getInTimezone(calendarDefaultTimezone());
+                  if (startDate.day == aCurDate.getDate() && startDate.month == aCurDate.getMonth() )
+                     timeString = formatter.formatTime(startDate);
+                  else
+                     timeString = formatter.formatDateWithoutYear(startDate)+ " "  + formatter.formatTime(startDate);
+                  timeString += " - ";
+               }
+
+               if (endDate) {
+                 endDate = endDate.getInTimezone(calendarDefaultTimezone());
+                 if (endDate.day == aCurDate.getDate() && endDate.month == aCurDate.getMonth())
+                    timeString += formatter.formatTime(endDate);
+                 else
+                    timeString += formatter.formatDateWithoutYear(endDate) + " " + formatter.formatTime(endDate);
+               }
+               return timeString;
+            }
+
+            function createAgendaItem(aItem, aCurDate) {
+              let NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+              var box = document.createElementNS(NS, "hbox")
+
+              var titleLabel = document.createElementNS(NS, "label")
+              titleLabel.setAttribute("value", aItem.title );
+              titleLabel.setAttribute("class", "agenda-popup-title-label" );
+              box.appendChild(titleLabel);
+
+              var dateLabel = document.createElementNS(NS, "label")
+              dateLabel.setAttribute("value", getTimeString(aItem, aCurDate));
+              dateLabel.setAttribute("class", "agenda-popup-time-label");
+              box.appendChild(dateLabel);
+
+              return box;
+            }
+
+            // Hide the "Loading" item.
+            this.mTooltipBusyItem.setAttribute("collapsed", true);
+
+            // Add items to the tooltip!
+            for each (item in aItems)
+               this.mTooltip.appendChild(createAgendaItem(item, this.mItemForTooltip.date));
+          ]]>
+        </body>
+      </method>
+
+      <method name="onMinimonthDoubleClick">
+        <parameter name="event"/>
+        <body>
+          <![CDATA[
+          var box = event.originalTarget;
+          if ( !box || "minimonth-day" != box.getAttribute("class"))
+            return;
+
+          var jsDate = this.mMinimonth.value;
+          var ctd = jsDateToDateTime(jsDate);
+         
+          setCurrentApp(gCalendarAppName);
+         
+          ctd = ctd.getInTimezone(currentView().timezone);
+          ctd.isDate = true;
+          goToDate(ctd);
+          ]]>
+        </body>
+      </method>
+    </implementation>
+    
+    <handlers>
+      <handler event="DOMMouseScroll">
+      <![CDATA[
+         // Prevent scrolling of HomePage on scrolling the minimonth.
+         event.preventDefault();
+      ]]>
+      </handler>
+    </handlers>
+
+  </binding>
+</bindings>

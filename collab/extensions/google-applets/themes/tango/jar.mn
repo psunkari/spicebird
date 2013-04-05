@@ -1,0 +1,4 @@
+google-applets.jar:
+% skin google-applets classic/1.0 %skin/classic/google-applets/
+*   skin/classic/google-applets/google-applet.css
+    skin/classic/google-applets/google-applet.png

@@ -1,0 +1,27 @@
+chat.jar:
+% override chrome://messagebody/skin/textchat.css chrome://chat/skin/textchat.css
+% content chat %content/chat/ xpcnativewrappers=yes
+* content/chat/csAddressbookOverlay.xul
+* content/chat/csChatAccounts.js
+* content/chat/csChatAccountDialog.js
+* content/chat/csChatAccountDialog.xul
+* content/chat/csChatConnection.js
+* content/chat/csChatConnectionsPopup.xml
+* content/chat/csChatContactsList.xml
+* content/chat/csChatContactEditDialog.js
+* content/chat/csChatContactEditDialog.xul
+* content/chat/csChatContactInfoDialog.js
+* content/chat/csChatContactInfoDialog.xul
+* content/chat/csChatOverlay.js
+* content/chat/csChatOverlay.xul
+* content/chat/csChatPreferences.js
+* content/chat/csChatPreferences.xul
+* content/chat/csChatQuickStatus.xml
+* content/chat/csChatWidgets.css
+* content/chat/csChatWrapper.js
+* content/chat/csChatTests.js
+* content/chat/csTextChatContextMenu.js
+* content/chat/csTextChatContextMenu.xul
+* content/chat/csTextChatWindow.js
+* content/chat/csTextChatWindow.xul
+* content/chat/csTextChatWidget.xml

@@ -1,0 +1,915 @@
+<html>
+<head>
+<base id="_CS_baseURI" href="http://www.google.com/ig/modules/"/>
+<style type="text/css">
+
+  /* Implementation style */
+  #content-iframe
+  {
+    border: 0px;
+    margin: 0px;
+    padding: 0px;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .error-message, .message
+  {
+    font-style: italic;
+    font-size: medium;
+  }
+
+  /* Preferences */
+  grid, grid label, textbox
+  {
+    background-color: -moz-dialog !important;
+    color: -moz-dialogtext !important;
+    font: -moz-dialog;
+  }
+
+  /* Default Google page style */
+  a:link
+  {
+    color: #0000FF;
+  }
+  div
+  {
+    font-family: sans-serif;
+  }
+  
+  address, blockquote, center, dir, div, dl, fieldset, form, h1, h2, h3, h4, h5, h6, hr, isindex, menu, noframes, noscript, ol, p, pre, table, ul, dd, dt, frameset, li, tbody, tfoot, th, thead, tr
+  {
+    margin: 0px;
+    padding: 0px;
+  }
+
+  td.tabselector
+  {
+    border: 1px solid gray;
+    background: #ccc;
+    padding: 2px;
+  }
+
+  table.tabselector-table
+  {
+    border: none;
+    padding: 0px;
+  }
+
+  td[selected="true"]
+  {
+    background: #fff;
+    border-bottom: 0px;
+  }
+
+  div.minimsg, table.minimsg 
+  {
+    background: #ddd;
+    font-size: small;
+  }
+
+</style>
+
+<script type="text/javascript">
+  var DEBUG = false;
+  var _height;
+  var _title;
+  var _loadCallbacks = new Array;
+  var _prefs;
+  var _globals;
+  var _strings;
+  var _arguments;
+
+  function init()
+  {
+    for each (loadCallback in _loadCallbacks) 
+      loadCallback();
+    _loadCallbacks = [];
+    _IG_AdjustIFrameHeight();
+  }
+
+  function _constructPrefPane()
+  {
+    function createXULElement(element)
+    {
+      return document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", element);      
+    }
+
+    var prefPane = document.getElementById("_CS_prefPane");
+    while (prefPane.firstChild)
+      prefPane.removeChild(prefPane.firstChild);
+
+    var grid = createXULElement("grid");
+    var columns = createXULElement("columns");
+    var column = createXULElement("column");
+    column.setAttribute("flex", "1");
+    columns.appendChild(column);
+    column = createXULElement("column");
+    column.setAttribute("flex", "1");
+    columns.appendChild(column);
+    grid.appendChild(columns);
+
+    var rows = createXULElement("rows");
+
+    for each (prefMeta in _prefsMeta)
+    {
+      if (prefMeta["dataType"] == "hidden")
+        continue;
+
+      var row = createXULElement("row");
+      row.setAttribute("align", "center");
+      var label = createXULElement("label");
+      label.setAttribute("value", prefMeta["displayName"]);
+      label.setAttribute("crop", "end");
+
+      var input;
+      switch (prefMeta["dataType"])
+      {
+        case "string":
+          input = createXULElement("textbox");
+          break;
+        case "bool":
+          input = createXULElement("checkbox");
+          break;
+        case "enum":
+          input = createXULElement("textbox");
+          break;
+        case "list":
+          input = createXULElement("textbox");
+          break;
+        case "location":
+          input = createXULElement("textbox");
+          break;
+      }
+      input.setAttribute("flex", "1");
+      input.setAttribute("value", unescape(_prefs[prefMeta["name"]]));
+      row.appendChild(label);
+      row.appendChild(input);
+      rows.appendChild(row);
+    }
+    grid.appendChild(rows);
+    prefPane.appendChild(grid);
+  }
+
+  function convertToAbsoluteURL(url)
+  {
+    var converter = document.getElementById("_CS_linkConverter");
+    converter.setAttribute("href", url);
+    return converter.href;
+  }
+
+  /*
+   *
+   * Prefs API
+   *
+   */
+  function _IG_Prefs (moduleID)
+  {
+    this.moduleID = moduleID;
+  }
+
+  _IG_Prefs.prototype = {
+    getString: function(userPref)
+    {
+      if (userPref in _prefs)
+        return unescape(_prefs[userPref]);
+      return "";
+    },
+    getInt: function(userPref)
+    {
+      if (userPref in _prefs)
+        return parseInt(_prefs[userPref]);
+      return 0;
+    },
+    getBool: function(userPref)
+    {
+      if (userPref in _prefs)
+        if ( _prefs[userPref] == "true")
+          return true;
+        else return false;
+      return false;
+    },
+    getArray: function(userPref)
+    {
+      if (userPref in _prefs) 
+        return  unescape(_prefs[userPref]).split("|");
+      return [];
+    },
+    getMsg: function(message)
+    {
+      if (message in _strings)
+        return unescape(_strings[message]);
+      return "";
+    },
+    set: function(userPref, value)
+    {
+      _prefs[userPref] = escape(value);
+    },
+    setArray:function(userPref, value)
+    {
+      _prefs[userPref] = escape(value);
+    },
+    dump: function()
+    {
+    }
+  };
+
+  /*
+   *
+   * Utils API
+   *
+   */
+  function _gel(id) {
+    return document.getElementById(id);
+  }
+  
+  function _gelstn(tagname) {
+    return document.getElementsByTagName(tagname);
+  }
+  
+  function _esc(str) {
+    //Todo: what about encodeURIComponent() ?
+    return escape(str);
+  }
+  
+  function _unesc(str) {
+    //Todo: decodeURIComponent()
+    return unsecape(str);
+  }
+  
+  function _trim(str) {
+    str = str.replace(/^\s*/m, "");
+    str = str.replace(/\s*$/m, "");
+    return str;
+  }
+  
+  function _uc(str) {
+    return str.toUpperCase();
+  }
+  
+  function _min(v1,v2) {
+    return (v1<v2) ? v1 : v2;
+  }
+  
+  function _max(v1,v2) {
+    return (v1>v2) ? v1 : v2;
+  }
+  
+  function _hesc(str) {
+    return str.replace(/[<>]/g,"");
+  }
+  
+  function _args() {
+    return _arguments;
+  }
+  
+  function _toggle(element) {
+    var status;
+    if (element.hasAttribute("collapsed")) 
+      status = element.getAttribute("collapsed");
+    else
+      status = "false";
+  
+    if (status == "true")
+      status = "false";
+    else 
+      status = "true";
+    element.setAttribute("collapsed", status);
+  }  
+  
+  //Todo: Refresh interval
+  function _IG_FetchContent(url, func, obj) {
+    if(DEBUG)
+      dump ("Google Applet API: _IG_FetchContent: called with url = " + url + "\n");
+    var encodedUrl = escape(url);
+    url = "x-applet://www.spicebird.com/&_CS_UrlType=http&url=" + encodedUrl;
+
+    var request = new XMLHttpRequest();
+    request.open("GET", url, true);
+    request.onreadystatechange = function() {
+      if (request.readyState == 4) { // done
+        if (request.status == 200) {
+          func(request.responseText);
+        }
+        else if (request.status >= 300 && request.status <= 307) {
+          // Handle all redirect urls if "Location" header exists.
+          var headers = request.getAllResponseHeaders();
+          var redirect_url = headers.match(/Location: (.*)/)[1];
+          if(DEBUG)
+            dump("Google Applet API: _IG_FetchContent: Redirecting to " + redirect_url + "\n");
+          _IG_FetchContent(redirect_url, func, obj);
+        }
+        else {
+          if (DEBUG)
+            dump("Google Applet API: _IG_FetchContent failed. Status =" + request.status + "\n");
+        }
+      }
+    }
+    request.send(null);
+  }
+
+  function _IG_Callback(fun, a1, a2, a3, a4, a5) {
+    return function(content) { fun(content, a1, a2, a3, a4, a5); };
+  }
+  
+  function _IG_FetchXmlContent (url, func, obj) {
+    if(DEBUG)
+      dump("Google Applet API: _IG_FetchXmlContent called with url = " + url + "\n");
+    var encodedUrl = escape(url);
+    url = "x-applet://www.spicebird.com/&_CS_UrlType=http&url=" + encodedUrl;
+    var request = new XMLHttpRequest();
+    request.open("GET", url, true);
+    request.overrideMimeType('text/xml');
+    request.onreadystatechange = function() {
+      if (request.readyState == 4) { // done
+        if (request.status == 200) {
+          func(request.responseXML);
+        }
+        else if (request.status >= 300 && request.status <= 307) {
+          // Handle all redirect urls if "Location" header exists.
+           var headers = request.getAllResponseHeaders();
+          var redirect_url = headers.match(/Location: (.*)/)[1];
+          if(DEBUG)
+            dump("Google Applet API: _IG_FetchXmlContent: Redirecting to " + redirect_url + "\n");
+          _IG_FetchXmlContent(redirect_url, func, obj);
+        }
+        else {
+          if(DEBUG)
+            dump ("Google Applet API: _IG_FetchXmlContent failded. status=" + request.status + "\n");
+        }
+      }
+    }
+    request.send(null);
+  }
+
+  /*
+   * _IG_FetchFeedAsJSON implementation
+   */
+  function _IG_FetchFeedAsJSON(url, func, num_entries, get_summaries) 
+  {
+    var numList = num_entries ? num_entries : 3;
+    function fetchCallback(aXML)
+    {
+      var JsonObj = {};
+      var rss = aXML.getElementsByTagName("rss").item(0);
+      var feed = aXML.getElementsByTagName("feed").item(0);
+      if (rss)
+        JsonObj = parseRSS(rss, numList);
+      else if (feed)
+        JsonObj = parseAtomFeed(feed, numList);
+      else {
+        if (DEBUG)
+          dump("Google Applet API: _IG_FetchFeedAsJSON: Not a Feed or RSS:" + url + "\n");
+      }
+
+      JsonObj.URL = url;
+      func(JsonObj); // Give the object to the callback method.
+    }
+    _IG_FetchXmlContent(url, fetchCallback);
+  }
+
+  function parseRSS(root, numList) 
+  {
+    root = root.getElementsByTagName("channel").item(0);
+    var JsonObj = {};
+    var attributes = [ "Title", "Description", "Link", "Author" ];
+    for each (var attr in attributes) 
+    {
+      var val = "";
+      var items = root.getElementsByTagName(attr.toLowerCase());
+      if (items && items.length > 0 ) 
+        val = items.item(0).textContent;
+      JsonObj[attr] = val;
+    }
+
+    JsonObj.Entry = new Array();
+    var i=0;
+    var items = root.getElementsByTagName("item");
+    for (i=0; i< items.length; i++) 
+    {
+      var item = items.item(i);
+      var attributes = ["Title", "Link", "Summary", "Date"];
+      var itemObj = {};
+      for each (var attr in attributes) 
+      {
+        if (attr == "Summary")
+          xmlAttr = "description";
+        else if (attr == "Date") // TODO:Date not supported.
+          continue; // xmlAttr = "pubDate";
+        else
+          xmlAttr = attr.toLowerCase();
+
+        var val = "";
+        var elements = item.getElementsByTagName(xmlAttr);
+        if (elements && elements.length > 0 ) 
+          val = elements.item(0).textContent;
+        itemObj[attr] = val;
+      }
+      JsonObj.Entry[i] = itemObj;
+      if (i == numList - 1)
+        break;
+    }
+    return JsonObj;
+  }
+
+  function parseAtomFeed (root, numList) 
+  {
+    var JsonObj = {};
+    var attributes = [ "Title", "Description", "Link", "Author" ];
+    for each (var attr in attributes) 
+    {
+      var val = "";
+      var xmlAttr = attr;
+      if (attr == "Description" )
+        xmlAttr = "subtitle";
+      else if (attr == "Author")
+        xmlAttr = "name";
+
+      var items = root.getElementsByTagName(xmlAttr.toLowerCase());
+      if (items && items.length > 0 ) 
+        val = items.item(0).textContent;
+      JsonObj[attr] = val;
+    }
+
+    JsonObj.Entry = new Array();
+    var i=0;
+    var items = root.getElementsByTagName("entry");
+    for (i=0; i< items.length; i++) 
+    {
+      var item = items.item(i);
+      var attributes = ["Title", "Link", "Summary", "Date"];
+      var itemObj = {};
+      for each (var attr in attributes) 
+      {
+        if (attr == "Summary")
+          xmlAttr = "description";
+        else if (attr == "Date") // TODO: date not supported.
+          continue; //xmlAttr = "updated";
+        else
+          xmlAttr = attr.toLowerCase();
+
+        var val = "";
+        var elements = item.getElementsByTagName(xmlAttr);
+        if (elements && elements.length > 0 )
+        {
+          if ( attr == "Link")
+            val = elements.item(0).getAttribute("href");
+          else
+            val = elements.item(0).textContent;
+        }
+        itemObj[attr] = val;
+      }
+      JsonObj.Entry[i] = itemObj;
+      if (i == numList - 1)
+        break;
+    }
+    return JsonObj;
+  }
+
+
+  /*
+   * Event handler api
+   */
+  function _IG_AddModuleEventHandler() 
+  {
+    if(DEBUG)
+      dump("Google Applet API:  _IG_AddModuleEventHandler Not implemented.\n");
+  }
+
+  function _IG_AddDOMEventHandler(obj, event, callback)
+  {
+    obj.addEventListener(event, callback, false);
+  }
+  
+  function _IG_RegisterOnloadHandler(func)
+  {
+    _loadCallbacks.push(func);
+  }
+
+  function _IG_GetImage(url, obj) 
+  {
+    var image = new Image;
+    image.src = url;
+    return image;
+  }
+
+  function _IG_GetImageUrl(url, obj)
+  {
+    // TODO: Dummy impl.
+    return url;
+  }
+
+  function _IG_GetCachedUrl(url, obj)
+  {
+    return url;
+  }
+
+  /*
+   *
+   * Feature "dynamic-height"
+   *
+   */
+  var _counter = 0;
+  function _IG_AdjustIFrameHeight()
+  {
+    setAppletProperty("_CS_height_adjust", "" + _counter++);
+  }  
+
+  /*
+   *
+   * Feature "settitle"
+   *
+   */
+  function _IG_SetTitle(title)
+  {
+    _title = title;
+    setAppletProperty("_CS_title", _title);
+  }  
+  
+  function setAppletProperty(name, value)
+  {
+    document.getElementById(name).setAttribute("value", value);
+  }
+
+  /*
+   *  Tabs api
+   */
+   var tabGroupCounter = 0;
+
+   function _IG_Tabs(module_id, selected_tab, container) 
+   {
+      this._container = container;
+      this._selectedTabId = selected_tab;
+      this._moduleId = module_id;
+      this._tabSelectorId = this._moduleId + "_tabSelector_" + tabGroupCounter;
+      if (selected_tab)
+        this._defaultTabName = selected_tab;
+
+      var tabSelectorSrc = "<table class='tabselector-table'><tr id='" + this._tabSelectorId + "'></tr></table>";
+      
+      if (!this._container) { // create a container 
+         var containerDiv = document.createElement("div");
+         var tabPane = _gel('_CS_tabsPane');
+         tabPane.appendChild(containerDiv);
+         this._container = containerDiv;
+      }
+
+      var tabAreaDiv = document.createElement("div");
+      var tabSelectDiv = document.createElement("div");
+      tabSelectDiv.innerHTML = tabSelectorSrc;
+      this._container.appendChild(tabSelectDiv);
+      this._container.appendChild(tabAreaDiv);
+      this._tabAreaDiv = tabAreaDiv;
+
+      // TODO: If container is present. We need to add tab selector table to it!
+      tabGroupCounter++;
+   }
+
+   _IG_Tabs.prototype = 
+   {
+      _container : null,
+      _selectedTabId : null,
+      _moduleId   : null,
+      _tabCounter : 0,
+      _tabs : [],
+      _tabSelectorId: null,
+      _defaultTabName : null,
+      _selected : null,
+
+      addTab: function(tabName, params, callback) 
+      {
+        var id = "";
+        var callType = 1;
+        var callType = (params && typeof(params) == 'string') ? 2 : 1;
+        if (callType == 1)
+        {
+          var newTab = this._tabs[tabName] = new Tab(tabName);
+          if (params && params.contentContainer)
+          {
+            // TODO: If the container is not a div.
+            newDiv.appendChild(params.contentContainer);
+            newTab._contentContainer = params.contentContainer;
+            newTab._tabid = params.contentContainer.getAttribute("id");
+          }
+          else {
+            var newDiv = document.createElement("div");
+            id = this._moduleId + "_tab_" + this._tabCounter;
+            newDiv.setAttribute("id", id);
+            this._tabAreaDiv.appendChild(newDiv);
+            newTab._tabid = id;
+            newTab._contentContainer = newDiv;
+          }
+
+          if (params && params.callback)
+            newTab._callback = params.callback;
+
+          // TODO possible clash if indexes.
+          if (params && params.index)
+            newTab._index = index;
+          else 
+            newTab._index = this._tabCounter;
+
+          if (params && params.tooltip) {} // TODO
+        }
+        else if (callType == 2) 
+        {
+            id = params;
+            var div = _gel(id);
+            if (!div && DEBUG)
+              dump("Google Applet API: TabAPI: Div '" + id + "' does not exits.");
+
+            this._tabAreaDiv.appendChild(div);
+            var newTab = this._tabs[tabName] = new Tab(tabName);
+            newTab._tabid = id;
+            newTab._callback = callback;
+        }
+        // add tab selector
+        var tr = _gel(this._tabSelectorId);
+        var nameContainer = this.createTabSelector(tabName);
+        tr.appendChild(nameContainer);
+        newTab._nameContainer = nameContainer;
+
+        // Show appropriate tab.
+        if (!this._defaultTabName) // if no defTab is given first added tab is default tab.
+          this._defaultTabName = tabName; 
+        if (tabName == this._defaultTabName)
+          this.viewTab(tabName);
+
+        this._tabCounter++;
+        return id;
+      },
+
+      createTabSelector: function(tabName) {
+        var id = this._tabs[tabName]._tabid;
+        var selector = document.createElement('td');
+        selector.setAttribute("tabid", id);
+        selector.setAttribute("class", "tabselector");
+        selector.tabsObject = this;
+        selector.setAttribute("onclick", "this.tabsObject.viewTab('"+ tabName + "')"); 
+        selector.innerHTML = tabName;
+        return selector;
+      },
+
+      viewTab: function(name)
+      {
+        var tab = this._tabs[name];
+        showTab(tab._tabid);
+        this._selected = tab;
+        if (tab._callback)
+          (tab._callback)(tab._tabid);
+        
+        // set the selected att to tab selector.
+        var selectorTr = _gel(this._tabSelectorId);
+        for (var i=0; i< selectorTr.childNodes.length; i++)
+        {
+          var tabSelector = selectorTr.childNodes[i];
+          if (tabSelector.getAttribute("tabid") == tab._tabid)
+            tabSelector.setAttribute("selected", "true");
+          else
+            tabSelector.removeAttribute("selected");
+        }
+      },
+
+      addDynamicTab: function(tabName, callback)
+      {
+          var newDiv = document.createElement("div");
+          id = this._moduleId + "_tab_" + this._tabCounter;
+          newDiv.setAttribute("id", id);
+          this._tabAreaDiv.appendChild(newDiv);
+
+          var newTab = this._tabs[tabName] = new Tab(tabName);
+          newTab._tabid = id;
+          newTab._callback = callback;
+          newTab._contentContainer = newDiv;
+          newTab._index = this._tabCounter++;
+
+          // add tab selector
+          var tr = _gel(this._tabSelectorId);
+          var nameContainer = this.createTabSelector(tabName);
+          tr.appendChild(nameContainer);
+          newTab._nameContainer = nameContainer;
+
+          if (!this._defaultTabName)
+            this._defaultTabName = tabName;
+          if ( tabName == this._defaultTabName)
+            this.viewTab(tabName);
+
+          return id;
+      },
+
+      getSelectedTab: function()
+      {
+        return this._selected;
+      },
+
+      setSelectedTab: function(tabIndex)
+      {
+        for each (var name in this._tabs) {
+          if (this._tabs[name]._index == tabIndex) {
+            this.viewTab(name);
+            break;
+          }
+        }
+      },
+
+      moveTab: function(tabIndex1, tabIndex2)
+      {
+        if(DEBUG)
+          dump("Google Applet API: Tabs.moveTab - unimplemented\n");
+      },
+
+      removeTab: function(tabIndex)
+      {
+        if(DEBUG)
+          dump("Google Applet API: Tabs.removeTab - unimplemented\n");
+      },
+
+      getTabs: function()
+      {
+        var arr = new Array;
+        for each (var name in this._tabs) 
+          arr.push(this._tabs[name]);
+        return arr;
+      },
+
+      alignTabs: function(align, opt_offset)
+      {
+        if(DEBUG)
+          dump("Google Applet API: Tabs.alignTabs - unimplemented\n");
+      },
+
+      displayTabs: function(display)
+      {
+        this._container.style.display = display;
+      },
+
+      getHeaderContainer: function()
+      {
+        return _gel(this._tabSelectorId);
+      }
+   }
+
+   function Tab(name) {
+     this._name = name;
+   }
+   Tab.prototype = {
+     _name: null,
+     _nameContainer: null,
+     _contentContainer: null,
+     _callback: null,
+     _index: null,
+     _tabid: null,
+
+     getName: function() { return this._name; },
+     getNameContainer: function() { return this._nameContainer; },
+     getContentContainer: function() { return this._contentContainer; },
+     getCallback: function() { return this._callback; },
+     getIndex: function() { return this._index; }
+   }
+
+   function showTab(id)
+   {
+      var parent = _gel(id).parentNode;
+      for (var i=0 ; i< parent.childNodes.length; i++)
+      {
+        var div = parent.childNodes[i];
+        if (div.id == id ) 
+          div.style.display = 'inline';
+        else
+          div.style.display = 'none';
+      }
+   }
+
+ /*
+  * Mini messages
+  */
+  function _IG_MiniMessage(moduleId, container) 
+  {
+      this._moduleId = moduleId;
+      this._container = container;
+      if (!container) { // create a container 
+         var msgPane = _gel("_CS_miniMsgPane");
+         var containerDiv = document.createElement("div");
+         msgPane.appendChild(containerDiv);
+         this._container = containerDiv;
+      }
+  }
+
+  _IG_MiniMessage.prototype = 
+  {
+    _moduleId: null,
+    _container: null,
+    createDismissibleMessage: function(obj, opt_callback) 
+    {
+      var msgDiv ;
+      if (typeof(obj) == 'string') // create a new div
+      {
+        msgDiv = document.createElement("div");
+        msgDiv.innerHTML = obj;
+      }
+      else
+        msgDiv = obj;
+
+      var tableSrc = "<table class='minimsg' border='0'><tr><td id='minimsg-tr'/><td><a id='minimsg-cross' href=''>[X]</a></td></table>";
+      var tableDiv = document.createElement("div");
+      tableDiv.innerHTML = tableSrc;
+      this._container.appendChild(tableDiv);
+      _gel('minimsg-tr').appendChild(msgDiv);
+      msgDiv.setAttribute("class", "minimsg");
+
+      var msgContainer = this._container;
+      var ourCallback = function () {
+        var ret = true;
+        if (opt_callback) {
+          try { ret = opt_callback(); }
+          catch (e){}
+        }
+        if ( typeof(ret) != 'boolean' || ret == true)
+            msgContainer.removeChild(tableDiv);
+      }
+      _gel('minimsg-cross').addEventListener('click',ourCallback, false);
+    },
+
+    createTimerMessage: function(obj, seconds, opt_callback)
+    {
+      var msgDiv ;
+      if (typeof(obj) == 'string') // create a new div
+      {
+        msgDiv = document.createElement("div");
+        msgDiv.innerHTML = obj;
+      }
+      else 
+        msgDiv = obj;
+      
+      this._container.appendChild(msgDiv);
+      
+      var closeFun = function() {
+         var ret = true;
+         if (opt_callback) 
+            ret = opt_callback();
+         if(ret)
+           msgDiv.parentNode.removeChild(msgDiv);
+      }
+      setTimeout(closeFun, seconds * 1000);
+    },
+    createStaticMessage: function(obj)
+    {
+      if (typeof(obj) == 'string') // create a new div
+      {
+        msgDiv = document.createElement("div");
+        msgDiv.innerHTML = obj;
+      }
+      else 
+        msgDiv = obj;
+      msgDiv.setAttribute("class", "minimsg");
+      this._container.appendChild(msgDiv);
+      return msgDiv; 
+    },
+    dismissMessage: function(msg)
+    {
+      this._container.removeChild(msg);
+    }
+  };
+
+  function _IG_Analytics() {
+    if(DEBUG)
+      dump("Google Applet API: _IG_Analytics - unimplemented\n");
+  }
+
+  function _IG_EmbedFlash(swf_url, swf_container, opt_params){
+    if (!opt_params)
+      opt_params = {};
+    flashDiv = _gel(swf_container);
+    var widthHeight = "width='" + (opt_params.width ? opt_params.width : "100%") +"' ";
+    widthHeight += " height='" + (opt_params.height ? opt_params.height : "100%") +"' ";
+    var html  = ''  
+            + '<OBJECT classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"'
+            + ' codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0"'
+            + ' WIDTH="100%" HEIGHT="100%" id="myMovieName">'
+            + '<PARAM NAME=movie VALUE="myFlashMovie.swf">'
+            + '<PARAM NAME=quality VALUE=high><PARAM NAME=bgcolor VALUE=#FFFFFF>'
+            + '<EMBED src="' + swf_url + '" quality=high bgcolor=#FFFFFF '
+            + widthHeight + ' NAME="myMovieName" ALIGN="" TYPE="application/x-shockwave-flash"'
+            + ' PLUGINSPAGE="http://www.macromedia.com/go/getflashplayer"> </EMBED> </OBJECT>';
+    flashDiv.innerHTML = html;
+  }
+
+</script>
+</head>
+
+<body onload="init()">
+<!--Readonly Properties-->
+<form id="_CS_dummy">
+<input type="hidden" id="_CS_appletUrl" value=""/>
+<!--Writeonly Properties-->
+<input type="hidden" id="_CS_title" value=""/>
+<input type="hidden" id="_CS_height_adjust" value=""/>
+<input type="hidden" id="_CS_loadFinishedEvent" value=""/>
+</form>
+<div id="_CS_miniMsgPane"></div>
+<div id="_CS_tabsPane"></div>
+<div id="_CS_prefPane"></div>
+<div id="_CS_content"></div>
+__INJECTSCRIPT__
+</body>
+</html>

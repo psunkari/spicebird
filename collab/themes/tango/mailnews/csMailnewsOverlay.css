@@ -1,0 +1,159 @@
+/*
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+# Synovel Software Technologies
+# Portions created by the Initial Developer are Copyright (C) 2007-2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Prasad Sunkari <prasad@synovel.com> (Original Author)
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+*/
+
+menuitem[observes="switch-to-mailnews"] {
+    list-style-image: url("chrome://messenger/skin/16x16/internet-mail.png");
+}
+
+#new-mail-item, #new-mail-item-2 {
+    list-style-image: url("chrome://messenger/skin/16x16/mail-message-new.png");
+}
+
+#new-mail-item, #new-mail-item-2 {
+    list-style-image: url("chrome://messenger/skin/16x16/mail-message-new.png");
+}
+
+#new-mail-folder-item, #new-mail-folder-item-2, #folderPaneContext-new {
+    list-style-image: url("chrome://messenger/skin/icons/folder.png");
+    -moz-image-region: rect(16px 16px 32px 0px);
+}
+
+#new-mail-vfolder-item, #new-mail-vfolder-item-2 {
+    list-style-image: url("chrome://messenger/skin/icons/folder.png");
+    -moz-image-region: rect(16px 176px 32px 160px);
+}
+
+#openMessageFileMenuitem {
+    list-style-image: url("chrome://collab/skin/16x16/document-open.png");
+}
+
+#menu_saveAs {
+    -moz-binding: url("chrome://global/content/bindings/menu.xml#menu-iconic");
+}
+
+#menu_saveAs, #mailContext-saveAs {
+    list-style-image: url("chrome://collab/skin/16x16/document-save-as.png");
+}
+
+#printMenuItem, #mailContext-print {
+    list-style-image: url("chrome://collab/skin/16x16/document-print.png");
+}
+
+#printPreviewMenuItem, #mailContext-printpreview {
+    list-style-image: url("chrome://collab/skin/16x16/document-print-preview.png");
+}
+
+#menu_preferences {
+    list-style-image: url("chrome://collab/skin/16x16/preferences-system.png");
+}
+
+#goNextMenu {
+    -moz-binding: url("chrome://global/content/bindings/menu.xml#menu-iconic");
+    list-style-image: url("chrome://messenger/skin/16x16/go-down.png");
+}
+
+#goPreviousMenu {
+    -moz-binding: url("chrome://global/content/bindings/menu.xml#menu-iconic");
+    list-style-image: url("chrome://messenger/skin/16x16/go-up.png");
+}
+
+#menu_goForward {
+    list-style-image: url("chrome://messenger/skin/16x16/go-next.png");
+}
+
+#menu_goBack {
+    list-style-image: url("chrome://messenger/skin/16x16/go-previous.png");
+}
+
+#newMsgCmd {
+    list-style-image: url("chrome://messenger/skin/16x16/mail-message-new.png");
+}
+
+#replyMainMenu, #replyNewsgroupMainMenu, #mailContext-replySender, 
+#mailContext-replyNewsgroup {
+    list-style-image: url("chrome://messenger/skin/16x16/mail-reply-sender.png");
+}
+
+#menu_replyToAll, #mailContext-replyAll {
+    list-style-image: url("chrome://messenger/skin/16x16/mail-reply-all.png");
+}
+
+#menu_forwardMsg, #mailContext-forward, #mailContext-forwardAsAttachment {
+    list-style-image: url("chrome://messenger/skin/16x16/mail-forward.png");
+}
+
+#folderPaneContext-searchMessages {
+    list-style-image: url("chrome://collab/skin/16x16/edit-find.png");
+}
+
+#folderPaneContext-remove {
+    list-style-image: url("chrome://collab/skin/16x16/edit-delete.png");
+}
+
+#mailContext-selectall {
+    list-style-image: url("chrome://collab/skin/16x16/edit-select-all.png");
+}
+
+#mailContext-copy {
+    list-style-image: url("chrome://collab/skin/16x16/edit-copy.png");
+}
+
+#mailContext-delete {
+    list-style-image: url("chrome://collab/skin/16x16/edit-delete.png");
+}
+
+/* Tab Icons */
+.tabcollab-tab[type="message"], .tabcollab-tab[type="folder"] {
+  list-style-image: url("chrome://messenger/skin/16x16/folder-pane.png");
+  -moz-image-region: rect(0 16px 16px 0);
+}
+
+.tabcollab-tab[type="folder"][ServerType="nntp"] {
+  -moz-image-region: rect(0 64px 16px 48px);
+}
+
+.tabcollab-tab[type="folder"][ServerType="rss"] { 
+  -moz-image-region: rect(0 96px 16px 80px);
+}
+
+.tabcollab-tab[type="glodaSearch"],
+.tabcollab-tab[type="glodaFacet"] {
+  list-style-image: url("chrome://global/skin/icons/Search-glass.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}

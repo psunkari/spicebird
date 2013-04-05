@@ -1,0 +1,325 @@
+<?xml version="1.0"?>
+<!--
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Spicebird code.
+#
+# The Initial Developer of the Original Code is
+# Synovel Software Technologies
+# Portions created by the Initial Developer are Copyright (C) 2008,2009
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Prasad Sunkari <prasad@synovel.com> (Original Author)
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+-->
+
+<!DOCTYPE bindings [
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
+  <!ENTITY % chatDTD SYSTEM "chrome://chat/locale/csChatOverlay.dtd"> %chatDTD;
+  <!ENTITY % statusDTD SYSTEM "chrome://chat/locale/csChatStatuses.dtd"> %statusDTD;
+]>
+
+<bindings id="csChatQuickStatus"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="statusWidget"
+           extends="chrome://global/content/bindings/textbox.xml#textbox">
+    <resources>
+      <stylesheet src="chrome://chat/skin/csChatQuickStatus.css"/>
+    </resources>
+    <content>
+      <xul:button class="chat-qs-button" type="menu"
+                  style="min-width: 10px"
+                  anonid="qs-button" popup="_child" chromedir="&locale.dir;">
+        <xul:image class="status-image"
+                   anonid="status-image" chat-status="offline"/>
+        <xul:image class="dropmarker-image" anonid="dropmarker-image"/>
+        <xul:menupopup type="chat-statuses-popup"
+                       anonid="menupopup" position="before_start"/>
+      </xul:button>
+      <xul:hbox class="quick-search-textbox textbox-input-box" flex="1">
+        <html:input class="textbox-input" flex="1" default-message="true" 
+                    default-value="&collab.chat.status.default.label;"
+                    value="&collab.chat.status.default.label;"
+                    allowevents="true" anonid="input" disabled="true"
+                    xbl:inherits="size,disabled,readonly,tabindex,accesskey"/>
+      </xul:hbox>
+      <xul:image class="chat-qs-status-image" anonid="chat-progress-image"/>
+    </content>
+
+    <implementation implements="nsIObserver">
+      <constructor>
+        <![CDATA[
+          this.clickSelectsAll = true;
+
+          var popup = document.getAnonymousElementByAttribute(this, "anonid", "menupopup");
+          popup.addEventListener("command", function(event) {
+                                              var target = event.originalTarget;
+                                              var status = target.getAttribute("chat-status");
+                                              var message = target.getAttribute("chat-message");
+
+                                              csChatWrapper.setGlobalStatus(status, message);
+                                            }, false);
+
+          var service = Components.classes["@mozilla.org/observer-service;1"]
+                                  .getService(Ci.nsIObserverService);
+          service.addObserver(this, "ChatStatusSync", false);
+          service.addObserver(this, "ChatConnecting", false);
+        ]]>
+      </constructor>
+
+      <method name="observe">
+        <parameter name="aSubject"/>
+        <parameter name="aTopic"/>
+        <parameter name="aData"/>
+        <body><![CDATA[
+          if (aTopic == "ChatStatusSync") {
+            this.showCompleteStatus(csChatWrapper.presence.status,
+                                    csChatWrapper.presence.message);
+          }
+
+          else if (aTopic == "ChatConnecting") {
+            var img = document.getAnonymousElementByAttribute(this, "anonid", "status-image");
+            if (aData == "true")
+              img.setAttribute("busy", aData);
+            else
+              img.removeAttribute("busy");
+          }
+        ]]></body>
+      </method>
+
+      <method name="saveNewStatus">
+        <parameter name="aOnlineStatus"/>
+        <parameter name="aStatusMessage"/>
+        <body><![CDATA[
+          var menu = document.getAnonymousElementByAttribute(this, "anonid",
+                                                             "menupopup");
+          menu.saveNewStatus(aOnlineStatus, aStatusMessage);
+        ]]></body>
+      </method>
+
+      <method name="showCompleteStatus">
+        <parameter name="aOnlineStatus"/>
+        <parameter name="aStatusMessage"/>
+        <body><![CDATA[
+          var image = document.getAnonymousElementByAttribute(this, "anonid",
+                                                              "status-image");
+          image.setAttribute("chat-status", aOnlineStatus);
+
+          var input = document.getAnonymousElementByAttribute(this, "anonid",
+                                                              "input");
+          if (aStatusMessage) {
+            input.value = aStatusMessage;
+            input.removeAttribute("default-message");
+          } else if (!aStatusMessage) {
+            input.value = input.getAttribute("default-value");
+            input.setAttribute("default-message", "true");
+          }
+          
+          if (aOnlineStatus != "offline") {
+            input.removeAttribute("disabled");
+            if (aStatusMessage)
+              this.saveNewStatus(aOnlineStatus, aStatusMessage);
+          } else {
+            input.setAttribute("disabled", true);
+          }
+        ]]></body>
+      </method>
+      <method name="setStatusMessage">
+        <body><![CDATA[
+          var image = document.getAnonymousElementByAttribute(this, "anonid",
+                                                              "status-image");
+          var input = document.getAnonymousElementByAttribute(this, "anonid",
+                                                              "input");
+
+          csChatWrapper.setGlobalStatus(image.getAttribute("chat-status"),
+                                        input.value);
+          this.saveNewStatus(image.getAttribute("chat-status"), input.value);
+        ]]></body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="keypress" keycode="VK_RETURN"
+               phase="capturing" action="return this.setStatusMessage();"/>
+      <handler event="keypress" keycode="VK_ENTER"
+               phase="capturing" action="return this.setStatusMessage();"/>
+    </handlers>
+  </binding>
+
+  <binding id="statuses-popup"
+           extends="chrome://global/content/bindings/popup.xml#popup"
+           display="chrome://global/content/bindings/popup.xml#popup">
+    <content>
+      <xul:arrowscrollbox class="popup-internal-box" flex="1" orient="vertical">
+        <xul:menuitem chat-status="available" class="menuitem-iconic" 
+                      label="&collab.chat.status.available.label;"/>
+        <xul:menuitem chat-status="busy" class="menuitem-iconic"
+                      label="&collab.chat.status.busy.label;"/>
+        <xul:menuitem chat-status="away" class="menuitem-iconic"
+                      label="&collab.chat.status.away.label;"/>
+        <xul:menuitem chat-status="invisible" class="menuitem-iconic"
+                      label="&collab.chat.status.invisible.label;"/>
+        <xul:menuitem chat-status="offline" class="menuitem-iconic"
+                      label="&collab.chat.status.offline.label;"/>
+        <xul:menuseparator/>
+        <xul:menu label="&collab.chat.status.recent.label;"
+                  anonid="chat-recent-menu">
+          <xul:menupopup anonid="chat-recent-statuses">
+            <xul:menuseparator anonid="clear-separator"
+                               style="display:-moz-box !important"/>
+            <xul:menuitem label="&collab.chat.status.recent.clear.label;"
+                          oncommand="clearRecentMessages(event)"/>
+          </xul:menupopup>
+        </xul:menu>
+      </xul:arrowscrollbox>
+    </content>
+    <implementation>
+      <constructor>
+        <![CDATA[
+          this.mClearSeparator = document.getAnonymousElementByAttribute(this,
+                                                   'anonid', 'clear-separator');
+          this.mRecentPopup = document.getAnonymousElementByAttribute(this,
+                                           'anonid', 'chat-recent-statuses');
+          this.mRecentMenu = document.getAnonymousElementByAttribute(this,
+                                           'anonid', 'chat-recent-menu');
+
+          this.mPrefBranch = Components.classes['@mozilla.org/preferences-service;1']
+                               .getService(Components.interfaces.nsIPrefService)
+                               .getBranch('collab.chat.statuses.');
+        ]]>
+      </constructor>
+      <method name="clearRecentMessages">
+        <body>
+          <![CDATA[
+            this.mPrefBranch.deleteBranch("");
+          ]]>
+        </body>
+      </method>
+      <method name="saveNewStatus">
+        <parameter name="aOnlineStatus"/>
+        <parameter name="aStatusMessage"/>
+        <body>
+          <![CDATA[
+            var list = new Array();
+            var key = 0;
+
+            try {
+              for (key=0; key<10; key++) {
+                list.push({ 
+                  status: this.mPrefBranch.getCharPref(key + ".status"),
+                  message: this.mPrefBranch.getComplexValue(key + ".message", Ci.nsISupportsString)
+                });
+              }
+            } catch (ex) {};
+
+            // Remove the status if it already exists
+            list = list.filter(function(item) {
+                                 return (item.status != aOnlineStatus ||
+                                         item.message != aStatusMessage)
+                               });
+
+            while (list.length >= 10)
+              list.shift();
+
+            list.push({ status: aOnlineStatus, message: aStatusMessage });
+
+            // Iterate through the list and save preferences
+            key = Number(0);
+            for each (var item in list) {
+              this.mPrefBranch.setCharPref(key + ".status", item.status);
+
+              var str = Components.classes["@mozilla.org/supports-string;1"]
+                                  .createInstance(Ci.nsISupportsString);
+              str.data = item.message;
+              this.mPrefBranch.setComplexValue(key + ".message", Ci.nsISupportsString, str);
+              key++;
+            }
+          ]]>
+        </body>
+      </method>
+      <method name="_createNode">
+        <parameter name="key"/>
+        <body>
+          <![CDATA[
+            var element;
+            var status = this.mPrefBranch.getCharPref(key + ".status");
+            var message = this.mPrefBranch.getComplexValue(key + ".message", Ci.nsISupportsString).data;
+
+            element = document.createElement('menuitem');
+            element.setAttribute('class', 'menuitem-iconic');
+            element.setAttribute('chat-status', status);
+            element.setAttribute('chat-message', message);
+            element.setAttribute('label', message);
+
+            return element;
+          ]]>
+        </body>
+      </method>
+      <method name="populate">
+        <body>
+          <![CDATA[
+            var separator = this.mClearSeparator;
+            var scrollbox = separator.parentNode;
+            var count = 0;
+           
+            while(scrollbox.firstChild && scrollbox.firstChild != separator)
+              scrollbox.removeChild(scrollbox.firstChild);
+
+            var list = this.mPrefBranch.getChildList("", {});
+            for (var i=0; i<list.length; i++) {
+              var status = list[i];
+              if(/[^\.]*\.status/.test(status)) {
+                var key = status.split("\.")[0];
+                try {
+                  scrollbox.insertBefore(this._createNode(key), separator);
+                } catch(ex) {}
+              }
+            }
+            
+            if (scrollbox.firstChild == separator)
+              this.mRecentMenu.setAttribute("disabled", true);
+            else
+              this.mRecentMenu.removeAttribute("disabled");
+          ]]>
+        </body>
+      </method>
+    </implementation>
+    <handlers>
+      <handler event="popupshowing">
+        <![CDATA[
+          this.populate();
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+</bindings>

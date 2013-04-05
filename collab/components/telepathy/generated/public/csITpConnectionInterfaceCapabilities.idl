@@ -1,0 +1,138 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Spicebird code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Synovel Software Technologies
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Prasad Sunkari <prasad@synovel.com> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Code in this file is generated using a computer program.
+ * Please refer to the corresponding telepathy spec for any help in using the
+ * code here.  You may also feel free to contact the original developer for
+ * any related help.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+
+
+%{C++
+#include "glib/gtypes.h"
+%}
+native gpointer(gpointer);
+
+
+
+/*
+ * A pair (channel type, type-specific flags) as passed to
+ */
+[scriptable, uuid(22591172-a0d5-400f-8e5a-59716da4941a)]
+interface csITpCapabilityPair : nsISupports
+{
+  readonly attribute AUTF8String channelType;
+  readonly attribute PRUint32 typeSpecificFlags;
+
+  [noscript] gpointer toGLib();
+};
+
+/*
+ * A struct (contact handle, channel type, generic flags,
+        type-specific flags) representing a capability posessed by a contact,
+        as returned by
+ */
+[scriptable, uuid(c26430db-79c5-4995-88e0-25887e8c98eb)]
+interface csITpContactCapability : nsISupports
+{
+  readonly attribute PRUint32 handle;
+  readonly attribute AUTF8String channelType;
+  readonly attribute PRUint32 genericFlags;
+  readonly attribute PRUint32 typeSpecificFlags;
+
+  [noscript] gpointer toGLib();
+};
+
+/*
+ * A struct (contact handle, channel type, old generic flags,
+        new generic flags, old type-specific flags, new type-specific flags)
+        representing a change to one of a contact's capabilities, as seen in the
+ */
+[scriptable, uuid(acf449c8-5b3b-4284-a136-785074b955b2)]
+interface csITpCapabilityChange : nsISupports
+{
+  readonly attribute PRUint32 handle;
+  readonly attribute AUTF8String channelType;
+  readonly attribute PRUint32 oldGenericFlags;
+  readonly attribute PRUint32 newGenericFlags;
+  readonly attribute PRUint32 oldTypeSpecificFlags;
+  readonly attribute PRUint32 newTypeSpecificFlags;
+
+  [noscript] gpointer toGLib();
+};
+
+[scriptable, uuid(391092ea-f395-4653-94ae-91744fad6e8e)]
+interface csITpConnectionInterfaceCapabilitiesAdvertiseCapabilitiesCB : nsISupports
+{
+  void onAdvertiseCapabilitiesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onAdvertiseCapabilitiesDone(in nsIArray aSelfCapabilities);
+};
+
+[scriptable, uuid(5188eebc-9f1e-4f91-b2f5-2b71247ad6b7)]
+interface csITpConnectionInterfaceCapabilitiesCapabilitiesChangedObserver : nsISupports
+{
+  void onCapabilitiesChanged(in nsIArray aCaps);
+};
+
+[scriptable, uuid(4efa520d-5f73-4add-b0ea-0e204909a989)]
+interface csITpConnectionInterfaceCapabilitiesGetCapabilitiesCB : nsISupports
+{
+  void onGetCapabilitiesError(in ACString aErrorDomain, in PRUint32 aErrorCode, in ACString aErrorDesc);
+  void onGetCapabilitiesDone(in nsIArray aContactCapabilities);
+};
+
+
+
+[scriptable, uuid(1e57bb55-e9bb-4d52-89b7-1c7e0f95bfa3)]
+interface csITpConnectionInterfaceCapabilities : nsISupports
+{
+  const short Connection_Capability_Flags_Create = 1;
+  const short Connection_Capability_Flags_Invite = 2;
+
+  void callAdvertiseCapabilities(in nsIArray aAdd, in PRUint32 aRemoveCount, [array, size_is(aRemoveCount)] in string aRemove, in csITpConnectionInterfaceCapabilitiesAdvertiseCapabilitiesCB cb);
+
+  void connectToCapabilitiesChanged(in csITpConnectionInterfaceCapabilitiesCapabilitiesChangedObserver observer);
+  void disconnectFromCapabilitiesChanged(in csITpConnectionInterfaceCapabilitiesCapabilitiesChangedObserver observer);
+
+  void callGetCapabilities(in PRUint32 aHandlesCount, [array, size_is(aHandlesCount)] in PRUint32 aHandles, in csITpConnectionInterfaceCapabilitiesGetCapabilitiesCB cb);
+
+};
